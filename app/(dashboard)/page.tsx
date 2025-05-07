@@ -1,6 +1,6 @@
-import { Button } from '@/components/ui/button';
-import { ArrowRight, CreditCard, Database } from 'lucide-react';
-import { Terminal } from './terminal';
+import { Button } from "@/components/ui/button";
+import { ArrowRight, CreditCard, Database } from "lucide-react";
+import { Terminal } from "./terminal";
 
 export default function HomePage() {
   return (
@@ -10,24 +10,21 @@ export default function HomePage() {
           <div className="lg:grid lg:grid-cols-12 lg:gap-8">
             <div className="sm:text-center md:max-w-2xl md:mx-auto lg:col-span-6 lg:text-left">
               <h1 className="text-4xl font-bold text-gray-900 tracking-tight sm:text-5xl md:text-6xl">
-                Build Your SaaS
-                <span className="block text-orange-500">Faster Than Ever</span>
+                Vergabefervahren
+                <span className="block text-orange-500">Digital Prüfen</span>
               </h1>
               <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-xl lg:text-lg xl:text-xl">
-                Launch your SaaS product in record time with our powerful,
-                ready-to-use template. Packed with modern technologies and
-                essential integrations.
+                Sicheres und effizientes digitales Prüfungsverfahren für
+                umfangreiche Vergabeverfahren.
               </p>
               <div className="mt-8 sm:max-w-lg sm:mx-auto sm:text-center lg:text-left lg:mx-0">
                 <a
                   href="https://vercel.com/templates/next.js/next-js-saas-starter"
-                  target="_blank"
-                >
+                  target="_blank">
                   <Button
                     size="lg"
                     variant="outline"
-                    className="text-lg rounded-full"
-                  >
+                    className="text-lg rounded-full">
                     Deploy your own
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
@@ -115,8 +112,7 @@ export default function HomePage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="text-lg rounded-full"
-                >
+                  className="text-lg rounded-full">
                   View the code
                   <ArrowRight className="ml-3 h-6 w-6" />
                 </Button>
