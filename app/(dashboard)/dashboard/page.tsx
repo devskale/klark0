@@ -31,7 +31,7 @@ function SubscriptionSkeleton() {
   return (
     <Card className="mb-8 h-[140px]">
       <CardHeader>
-        <CardTitle>Team Subscription</CardTitle>
+        <CardTitle>Team Plan</CardTitle>
       </CardHeader>
     </Card>
   );
@@ -43,7 +43,7 @@ function ManageSubscription() {
   return (
     <Card className="mb-8">
       <CardHeader>
-        <CardTitle>Team Subscription</CardTitle>
+        <CardTitle>Team Plan</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -62,7 +62,7 @@ function ManageSubscription() {
             </div>
             <form action={customerPortalAction}>
               <Button type="submit" variant="outline">
-                Manage Subscription
+                Manage Plan
               </Button>
             </form>
           </div>
@@ -76,7 +76,7 @@ function TeamMembersSkeleton() {
   return (
     <Card className="mb-8 h-[140px]">
       <CardHeader>
-        <CardTitle>Team Members</CardTitle>
+        <CardTitle>Team Mitglieder</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="animate-pulse space-y-4 mt-1">
@@ -108,10 +108,12 @@ function TeamMembers() {
     return (
       <Card className="mb-8">
         <CardHeader>
-          <CardTitle>Team Members</CardTitle>
+          <CardTitle>Team Mitglieder</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">No team members yet.</p>
+          <p className="text-muted-foreground">
+            Noch keine Mitglieder vorhanden.
+          </p>
         </CardContent>
       </Card>
     );
@@ -120,7 +122,7 @@ function TeamMembers() {
   return (
     <Card className="mb-8">
       <CardHeader>
-        <CardTitle>Team Members</CardTitle>
+        <CardTitle>Team Mitglieder</CardTitle>
       </CardHeader>
       <CardContent>
         <ul className="space-y-4">
@@ -180,7 +182,7 @@ function InviteTeamMemberSkeleton() {
   return (
     <Card className="h-[260px]">
       <CardHeader>
-        <CardTitle>Invite Team Member</CardTitle>
+        <CardTitle>Team Mitglied einladen</CardTitle>
       </CardHeader>
     </Card>
   );
@@ -197,7 +199,7 @@ function InviteTeamMember() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Invite Team Member</CardTitle>
+        <CardTitle>Team Mitglied einladen</CardTitle>
       </CardHeader>
       <CardContent>
         <form action={inviteAction} className="space-y-4">
@@ -215,7 +217,7 @@ function InviteTeamMember() {
             />
           </div>
           <div>
-            <Label>Role</Label>
+            <Label>Rolle</Label>
             <RadioGroup
               defaultValue="member"
               name="role"
@@ -228,6 +230,10 @@ function InviteTeamMember() {
               <div className="flex items-center space-x-2 mt-2">
                 <RadioGroupItem value="owner" id="owner" />
                 <Label htmlFor="owner">Admin</Label>
+              </div>
+              <div className="flex items-center space-x-2 mt-2">
+                <RadioGroupItem value="dev" id="dev" />
+                <Label htmlFor="owner">Dev</Label>
               </div>
             </RadioGroup>
           </div>
@@ -244,7 +250,7 @@ function InviteTeamMember() {
             {isInvitePending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Inviting...
+                Einladen...
               </>
             ) : (
               <>
@@ -258,7 +264,7 @@ function InviteTeamMember() {
       {!isOwner && (
         <CardFooter>
           <p className="text-sm text-muted-foreground">
-            You must be a team owner to invite new members.
+            Du musst Eigentümer sein um Mitglieder einzuladen.
           </p>
         </CardFooter>
       )}
