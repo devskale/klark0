@@ -1,8 +1,8 @@
 "use client";
 
-import { useActionState, useState, useEffect } from "react"; // Added useState and useEffect
+import { useActionState, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input"; // Added Input
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -13,24 +13,75 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
-// TODO: Create and import a new action for file system settings
+// TODO: Create and import a new action for file system settings from a separate actions.ts file
 // import { updateFileSystemSettings } from "@/app/(dashboard)/dashboard/einstellungen/actions";
 
-// Define a more specific state for file system settings
+// Define FileSystemType
 type FileSystemType = "local" | "klark0fs" | "oci" | "sftp" | "webdav" | "";
 
+// Define FormField structure
+type FormField = {
+  id: string; // Corresponds to 'name' attribute in input and key in FileSystemSettings
+  label: string;
+  type: "text" | "password" | "number";
+  placeholder?: string;
+  defaultValue?: string | number;
+};
+
+// Define the structure for each file system configuration
+type FileSystemDetail = {
+  displayName: string;
+  fields: FormField[];
+};
+
+// Configuration object for all file system types and their fields
+const fileSystemConfigurations: Record<Exclude<FileSystemType, "">, FileSystemDetail> = {
+  local: {
+    displayName: "Lokal",
+    fields: [
+      { id: "path", label: "Lokaler Pfad", type: "text", placeholder: "/pfad/zum/ordner", defaultValue: "" },
+    ],
+  },
+  klark0fs: {
+    displayName: "Klark0FS",
+    fields: [
+      { id: "klark0fsApiKey", label: "Klark0 FS API Key", type: "password", placeholder: "Ihr API Key", defaultValue: "" },
+    ],
+  },
+  oci: {
+    displayName: "OCI Bucket",
+    fields: [
+      { id: "bucketName", label: "Bucket Name", type: "text", placeholder: "Ihr Bucket Name", defaultValue: "" },
+      { id: "region", label: "Region", type: "text", placeholder: "z.B. eu-frankfurt-1", defaultValue: "" },
+      { id: "accessKeyId", label: "Access Key ID", type: "text", placeholder: "Ihr Access Key ID", defaultValue: "" },
+      { id: "secretAccessKey", label: "Secret Access Key", type: "password", placeholder: "Ihr Secret Access Key", defaultValue: "" },
+    ],
+  },
+  sftp: {
+    displayName: "SFTP/SSH",
+    fields: [
+      { id: "host", label: "Host", type: "text", placeholder: "sftp.example.com", defaultValue: "" },
+      { id: "port", label: "Port", type: "number", placeholder: "22", defaultValue: 22 },
+      { id: "username", label: "Benutzername", type: "text", placeholder: "Ihr Benutzername", defaultValue: "" },
+      { id: "password", label: "Passwort", type: "password", placeholder: "Ihr Passwort", defaultValue: "" },
+      { id: "path", label: "Pfad (optional)", type: "text", placeholder: "/remote/pfad", defaultValue: "" },
+    ],
+  },
+  webdav: {
+    displayName: "WebDAV",
+    fields: [
+      { id: "host", label: "Host URL", type: "text", placeholder: "https://webdav.example.com/remote.php/dav/files/username", defaultValue: "" },
+      { id: "username", label: "Benutzername", type: "text", placeholder: "Ihr Benutzername", defaultValue: "" },
+      { id: "password", label: "Passwort", type: "password", placeholder: "Ihr Passwort", defaultValue: "" },
+      { id: "path", label: "Pfad auf Server (optional, oft Teil der Host URL)", type: "text", placeholder: "/optionaler/pfad", defaultValue: "" },
+    ],
+  },
+};
+
+// Generic FileSystemSettings type
 type FileSystemSettings = {
   type: FileSystemType;
-  path?: string; // For local, sftp, webdav
-  bucketName?: string; // For OCI
-  region?: string; // For OCI
-  accessKeyId?: string; // For OCI, Klark0FS (if applicable)
-  secretAccessKey?: string; // For OCI, Klark0FS (if applicable)
-  host?: string; // For SFTP, WebDAV
-  port?: number; // For SFTP
-  username?: string; // For SFTP, WebDAV
-  password?: string; // For SFTP, WebDAV
-  klark0fsApiKey?: string; // For Klark0FS
+  [key: string]: any; // Allow dynamic fields
 };
 
 type ActionState = {
@@ -39,65 +90,80 @@ type ActionState = {
   settings?: FileSystemSettings;
 };
 
+// Helper to get initial settings based on type
+const getInitialSettings = (type: Exclude<FileSystemType, "">): FileSystemSettings => {
+  const settings: FileSystemSettings = { type };
+  const config = fileSystemConfigurations[type];
+  if (config) {
+    config.fields.forEach(field => {
+      settings[field.id] = field.defaultValue;
+    });
+  }
+  return settings;
+};
+
 // Placeholder for the actual server action
 async function updateFileSystemSettings(
   prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
   console.log("Form submitted", Object.fromEntries(formData.entries()));
-  // Simulate API call
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  // TODO: Implement actual logic to save settings
-  // For now, just return a success message and the submitted data
-  const settings: Partial<FileSystemSettings> = {};
-  settings.type = formData.get("fileSystemSetting") as FileSystemType;
-  if (settings.type === "local")
-    settings.path = formData.get("localPath") as string;
-  if (settings.type === "oci") {
-    settings.bucketName = formData.get("ociBucketName") as string;
-    settings.region = formData.get("ociRegion") as string;
-    settings.accessKeyId = formData.get("ociAccessKeyId") as string;
-    settings.secretAccessKey = formData.get("ociSecretAccessKey") as string;
-  }
-  if (settings.type === "sftp") {
-    settings.host = formData.get("sftpHost") as string;
-    settings.port = parseInt(formData.get("sftpPort") as string, 10);
-    settings.username = formData.get("sftpUsername") as string;
-    settings.password = formData.get("sftpPassword") as string;
-    settings.path = formData.get("sftpPath") as string;
-  }
-  if (settings.type === "webdav") {
-    settings.host = formData.get("webdavHost") as string;
-    settings.username = formData.get("webdavUsername") as string;
-    settings.password = formData.get("webdavPassword") as string;
-    settings.path = formData.get("webdavPath") as string;
-  }
-  if (settings.type === "klark0fs") {
-    settings.klark0fsApiKey = formData.get("klark0fsApiKey") as string;
+  await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate API call
+
+  const type = formData.get("fileSystemSetting") as Exclude<FileSystemType, "">;
+
+  if (!type || !fileSystemConfigurations[type]) {
+    return { error: "Ungültiger Dateisystem Typ ausgewählt." };
   }
 
+  const settings: FileSystemSettings = { type };
+  const config = fileSystemConfigurations[type];
+
+  config.fields.forEach(field => {
+    const value = formData.get(field.id);
+    if (value !== null && value !== undefined) {
+      if (field.type === "number" && typeof value === 'string') {
+        const numValue = parseInt(value, 10);
+        settings[field.id] = isNaN(numValue) ? field.defaultValue : numValue;
+      } else {
+        // If value is empty string, not a password, and has a defined default, use default. Otherwise, use the value.
+        // This means user-cleared fields (non-password) might revert to default if one is set.
+        settings[field.id] = (value === "" && field.type !== "password" && field.defaultValue !== undefined) ? field.defaultValue : value;
+      }
+    } else {
+      settings[field.id] = field.defaultValue;
+    }
+  });
+
+  // TODO: Implement actual logic to save settings
   return {
     success: "Dateisystem Einstellungen erfolgreich gespeichert!",
-    settings: settings as FileSystemSettings,
+    settings: settings,
   };
   // return { error: "Fehler beim Speichern der Einstellungen." };
 }
 
+const defaultInitialType: Exclude<FileSystemType, ""> = "local";
+const initialActionState: ActionState = {
+  settings: getInitialSettings(defaultInitialType),
+};
+
 export default function GeneralPage() {
   const [state, formAction, isPending] = useActionState<ActionState, FormData>(
-    updateFileSystemSettings, // Using the new placeholder action
-    { settings: { type: "local" } } // Initial state with default type
+    updateFileSystemSettings,
+    initialActionState
   );
-  const [selectedFileSystem, setSelectedFileSystem] = useState<FileSystemType>(
-    state.settings?.type || "local"
+  const [selectedFileSystem, setSelectedFileSystem] = useState<Exclude<FileSystemType, "">>(
+    state.settings?.type && state.settings.type !== "" ? state.settings.type as Exclude<FileSystemType, ""> : defaultInitialType
   );
 
-  // Effect to update selectedFileSystem when form state changes (e.g. after submit or initial load)
   useEffect(() => {
-    if (state.settings?.type) {
-      setSelectedFileSystem(state.settings.type);
+    if (state.settings?.type && state.settings.type !== "" && state.settings.type !== selectedFileSystem) {
+      setSelectedFileSystem(state.settings.type as Exclude<FileSystemType, "">);
     }
-  }, [state.settings?.type]);
+  }, [state.settings?.type]); // Simplified dependency array
+
+  const currentFields = fileSystemConfigurations[selectedFileSystem]?.fields || [];
 
   return (
     <section className="flex-1 p-4 lg:p-8">
@@ -117,185 +183,41 @@ export default function GeneralPage() {
                 name="fileSystemSetting"
                 value={selectedFileSystem}
                 onValueChange={(value) =>
-                  setSelectedFileSystem(value as FileSystemType)
+                  setSelectedFileSystem(value as Exclude<FileSystemType, "">)
                 }>
                 <SelectTrigger id="fileSystemSetting">
                   <SelectValue placeholder="Wählen Sie einen Typ" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="local">Lokal</SelectItem>
-                  <SelectItem value="klark0fs">Klark0FS</SelectItem>
-                  <SelectItem value="oci">OCI Bucket</SelectItem>
-                  <SelectItem value="sftp">SFTP/SSH</SelectItem>
-                  <SelectItem value="webdav">WebDAV</SelectItem>
+                  {Object.entries(fileSystemConfigurations).map(([key, config]) => (
+                    <SelectItem key={key} value={key}>{config.displayName}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
-              {/* TODO: Add error display if needed, similar to how it might have been with RadioGroup errors */}
             </div>
 
-            {/* Dynamically rendered input fields based on selectedFileSystem */}
-            {selectedFileSystem === "local" && (
-              <div className="space-y-2 pt-4">
-                <Label htmlFor="localPath">Lokaler Pfad</Label>
-                <Input
-                  id="localPath"
-                  name="localPath"
-                  placeholder="/pfad/zum/ordner"
-                  defaultValue={state.settings?.path || ""}
-                />
-              </div>
-            )}
+            {currentFields.map(field => {
+              let Gtv = field.defaultValue !== undefined ? String(field.defaultValue) : "";
+              // Use value from state.settings ONLY if state.settings.type matches the currently selected FS type
+              if (state.settings?.type === selectedFileSystem && state.settings?.[field.id] !== undefined) {
+                Gtv = String(state.settings[field.id]);
+              }
 
-            {selectedFileSystem === "klark0fs" && (
-              <div className="space-y-2 pt-4">
-                <Label htmlFor="klark0fsApiKey">Klark0 FS API Key</Label>
-                <Input
-                  id="klark0fsApiKey"
-                  name="klark0fsApiKey"
-                  type="password"
-                  placeholder="Ihr API Key"
-                  defaultValue={state.settings?.klark0fsApiKey || ""}
-                />
-              </div>
-            )}
+              return (
+                // Use a key that depends on both selectedFileSystem and field.id to ensure re-mount
+                <div key={`${selectedFileSystem}-${field.id}`} className="space-y-2 pt-4">
+                  <Label htmlFor={field.id}>{field.label}</Label>
+                  <Input
+                    id={field.id}
+                    name={field.id}
+                    type={field.type}
+                    placeholder={field.placeholder}
+                    defaultValue={Gtv}
+                  />
+                </div>
+              );
+            })}
 
-            {selectedFileSystem === "oci" && (
-              <div className="space-y-4 pt-4">
-                <div>
-                  <Label htmlFor="ociBucketName">Bucket Name</Label>
-                  <Input
-                    id="ociBucketName"
-                    name="ociBucketName"
-                    placeholder="Ihr Bucket Name"
-                    defaultValue={state.settings?.bucketName || ""}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="ociRegion">Region</Label>
-                  <Input
-                    id="ociRegion"
-                    name="ociRegion"
-                    placeholder="z.B. eu-frankfurt-1"
-                    defaultValue={state.settings?.region || ""}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="ociAccessKeyId">Access Key ID</Label>
-                  <Input
-                    id="ociAccessKeyId"
-                    name="ociAccessKeyId"
-                    placeholder="Ihr Access Key ID"
-                    defaultValue={state.settings?.accessKeyId || ""}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="ociSecretAccessKey">Secret Access Key</Label>
-                  <Input
-                    id="ociSecretAccessKey"
-                    name="ociSecretAccessKey"
-                    type="password"
-                    placeholder="Ihr Secret Access Key"
-                    defaultValue={state.settings?.secretAccessKey || ""}
-                  />
-                </div>
-              </div>
-            )}
-
-            {selectedFileSystem === "sftp" && (
-              <div className="space-y-4 pt-4">
-                <div>
-                  <Label htmlFor="sftpHost">Host</Label>
-                  <Input
-                    id="sftpHost"
-                    name="sftpHost"
-                    placeholder="sftp.example.com"
-                    defaultValue={state.settings?.host || ""}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="sftpPort">Port</Label>
-                  <Input
-                    id="sftpPort"
-                    name="sftpPort"
-                    type="number"
-                    placeholder="22"
-                    defaultValue={state.settings?.port || 22}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="sftpUsername">Benutzername</Label>
-                  <Input
-                    id="sftpUsername"
-                    name="sftpUsername"
-                    placeholder="Ihr Benutzername"
-                    defaultValue={state.settings?.username || ""}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="sftpPassword">Passwort</Label>
-                  <Input
-                    id="sftpPassword"
-                    name="sftpPassword"
-                    type="password"
-                    placeholder="Ihr Passwort"
-                    defaultValue={state.settings?.password || ""}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="sftpPath">Pfad (optional)</Label>
-                  <Input
-                    id="sftpPath"
-                    name="sftpPath"
-                    placeholder="/remote/pfad"
-                    defaultValue={state.settings?.path || ""}
-                  />
-                </div>
-              </div>
-            )}
-
-            {selectedFileSystem === "webdav" && (
-              <div className="space-y-4 pt-4">
-                <div>
-                  <Label htmlFor="webdavHost">Host URL</Label>
-                  <Input
-                    id="webdavHost"
-                    name="webdavHost"
-                    placeholder="https://webdav.example.com/remote.php/dav/files/username"
-                    defaultValue={state.settings?.host || ""}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="webdavUsername">Benutzername</Label>
-                  <Input
-                    id="webdavUsername"
-                    name="webdavUsername"
-                    placeholder="Ihr Benutzername"
-                    defaultValue={state.settings?.username || ""}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="webdavPassword">Passwort</Label>
-                  <Input
-                    id="webdavPassword"
-                    name="webdavPassword"
-                    type="password"
-                    placeholder="Ihr Passwort"
-                    defaultValue={state.settings?.password || ""}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="webdavPath">
-                    Pfad auf Server (optional, oft Teil der Host URL)
-                  </Label>
-                  <Input
-                    id="webdavPath"
-                    name="webdavPath"
-                    placeholder="/optionaler/pfad"
-                    defaultValue={state.settings?.path || ""}
-                  />
-                </div>
-              </div>
-            )}
             {state.error && (
               <p className="text-red-500 text-sm">{state.error}</p>
             )}
