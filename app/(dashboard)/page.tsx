@@ -21,9 +21,7 @@ export default function HomePage() {
                 Verfahren.
               </p>
               <div className="mt-8 sm:max-w-lg sm:mx-auto sm:text-center lg:text-left lg:mx-0">
-                <a
-                  href="https://vercel.com/templates/next.js/next-js-saas-starter"
-                  target="_blank">
+                <a href="https://skale.dev" target="_blank">
                   <Button
                     size="lg"
                     variant="outline"
