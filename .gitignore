@@ -42,3 +42,6 @@ postgres_data/
 
 #trae
 .trae/
+
+#Drizzle Migrations
+lib/db/migrations/

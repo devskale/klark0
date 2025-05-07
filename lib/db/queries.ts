@@ -1,6 +1,6 @@
 import { desc, and, eq, isNull } from 'drizzle-orm';
 import { db } from './drizzle';
-import { activityLogs, teamMembers, teams, users } from './schema';
+import { activityLogs, teamMembers, teams, users, appSettings } from './schema';
 import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/auth/session';
 
@@ -127,4 +127,35 @@ export async function getTeamForUser() {
   });
 
   return result?.team || null;
+}
+
+// Function to get a specific app setting for a team
+export async function getAppSetting(teamId: number, settingKey: string) {
+  const result = await db
+    .select()
+    .from(appSettings)
+    .where(and(eq(appSettings.teamId, teamId), eq(appSettings.settingKey, settingKey)))
+    .limit(1);
+
+  return result.length > 0 ? result[0] : null;
+}
+
+// Function to update (or insert if not exists) a specific app setting for a team
+export async function updateAppSetting(teamId: number, settingKey: string, value: any) {
+  return await db
+    .insert(appSettings)
+    .values({
+      teamId,
+      settingKey,
+      value,
+      updatedAt: new Date(),
+    })
+    .onConflictDoUpdate({
+      target: [appSettings.teamId, appSettings.settingKey],
+      set: {
+        value,
+        updatedAt: new Date(),
+      },
+    })
+    .returning();
 }
