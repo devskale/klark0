@@ -63,6 +63,64 @@ pnpm dev
 
 Die Anwendung ist dann unter [http://localhost:3000](http://localhost:3000) erreichbar.
 
+## Datenbankschema anpassen
+
+Um das Datenbankschema zu ändern (z.B. neue Tabellen hinzufügen oder bestehende Tabellen modifizieren), sind folgende Schritte notwendig:
+
+1.  **Schema-Datei bearbeiten**:
+    Öffnen Sie die Datei `lib/db/schema.ts`. Hier können Sie neue Tabellen definieren oder bestehende anpassen. Verwenden Sie die von `drizzle-orm/pg-core` bereitgestellten Funktionen wie `pgTable`, `serial`, `varchar`, `text`, `timestamp`, `integer` etc.
+
+    Beispiel für eine neue Tabelle:
+
+    ```typescript
+    export const newTable = pgTable("new_table", {
+      id: serial("id").primaryKey(),
+      name: varchar("name", { length: 255 }).notNull(),
+      createdAt: timestamp("created_at").notNull().defaultNow(),
+    });
+    ```
+
+2.  **Relationen definieren (optional)**:
+    Wenn Ihre neue Tabelle Beziehungen zu anderen Tabellen hat, definieren Sie diese im unteren Teil der `lib/db/schema.ts` Datei mittels der `relations` Funktion von Drizzle ORM.
+
+    Beispiel:
+
+    ```typescript
+    export const newTableRelations = relations(newTable, ({ one, many }) => ({
+      // Beispiel: Beziehung zu 'users'
+      // user: one(users, {
+      //   fields: [newTable.userId],
+      //   references: [users.id],
+      // }),
+    }));
+    ```
+
+3.  **Typen exportieren**:
+    Fügen Sie Typ-Exporte für Ihre neue Tabelle hinzu, um TypeScript-Unterstützung zu gewährleisten:
+
+    ```typescript
+    export type NewTableType = typeof newTable.$inferSelect; // für Lesezugriffe
+    export type NewNewTableType = typeof newTable.$inferInsert; // für Schreibzugriffe
+    ```
+
+4.  **Migration generieren**:
+    Nachdem Sie die Änderungen in `lib/db/schema.ts` gespeichert haben, öffnen Sie Ihr Terminal und führen Sie folgenden Befehl aus, um die Migrationsdateien zu generieren:
+
+    ```bash
+    pnpm db:generate
+    ```
+
+    Dieser Befehl analysiert die Änderungen in Ihrem Schema und erstellt die notwendigen SQL-Skripte im `drizzle`-Ordner.
+
+5.  **Migration anwenden**:
+    Um die generierten Migrationen auf Ihre Datenbank anzuwenden, führen Sie folgenden Befehl aus:
+    ```bash
+    pnpm db:migrate
+    ```
+    Dieser Befehl führt die SQL-Skripte aus und aktualisiert Ihre Datenbankstruktur.
+
+Stellen Sie sicher, dass Ihre Datenbankverbindung korrekt konfiguriert ist (in der Regel über Umgebungsvariablen wie `POSTGRES_URL` in Ihrer `.env` Datei), bevor Sie die Migrationsbefehle ausführen.
+
 ## Standardzugangsdaten
 
 - Benutzer: `admin@klark0.de`
