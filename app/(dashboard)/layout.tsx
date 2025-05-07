@@ -79,7 +79,7 @@ function UserMenu() {
 
 function Header() {
   return (
-    <header className="border-b border-gray-200">
+    <header className="fixed top-0 left-0 right-0 z-50 border-b border-gray-200 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
         <Link href="/" className="flex items-center">
           <CircleIcon className="h-6 w-6 text-orange-500" />
@@ -99,7 +99,7 @@ function Header() {
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <section className="flex flex-col min-h-screen">
+    <section className="flex flex-col min-h-screen pt-[68px]">
       <Header />
       {children}
     </section>
