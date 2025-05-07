@@ -40,31 +40,30 @@ function getRelativeTime(date: Date) {
     return `${Math.floor(diffInSeconds / 86400)} days ago`;
   return date.toLocaleDateString();
 }
-
 function formatAction(action: ActivityType): string {
   switch (action) {
     case ActivityType.SIGN_UP:
-      return "You signed up";
+      return "Du hast dich registriert";
     case ActivityType.SIGN_IN:
-      return "You signed in";
+      return "Du hast dich angemeldet";
     case ActivityType.SIGN_OUT:
-      return "You signed out";
+      return "Du hast dich abgemeldet";
     case ActivityType.UPDATE_PASSWORD:
-      return "You changed your password";
+      return "Du hast dein Passwort geändert";
     case ActivityType.DELETE_ACCOUNT:
-      return "You deleted your account";
+      return "Du hast deinen Account gelöscht";
     case ActivityType.UPDATE_ACCOUNT:
-      return "You updated your account";
+      return "Du hast deinen Account aktualisiert";
     case ActivityType.CREATE_TEAM:
-      return "You created a new team";
+      return "Du hast ein neues Team erstellt";
     case ActivityType.REMOVE_TEAM_MEMBER:
-      return "You removed a team member";
+      return "Du hast ein Teammitglied entfernt";
     case ActivityType.INVITE_TEAM_MEMBER:
-      return "You invited a team member";
+      return "Du hast ein Teammitglied eingeladen";
     case ActivityType.ACCEPT_INVITATION:
-      return "You accepted an invitation";
+      return "Du hast eine Einladung angenommen";
     default:
-      return "Unknown action occurred";
+      return "Unbekannte Aktion aufgetreten";
   }
 }
 
@@ -114,8 +113,8 @@ export default async function ActivityPage() {
                 No activity yet
               </h3>
               <p className="text-sm text-gray-500 max-w-sm">
-                When you perform actions like signing in or updating your
-                account, they'll appear here.
+                Wenn du Aktionen wie Anmelden oder Aktualisieren deines Kontos
+                durchführst, werden sie hier angezeigt.
               </p>
             </div>
           )}
