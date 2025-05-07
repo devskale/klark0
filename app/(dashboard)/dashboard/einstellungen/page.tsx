@@ -142,11 +142,18 @@ async function updateFileSystemSettings(
         body: JSON.stringify({ settingKey: 'fileSystem', value: newSettings }),
     });
 
+    // BEST PRACTICE for caching DB values:
+    // The POST /api/settings endpoint, after successfully updating the settings in the database,
+    // MUST invalidate or update any server-side cache for 'fileSystem' settings.
+    // This ensures that subsequent reads will fetch the fresh data.
+
     if (!response.ok) {
         const errorData = await response.json();
         return { error: `Fehler beim Speichern: ${errorData.error || response.statusText}` };
     }
 
+    // Returning newSettings here allows the client to update its state (client-side cache)
+    // with the successfully saved data.
     return {
       success: "Dateisystem Einstellungen erfolgreich gespeichert!",
       settings: newSettings,
@@ -168,6 +175,7 @@ export default function GeneralPage() {
     initialActionState
   );
   const [selectedFileSystem, setSelectedFileSystem] = useState<Exclude<FileSystemType, "">>(defaultInitialType);
+  // dbSettings state acts as a client-side cache for the fetched settings.
   const [dbSettings, setDbSettings] = useState<FileSystemSettings | null>(null);
   const [isLoadingDbSettings, setIsLoadingDbSettings] = useState(true);
   const [isFileSystemCardOpen, setIsFileSystemCardOpen] = useState(true);
@@ -176,22 +184,32 @@ export default function GeneralPage() {
     const fetchSettings = async () => {
       setIsLoadingDbSettings(true);
       try {
+        // BEST PRACTICE for caching DB values:
+        // 1. The /api/settings GET endpoint should implement server-side caching (e.g., in-memory, Redis)
+        //    to avoid hitting the database on every request if the data hasn't changed.
+        // 2. The /api/settings GET endpoint should also set appropriate HTTP Cache-Control headers.
+        //    This allows the browser to cache the response, potentially avoiding network requests altogether
+        //    if the cached data is still fresh according to the headers.
         const response = await fetch('/api/settings?key=fileSystem');
         if (response.ok) {
           const data = await response.json();
           if (data && data.type) {
+            // Client-side caching: Storing fetched settings in React state (dbSettings).
             setDbSettings(data as FileSystemSettings);
             setSelectedFileSystem(data.type as Exclude<FileSystemType, "">);
           } else if (response.status === 404) {
+            // Settings not found in DB, initialize with defaults.
             setDbSettings(getInitialSettings(defaultInitialType));
             setSelectedFileSystem(defaultInitialType);
           }
         } else if (response.status === 404) {
+           // Settings not found (e.g., API returns 404 if no settings exist), initialize with defaults.
            setDbSettings(getInitialSettings(defaultInitialType));
            setSelectedFileSystem(defaultInitialType);
         }
       } catch (error) {
         console.error("Failed to fetch file system settings:", error);
+        // Fallback to default settings on error.
         setDbSettings(getInitialSettings(defaultInitialType));
         setSelectedFileSystem(defaultInitialType);
       } finally {
@@ -199,17 +217,18 @@ export default function GeneralPage() {
       }
     };
     fetchSettings();
-  }, []);
+  }, []); // Empty dependency array ensures this effect runs once on mount, fetching initial settings.
 
   useEffect(() => {
-    // This effect ensures that after a successful form submission,
-    // the UI (selectedFileSystem and dbSettings) reflects the settings
-    // that were confirmed by the action.
+    // This effect handles updating the client-side cache (dbSettings and selectedFileSystem)
+    // after a successful form submission (server action).
+    // It uses the 'settings' returned by the server action, ensuring UI consistency
+    // with the persisted state. This is a good practice.
     if (state.success && state.settings?.type && state.settings.type !== "") {
       setSelectedFileSystem(state.settings.type as Exclude<FileSystemType, "">);
-      setDbSettings(state.settings); // Keep dbSettings in sync with the latest confirmed state from action
+      setDbSettings(state.settings); // Update client-side cache with the latest settings from the action.
     }
-  }, [state.success, state.settings]); // Changed: Removed selectedFileSystem from dependencies
+  }, [state.success, state.settings]); 
 
   const currentFields = fileSystemConfigurations[selectedFileSystem]?.fields || [];
 
