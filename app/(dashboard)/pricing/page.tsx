@@ -1,7 +1,7 @@
-import { checkoutAction } from '@/lib/payments/actions';
-import { Check } from 'lucide-react';
-import { getStripePrices, getStripeProducts } from '@/lib/payments/stripe';
-import { SubmitButton } from './submit-button';
+import { checkoutAction } from "@/lib/payments/actions";
+import { Check } from "lucide-react";
+import { getStripePrices, getStripeProducts } from "@/lib/payments/stripe";
+import { SubmitButton } from "./submit-button";
 
 // Prices are fresh for one hour max
 export const revalidate = 3600;
@@ -12,8 +12,8 @@ export default async function PricingPage() {
     getStripeProducts(),
   ]);
 
-  const basePlan = products.find((product) => product.name === 'Base');
-  const plusPlan = products.find((product) => product.name === 'Plus');
+  const basePlan = products.find((product) => product.name === "Base");
+  const plusPlan = products.find((product) => product.name === "Plus");
 
   const basePrice = prices.find((price) => price.productId === basePlan?.id);
   const plusPrice = prices.find((price) => price.productId === plusPlan?.id);
@@ -22,26 +22,26 @@ export default async function PricingPage() {
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="grid md:grid-cols-2 gap-8 max-w-xl mx-auto">
         <PricingCard
-          name={basePlan?.name || 'Base'}
+          name={basePlan?.name || "Basis"}
           price={basePrice?.unitAmount || 800}
-          interval={basePrice?.interval || 'month'}
+          interval={basePrice?.interval || "Monat"}
           trialDays={basePrice?.trialPeriodDays || 7}
           features={[
-            'Unlimited Usage',
-            'Unlimited Workspace Members',
-            'Email Support',
+            "Unbegrenzte Nutzung",
+            "Unbegrenzte Workspace-Mitglieder",
+            "E-Mail-Support",
           ]}
           priceId={basePrice?.id}
         />
         <PricingCard
-          name={plusPlan?.name || 'Plus'}
+          name={plusPlan?.name || "Plus"}
           price={plusPrice?.unitAmount || 1200}
-          interval={plusPrice?.interval || 'month'}
+          interval={plusPrice?.interval || "Monat"}
           trialDays={plusPrice?.trialPeriodDays || 7}
           features={[
-            'Everything in Base, and:',
-            'Early Access to New Features',
-            '24/7 Support + Slack Access',
+            "Alles in Basis, und:",
+            "Frühzeitiger Zugang zu neuen Funktionen",
+            "24/7 Support + Slack-Zugang",
           ]}
           priceId={plusPrice?.id}
         />
@@ -69,12 +69,12 @@ function PricingCard({
     <div className="pt-6">
       <h2 className="text-2xl font-medium text-gray-900 mb-2">{name}</h2>
       <p className="text-sm text-gray-600 mb-4">
-        with {trialDays} day free trial
+        mit {trialDays} Tagen kostenloser Testphase
       </p>
       <p className="text-4xl font-medium text-gray-900 mb-6">
-        ${price / 100}{' '}
+        €{price / 100}{" "}
         <span className="text-xl font-normal text-gray-600">
-          per user / {interval}
+          pro Nutzer / {interval}
         </span>
       </p>
       <ul className="space-y-4 mb-8">

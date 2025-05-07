@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Users, Settings, Shield, Activity, Menu } from 'lucide-react';
+import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Users, Settings, Shield, Activity, Menu } from "lucide-react";
 
 export default function DashboardLayout({
-  children
+  children,
 }: {
   children: React.ReactNode;
 }) {
@@ -15,10 +15,10 @@ export default function DashboardLayout({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const navItems = [
-    { href: '/dashboard', icon: Users, label: 'Team' },
-    { href: '/dashboard/general', icon: Settings, label: 'General' },
-    { href: '/dashboard/activity', icon: Activity, label: 'Activity' },
-    { href: '/dashboard/security', icon: Shield, label: 'Security' }
+    { href: "/dashboard", icon: Users, label: "Team" },
+    { href: "/dashboard/general", icon: Settings, label: "Allgemein" },
+    { href: "/dashboard/activity", icon: Activity, label: "Aktivität" },
+    { href: "/dashboard/security", icon: Shield, label: "Sicherheit" },
   ];
 
   return (
@@ -26,13 +26,12 @@ export default function DashboardLayout({
       {/* Mobile header */}
       <div className="lg:hidden flex items-center justify-between bg-white border-b border-gray-200 p-4">
         <div className="flex items-center">
-          <span className="font-medium">Settings</span>
+          <span className="font-medium">Einstellungen</span>
         </div>
         <Button
           className="-mr-3"
           variant="ghost"
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        >
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
           <Menu className="h-6 w-6" />
           <span className="sr-only">Toggle sidebar</span>
         </Button>
@@ -42,21 +41,19 @@ export default function DashboardLayout({
         {/* Sidebar */}
         <aside
           className={`w-64 bg-white lg:bg-gray-50 border-r border-gray-200 lg:block ${
-            isSidebarOpen ? 'block' : 'hidden'
+            isSidebarOpen ? "block" : "hidden"
           } lg:relative absolute inset-y-0 left-0 z-40 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
-            isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          }`}
-        >
+            isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}>
           <nav className="h-full overflow-y-auto p-4">
             {navItems.map((item) => (
               <Link key={item.href} href={item.href} passHref>
                 <Button
-                  variant={pathname === item.href ? 'secondary' : 'ghost'}
+                  variant={pathname === item.href ? "secondary" : "ghost"}
                   className={`shadow-none my-1 w-full justify-start ${
-                    pathname === item.href ? 'bg-gray-100' : ''
+                    pathname === item.href ? "bg-gray-100" : ""
                   }`}
-                  onClick={() => setIsSidebarOpen(false)}
-                >
+                  onClick={() => setIsSidebarOpen(false)}>
                   <item.icon className="h-4 w-4" />
                   {item.label}
                 </Button>

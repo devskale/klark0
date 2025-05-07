@@ -10,8 +10,8 @@ export default function HomePage() {
           <div className="lg:grid lg:grid-cols-12 lg:gap-8">
             <div className="sm:text-center md:max-w-2xl md:mx-auto lg:col-span-6 lg:text-left">
               <h1 className="text-4xl font-bold text-gray-900 tracking-tight sm:text-5xl md:text-6xl">
-                Vergabefervahren
-                <span className="block text-orange-500">Digital Prüfen</span>
+                Vergabeverfahren
+                <span className="block text-orange-500">digital prüfen</span>
               </h1>
               <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-xl lg:text-lg xl:text-xl">
                 Sicheres und effizientes digitales Prüfungsverfahren für
@@ -25,7 +25,7 @@ export default function HomePage() {
                     size="lg"
                     variant="outline"
                     className="text-lg rounded-full">
-                    Deploy your own
+                    Zu den Projekten
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </a>
@@ -52,11 +52,11 @@ export default function HomePage() {
               </div>
               <div className="mt-5">
                 <h2 className="text-lg font-medium text-gray-900">
-                  Next.js and React
+                  Digitale Prüfungsverfahren
                 </h2>
                 <p className="mt-2 text-base text-gray-500">
-                  Leverage the power of modern web technologies for optimal
-                  performance and developer experience.
+                  Wir verifizieren Verfahrensdaten mit modernsten digitalen
+                  Auditingmethoden.
                 </p>
               </div>
             </div>
@@ -67,11 +67,10 @@ export default function HomePage() {
               </div>
               <div className="mt-5">
                 <h2 className="text-lg font-medium text-gray-900">
-                  Postgres and Drizzle ORM
+                  KI assisted Auditing
                 </h2>
                 <p className="mt-2 text-base text-gray-500">
-                  Robust database solution with an intuitive ORM for efficient
-                  data management and scalability.
+                  KI dient als Unterstützung des Vergabeaudits.
                 </p>
               </div>
             </div>
@@ -81,12 +80,10 @@ export default function HomePage() {
                 <CreditCard className="h-6 w-6" />
               </div>
               <div className="mt-5">
-                <h2 className="text-lg font-medium text-gray-900">
-                  Stripe Integration
-                </h2>
+                <h2 className="text-lg font-medium text-gray-900">Sicher</h2>
                 <p className="mt-2 text-base text-gray-500">
-                  Seamless payment processing and subscription management with
-                  industry-leading Stripe integration.
+                  Die Sicherheit Ihrer Daten ist uns wichtig. Konform nach EU-KI
+                  Act, DSGVO, NIS2.
                 </p>
               </div>
             </div>
@@ -99,16 +96,15 @@ export default function HomePage() {
           <div className="lg:grid lg:grid-cols-2 lg:gap-8 lg:items-center">
             <div>
               <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">
-                Ready to launch your SaaS?
+                Bereit um zu Beginnen?
               </h2>
               <p className="mt-3 max-w-3xl text-lg text-gray-500">
-                Our template provides everything you need to get your SaaS up
-                and running quickly. Don't waste time on boilerplate - focus on
-                what makes your product unique.
+                Legen sie ein Vergabeprojekt an und laden Sie Ihre Dokumente
+                hoch.
               </p>
             </div>
             <div className="mt-8 lg:mt-0 flex justify-center lg:justify-end">
-              <a href="https://github.com/nextjs/saas-starter" target="_blank">
+              <a href="https://github.com/devskale/klark0" target="_blank">
                 <Button
                   size="lg"
                   variant="outline"
