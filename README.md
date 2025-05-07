@@ -62,3 +62,7 @@ Die Anwendung ist dann unter [http://localhost:3000](http://localhost:3000) erre
 ## Produktivbetrieb
 
 Für den Produktiveinsatz empfehlen wir eine Bereitstellung auf [Vercel](https://vercel.com/) oder einer ähnlichen Plattform. Stellen Sie sicher, dass alle erforderlichen Umgebungsvariablen für die Produktionsumgebung gesetzt sind.
+
+## Versionierung
+
+v0.0 initiale Version in deutsch. Boilperplate webapp mit Basis Layout und Design.
