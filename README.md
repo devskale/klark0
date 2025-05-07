@@ -11,6 +11,15 @@ Klark0 ist eine moderne Webanwendung für sicheres digitales Vergabe Auditing, e
 - Integrierte Berichtsfunktionen
 - Benutzerfreundliche Oberfläche mit modernem Design
 
+## Einstellungen
+
+### Admin
+
+Dateisystem
+Lokales Dateisystem
+Klark0FS
+OCI Bucket
+
 ## Tech Stack
 
 - **Framework**: [Next.js](https://nextjs.org/)
