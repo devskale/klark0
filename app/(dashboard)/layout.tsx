@@ -35,7 +35,7 @@ function UserMenu() {
         <Link
           href="/pricing"
           className="text-sm font-medium text-gray-700 hover:text-gray-900">
-          Pricing
+          Preise
         </Link>
         <Button asChild className="rounded-full">
           <Link href="/sign-up">Registrieren</Link>
