@@ -16,6 +16,7 @@ import {
   Folder,
   Bolt,
   Hammer,
+  Check,
 } from "lucide-react"; // Added CircleIcon, Home, LogOut
 import { AppSidebar } from "@/components/app-sidebar";
 import { Separator } from "@/components/ui/separator"; // Assuming this exists
@@ -128,16 +129,36 @@ const sidebarData = {
       items: [
         {
           title: "Projektauswahl",
-          url: "/dashboard/pauswahl",
+          url: "/dashboard/aauswahl",
           icon: Hexagon,
         },
-        { title: "Vault", url: "/dashboard/pfolder", icon: Folder },
+        { title: "Vault", url: "/dashboard/afolder", icon: Folder },
         {
           title: "Konfig",
-          url: "/dashboard/einstellungen",
+          url: "/dashboard/akonfig",
           icon: Bolt,
         },
-        { title: "Tools", url: "/dashboard/tools", icon: Hammer },
+        { title: "Tools", url: "/dashboard/atools", icon: Hammer },
+        { title: "Freigabe", url: "/dashboard/afreigabe", icon: Check },
+      ],
+    },
+    {
+      title: "Bieter",
+      url: "#",
+      items: [
+        {
+          title: "Bieterauswahl",
+          url: "/dashboard/bauswahl",
+          icon: Hexagon,
+        },
+        { title: "Vault", url: "/dashboard/bfolder", icon: Folder },
+        {
+          title: "Konfig",
+          url: "/dashboard/bkonfig",
+          icon: Bolt,
+        },
+        { title: "Tools", url: "/dashboard/btools", icon: Hammer },
+        { title: "Freigabe", url: "/dashboard/bfreigabe", icon: Check },
       ],
     },
     {
