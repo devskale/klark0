@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState, useEffect } from "react";
+import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,6 +18,9 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import useSWR from "swr";
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 // Define FileSystemType
 export type FileSystemType =
@@ -31,7 +34,7 @@ export type FileSystemType =
 
 // Define FormField structure
 export type FormField = {
-  id: string; // Corresponds to 'name' attribute in input and key in FileSystemSettings
+  id: string;
   label: string;
   type: "text" | "password" | "number";
   placeholder?: string;
@@ -220,175 +223,13 @@ const fileSystemConfigurations: Record<
 // Generic FileSystemSettings type
 export type FileSystemSettings = {
   type: FileSystemType;
-  [key: string]: any; // Allow dynamic fields
+  [key: string]: any;
 };
 
 type ActionState = {
   error?: string;
   success?: string;
   settings?: FileSystemSettings;
-};
-
-// Helper to get initial settings based on type
-const getInitialSettings = (
-  type: Exclude<FileSystemType, "">
-): FileSystemSettings => {
-  const settings: FileSystemSettings = { type };
-  const config = fileSystemConfigurations[type];
-  if (config) {
-    config.fields.forEach((field) => {
-      settings[field.id] = field.defaultValue;
-    });
-  }
-  return settings;
-};
-
-// Server action to update file system settings
-async function updateFileSystemSettings(
-  prevState: ActionState,
-  formData: FormData
-): Promise<ActionState> {
-  console.log("Form submitted", Object.fromEntries(formData.entries()));
-
-  const type = formData.get("fileSystemSetting") as Exclude<FileSystemType, "">;
-
-  if (!type || !fileSystemConfigurations[type]) {
-    return { error: "Ungültiger Dateisystem Typ ausgewählt." };
-  }
-
-  const newSettings: FileSystemSettings = { type };
-  const config = fileSystemConfigurations[type];
-
-  config.fields.forEach((field) => {
-    const value = formData.get(field.id);
-    if (value !== null && value !== undefined) {
-      if (field.type === "number" && typeof value === "string") {
-        const numValue = parseInt(value, 10);
-        newSettings[field.id] = isNaN(numValue) ? field.defaultValue : numValue;
-      } else {
-        newSettings[field.id] =
-          value === "" &&
-          field.type !== "password" &&
-          field.defaultValue !== undefined
-            ? field.defaultValue
-            : value;
-      }
-    } else {
-      newSettings[field.id] = field.defaultValue;
-    }
-  });
-
-  try {
-    const response = await fetch("/api/settings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ settingKey: "fileSystem", value: newSettings }),
-    });
-
-    // BEST PRACTICE for caching DB values:
-    // The POST /api/settings endpoint, after successfully updating the settings in the database,
-    // MUST invalidate or update any server-side cache for 'fileSystem' settings.
-    // This ensures that subsequent reads will fetch the fresh data.
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      return {
-        error: `Fehler beim Speichern: ${
-          errorData.error || response.statusText
-        }`,
-      };
-    }
-
-    // Returning newSettings here allows the client to update its state (client-side cache)
-    // with the successfully saved data.
-    return {
-      success: "Dateisystem Einstellungen erfolgreich gespeichert!",
-      settings: newSettings,
-    };
-  } catch (e: any) {
-    console.error("Error saving file system settings:", e);
-    return { error: `Fehler beim Speichern der Einstellungen: ${e.message}` };
-  }
-}
-
-// Server action to update info settings
-async function updateInfoSettings(
-  prevState: ActionState,
-  formData: FormData
-): Promise<ActionState> {
-  const newSettings: Record<string, string> = {};
-  infoConfig.fields.forEach((field) => {
-    const value = formData.get(field.id);
-    newSettings[field.id] = value ? String(value) : "";
-  });
-
-  try {
-    const response = await fetch("/api/settings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ settingKey: "info", value: newSettings }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      return {
-        error: `Fehler beim Speichern: ${
-          errorData.error || response.statusText
-        }`,
-      };
-    }
-
-    return {
-      success: "Info-Einstellungen erfolgreich gespeichert!",
-    };
-  } catch (e: any) {
-    console.error("Error saving info settings:", e);
-    return { error: `Fehler beim Speichern der Einstellungen: ${e.message}` };
-  }
-}
-
-// Server action to update external websites settings
-async function updateExternalWebsitesSettings(
-  prevState: ActionState,
-  formData: FormData
-): Promise<ActionState> {
-  const newSettings: Record<string, boolean> = {};
-  externalWebsitesConfig.options.forEach((option) => {
-    const value = formData.get(option.id);
-    newSettings[option.id] = value === "on";
-  });
-
-  try {
-    const response = await fetch("/api/settings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        settingKey: "externalWebsites",
-        value: newSettings,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      return {
-        error: `Fehler beim Speichern: ${
-          errorData.error || response.statusText
-        }`,
-      };
-    }
-
-    return {
-      success: "Externe Webseiten-Einstellungen erfolgreich gespeichert!",
-    };
-  } catch (e: any) {
-    console.error("Error saving external websites settings:", e);
-    return { error: `Fehler beim Speichern der Einstellungen: ${e.message}` };
-  }
-}
-
-const defaultInitialType: Exclude<FileSystemType, ""> = "local";
-const initialActionState: ActionState = {
-  settings: getInitialSettings(defaultInitialType),
 };
 
 // Configuration for external websites
@@ -418,72 +259,56 @@ const infoConfig = {
 
 export default function GeneralPage() {
   const [state, formAction, isPending] = useActionState<ActionState, FormData>(
-    updateFileSystemSettings,
-    initialActionState
-  );
-  const [selectedFileSystem, setSelectedFileSystem] =
-    useState<Exclude<FileSystemType, "">>(defaultInitialType);
-  // dbSettings state acts as a client-side cache for the fetched settings.
-  const [dbSettings, setDbSettings] = useState<FileSystemSettings | null>(null);
-  const [isLoadingDbSettings, setIsLoadingDbSettings] = useState(true);
-  const [isFileSystemCardOpen, setIsFileSystemCardOpen] = useState(true);
-  const [isInfoCardOpen, setIsInfoCardOpen] = useState(true);
-  const [isWebsitesCardOpen, setIsWebsitesCardOpen] = useState(true);
+    async (prevState, formData) => {
+      const type = formData.get("fileSystemSetting") as FileSystemType;
+      const newSettings: FileSystemSettings = { type };
 
-  useEffect(() => {
-    const fetchSettings = async () => {
-      setIsLoadingDbSettings(true);
-      try {
-        // BEST PRACTICE for caching DB values:
-        // 1. The /api/settings GET endpoint should implement server-side caching (e.g., in-memory, Redis)
-        //    to avoid hitting the database on every request if the data hasn't changed.
-        // 2. The /api/settings GET endpoint should also set appropriate HTTP Cache-Control headers.
-        //    This allows the browser to cache the response, potentially avoiding network requests altogether
-        //    if the cached data is still fresh according to the headers.
-        const response = await fetch("/api/settings?key=fileSystem");
-        if (response.ok) {
-          const data = await response.json();
-          if (data && data.type) {
-            // Client-side caching: Storing fetched settings in React state (dbSettings).
-            setDbSettings(data as FileSystemSettings);
-            setSelectedFileSystem(data.type as Exclude<FileSystemType, "">);
-          } else if (response.status === 404) {
-            // Settings not found in DB, initialize with defaults.
-            setDbSettings(getInitialSettings(defaultInitialType));
-            setSelectedFileSystem(defaultInitialType);
-          }
-        } else if (response.status === 404) {
-          // Settings not found (e.g., API returns 404 if no settings exist), initialize with defaults.
-          setDbSettings(getInitialSettings(defaultInitialType));
-          setSelectedFileSystem(defaultInitialType);
-        }
-      } catch (error) {
-        console.error("Failed to fetch file system settings:", error);
-        // Fallback to default settings on error.
-        setDbSettings(getInitialSettings(defaultInitialType));
-        setSelectedFileSystem(defaultInitialType);
-      } finally {
-        setIsLoadingDbSettings(false);
+      const config = fileSystemConfigurations[type];
+      if (config) {
+        config.fields.forEach((field) => {
+          const value = formData.get(field.id);
+          newSettings[field.id] = value || field.defaultValue;
+        });
       }
-    };
-    fetchSettings();
-  }, []); // Empty dependency array ensures this effect runs once on mount, fetching initial settings.
 
-  useEffect(() => {
-    // This effect handles updating the client-side cache (dbSettings and selectedFileSystem)
-    // after a successful form submission (server action).
-    // It uses the 'settings' returned by the server action, ensuring UI consistency
-    // with the persisted state. This is a good practice.
-    if (state.success && state.settings?.type && state.settings.type !== "") {
-      setSelectedFileSystem(state.settings.type as Exclude<FileSystemType, "">);
-      setDbSettings(state.settings); // Update client-side cache with the latest settings from the action.
-    }
-  }, [state.success, state.settings]);
+      const response = await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ settingKey: "fileSystem", value: newSettings }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        return { error: errorData.error || response.statusText };
+      }
+
+      return {
+        success: "Dateisystem Einstellungen erfolgreich gespeichert!",
+        settings: newSettings,
+      };
+    },
+    {}
+  );
+
+  const { data: dbSettings, mutate } = useSWR<FileSystemSettings>(
+    "/api/settings?key=fileSystem",
+    fetcher
+  );
+
+  const { data: externalWebsites } = useSWR<Record<string, boolean>>(
+    "/api/settings?key=externalWebsites",
+    fetcher
+  );
+
+  const { data: infoSettings } = useSWR<Record<string, string>>(
+    "/api/settings?key=info",
+    fetcher
+  );
 
   const currentFields =
-    fileSystemConfigurations[selectedFileSystem]?.fields || [];
+    fileSystemConfigurations[dbSettings?.type || "local"]?.fields || [];
 
-  if (isLoadingDbSettings) {
+  if (!dbSettings) {
     return (
       <section className="flex-1 p-4 lg:p-8 flex justify-center items-center">
         <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
@@ -499,28 +324,30 @@ export default function GeneralPage() {
       </h1>
 
       {/* Info Section */}
-      <Collapsible
-        open={isInfoCardOpen}
-        onOpenChange={setIsInfoCardOpen}
-        className="mb-8">
+      <Collapsible open={true} onOpenChange={() => {}} className="mb-8">
         <Card className="w-full">
           <CardHeader className="flex flex-row items-center justify-between cursor-pointer">
-            <CollapsibleTrigger asChild>
-              <div className="flex items-center justify-between w-full">
-                <CardTitle>{infoConfig.displayName}</CardTitle>
-                <ChevronDown
-                  className={`h-5 w-5 transition-transform ${
-                    isInfoCardOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </div>
-            </CollapsibleTrigger>
+            <CardTitle>{infoConfig.displayName}</CardTitle>
           </CardHeader>
           <CollapsibleContent>
             <CardContent className="space-y-4 pt-0">
               <form
                 className="space-y-4"
-                action={(formData) => updateInfoSettings(state, formData)}>
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+                  const newInfo = Object.fromEntries(formData.entries());
+                  await fetch("/api/settings", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      settingKey: "info",
+                      value: newInfo,
+                    }),
+                  });
+                  mutate();
+                }}
+              >
                 {infoConfig.fields.map((field) => (
                   <div key={field.id}>
                     <Label htmlFor={field.id}>{field.label}</Label>
@@ -529,7 +356,7 @@ export default function GeneralPage() {
                       name={field.id}
                       type={field.type}
                       placeholder={field.placeholder}
-                      defaultValue={field.defaultValue}
+                      defaultValue={infoSettings?.[field.id] || ""}
                     />
                   </div>
                 ))}
@@ -543,37 +370,48 @@ export default function GeneralPage() {
       </Collapsible>
 
       {/* External Websites Section */}
-      <Collapsible
-        open={isWebsitesCardOpen}
-        onOpenChange={setIsWebsitesCardOpen}
-        className="mb-8">
+      <Collapsible open={true} onOpenChange={() => {}} className="mb-8">
         <Card className="w-full">
           <CardHeader className="flex flex-row items-center justify-between cursor-pointer">
-            <CollapsibleTrigger asChild>
-              <div className="flex items-center justify-between w-full">
-                <CardTitle>{externalWebsitesConfig.displayName}</CardTitle>
-                <ChevronDown
-                  className={`h-5 w-5 transition-transform ${
-                    isWebsitesCardOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </div>
-            </CollapsibleTrigger>
+            <CardTitle>{externalWebsitesConfig.displayName}</CardTitle>
           </CardHeader>
           <CollapsibleContent>
             <CardContent className="space-y-4 pt-0">
               <form
                 className="space-y-4"
-                action={(formData) =>
-                  updateExternalWebsitesSettings(state, formData)
-                }>
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+                  const newWebsites = Object.fromEntries(
+                    Array.from(formData.entries()).map(([key, value]) => [
+                      key,
+                      value === "on",
+                    ])
+                  );
+                  await fetch("/api/settings", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      settingKey: "externalWebsites",
+                      value: newWebsites,
+                    }),
+                  });
+                  mutate(); // Revalidate the SWR cache
+                }}
+              >
                 {externalWebsitesConfig.options.map((option) => (
                   <div key={option.id} className="flex items-center space-x-2">
                     <input
                       type="checkbox"
                       id={option.id}
                       name={option.id}
-                      defaultChecked={option.defaultValue}
+                      checked={externalWebsites?.[option.id] || false}
+                      onChange={(e) =>
+                        mutate({
+                          ...externalWebsites,
+                          [option.id]: e.target.checked,
+                        })
+                      }
                       className="h-4 w-4"
                     />
                     <Label htmlFor={option.id}>{option.label}</Label>
@@ -588,20 +426,12 @@ export default function GeneralPage() {
         </Card>
       </Collapsible>
 
-      <Collapsible
-        open={isFileSystemCardOpen}
-        onOpenChange={setIsFileSystemCardOpen}>
+      {/* File System Section */}
+      <Collapsible open={true} onOpenChange={() => {}}>
         <Card>
-          <CollapsibleTrigger asChild>
-            <CardHeader className="flex flex-row items-center justify-between cursor-pointer">
-              <CardTitle>Dateisystem</CardTitle>
-              <ChevronDown
-                className={`h-5 w-5 transition-transform ${
-                  isFileSystemCardOpen ? "rotate-180" : ""
-                }`}
-              />
-            </CardHeader>
-          </CollapsibleTrigger>
+          <CardHeader className="flex flex-row items-center justify-between cursor-pointer">
+            <CardTitle>Dateisystem</CardTitle>
+          </CardHeader>
           <CollapsibleContent>
             <CardContent>
               <form className="space-y-4" action={formAction}>
@@ -609,12 +439,11 @@ export default function GeneralPage() {
                   <Label htmlFor="fileSystemSetting">Dateisystem Typ</Label>
                   <Select
                     name="fileSystemSetting"
-                    value={selectedFileSystem}
+                    value={dbSettings.type}
                     onValueChange={(value) =>
-                      setSelectedFileSystem(
-                        value as Exclude<FileSystemType, "">
-                      )
-                    }>
+                      mutate({ ...dbSettings, type: value })
+                    }
+                  >
                     <SelectTrigger id="fileSystemSetting">
                       <SelectValue placeholder="Wählen Sie einen Typ" />
                     </SelectTrigger>
@@ -630,44 +459,18 @@ export default function GeneralPage() {
                   </Select>
                 </div>
 
-                {currentFields.map((field) => {
-                  let Gtv =
-                    field.defaultValue !== undefined
-                      ? String(field.defaultValue)
-                      : "";
-
-                  if (
-                    dbSettings &&
-                    dbSettings.type === selectedFileSystem &&
-                    dbSettings[field.id] !== undefined
-                  ) {
-                    Gtv = String(dbSettings[field.id]);
-                  } else if (
-                    state.settings?.type === selectedFileSystem &&
-                    state.settings?.[field.id] !== undefined &&
-                    state.success
-                  ) {
-                    // This condition ensures that if an action just succeeded and state.settings reflects that for the *current* selection,
-                    // it can be used. This is mostly a fallback or for immediate reflection if dbSettings update is perceived as delayed.
-                    // Given dbSettings is updated in the effect above, this might often be covered by the dbSettings check.
-                    Gtv = String(state.settings[field.id]);
-                  }
-
-                  return (
-                    <div
-                      key={`${selectedFileSystem}-${field.id}`}
-                      className="space-y-2 pt-4">
-                      <Label htmlFor={field.id}>{field.label}</Label>
-                      <Input
-                        id={field.id}
-                        name={field.id}
-                        type={field.type}
-                        placeholder={field.placeholder}
-                        defaultValue={Gtv}
-                      />
-                    </div>
-                  );
-                })}
+                {currentFields.map((field) => (
+                  <div key={field.id} className="space-y-2 pt-4">
+                    <Label htmlFor={field.id}>{field.label}</Label>
+                    <Input
+                      id={field.id}
+                      name={field.id}
+                      type={field.type}
+                      placeholder={field.placeholder}
+                      defaultValue={dbSettings[field.id] || ""}
+                    />
+                  </div>
+                ))}
 
                 {state.error && (
                   <p className="text-red-500 text-sm">{state.error}</p>
@@ -678,7 +481,8 @@ export default function GeneralPage() {
                 <Button
                   type="submit"
                   className="bg-orange-500 hover:bg-orange-600 text-white"
-                  disabled={isPending}>
+                  disabled={isPending}
+                >
                   {isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
