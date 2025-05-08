@@ -19,6 +19,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import useSWR from "swr";
+import { useState } from "react";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -305,6 +306,10 @@ export default function GeneralPage() {
     fetcher
   );
 
+  const [isInfoCardOpen, setIsInfoCardOpen] = useState(true);
+  const [isWebsitesCardOpen, setIsWebsitesCardOpen] = useState(true);
+  const [isFileSystemCardOpen, setIsFileSystemCardOpen] = useState(true);
+
   const currentFields =
     fileSystemConfigurations[dbSettings?.type || "local"]?.fields || [];
 
@@ -324,10 +329,19 @@ export default function GeneralPage() {
       </h1>
 
       {/* Info Section */}
-      <Collapsible open={true} onOpenChange={() => {}} className="mb-8">
-        <Card className="w-full">
+      <Collapsible open={isInfoCardOpen} onOpenChange={setIsInfoCardOpen} className="mb-8">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between cursor-pointer">
-            <CardTitle>{infoConfig.displayName}</CardTitle>
+            <CollapsibleTrigger asChild>
+              <div className="flex items-center justify-between w-full">
+                <CardTitle>{infoConfig.displayName}</CardTitle>
+                <ChevronDown
+                  className={`h-5 w-5 transition-transform ${
+                    isInfoCardOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </div>
+            </CollapsibleTrigger>
           </CardHeader>
           <CollapsibleContent>
             <CardContent className="space-y-4 pt-0">
@@ -370,10 +384,19 @@ export default function GeneralPage() {
       </Collapsible>
 
       {/* External Websites Section */}
-      <Collapsible open={true} onOpenChange={() => {}} className="mb-8">
-        <Card className="w-full">
+      <Collapsible open={isWebsitesCardOpen} onOpenChange={setIsWebsitesCardOpen} className="mb-8">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between cursor-pointer">
-            <CardTitle>{externalWebsitesConfig.displayName}</CardTitle>
+            <CollapsibleTrigger asChild>
+              <div className="flex items-center justify-between w-full">
+                <CardTitle>{externalWebsitesConfig.displayName}</CardTitle>
+                <ChevronDown
+                  className={`h-5 w-5 transition-transform ${
+                    isWebsitesCardOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </div>
+            </CollapsibleTrigger>
           </CardHeader>
           <CollapsibleContent>
             <CardContent className="space-y-4 pt-0">
@@ -427,10 +450,19 @@ export default function GeneralPage() {
       </Collapsible>
 
       {/* File System Section */}
-      <Collapsible open={true} onOpenChange={() => {}}>
+      <Collapsible open={isFileSystemCardOpen} onOpenChange={setIsFileSystemCardOpen}>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between cursor-pointer">
-            <CardTitle>Dateisystem</CardTitle>
+            <CollapsibleTrigger asChild>
+              <div className="flex items-center justify-between w-full">
+                <CardTitle>Dateisystem</CardTitle>
+                <ChevronDown
+                  className={`h-5 w-5 transition-transform ${
+                    isFileSystemCardOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </div>
+            </CollapsibleTrigger>
           </CardHeader>
           <CollapsibleContent>
             <CardContent>

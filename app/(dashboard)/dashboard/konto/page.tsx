@@ -5,11 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Loader2, ChevronDown } from "lucide-react";
 import { updateAccount } from "@/app/(login)/actions";
 import { User } from "@/lib/db/schema";
 import useSWR from "swr";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -77,6 +82,7 @@ export default function GeneralPage() {
     updateAccount,
     {}
   );
+  const [isCardOpen, setIsCardOpen] = useState(true);
 
   return (
     <section className="flex-1 p-4 lg:p-8">
@@ -84,37 +90,50 @@ export default function GeneralPage() {
         Konto Einstellungen
       </h1>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Nutzer Information</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form className="space-y-4" action={formAction}>
-            <Suspense fallback={<AccountForm state={state} />}>
-              <AccountFormWithData state={state} />
-            </Suspense>
-            {state.error && (
-              <p className="text-red-500 text-sm">{state.error}</p>
-            )}
-            {state.success && (
-              <p className="text-green-500 text-sm">{state.success}</p>
-            )}
-            <Button
-              type="submit"
-              className="bg-orange-500 hover:bg-orange-600 text-white"
-              disabled={isPending}>
-              {isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                "Save Changes"
-              )}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+      <Collapsible open={isCardOpen} onOpenChange={setIsCardOpen}>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between cursor-pointer">
+            <CollapsibleTrigger asChild>
+              <div className="flex items-center justify-between w-full">
+                <CardTitle>Nutzer Information</CardTitle>
+                <ChevronDown
+                  className={`h-5 w-5 transition-transform ${
+                    isCardOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </div>
+            </CollapsibleTrigger>
+          </CardHeader>
+          <CollapsibleContent>
+            <CardContent>
+              <form className="space-y-4" action={formAction}>
+                <Suspense fallback={<AccountForm state={state} />}>
+                  <AccountFormWithData state={state} />
+                </Suspense>
+                {state.error && (
+                  <p className="text-red-500 text-sm">{state.error}</p>
+                )}
+                {state.success && (
+                  <p className="text-green-500 text-sm">{state.success}</p>
+                )}
+                <Button
+                  type="submit"
+                  className="bg-orange-500 hover:bg-orange-600 text-white"
+                  disabled={isPending}>
+                  {isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Save Changes"
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
     </section>
   );
 }
