@@ -20,7 +20,7 @@ import {
  * @returns JSX.Element
  */
 export function SearchForm() {
-  return <div className="p-2">Search Form Placeholder</div>;
+  return <div className="p-2">Searchform</div>;
 }
 
 // Placeholder for VersionSwitcher component

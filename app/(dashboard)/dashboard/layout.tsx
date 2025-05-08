@@ -3,7 +3,20 @@
 import * as React from "react";
 import Link from "next/link"; // Added
 import { Suspense, useState } from "react"; // Added
-import { Users, User, Settings, Activity, Shield, CircleIcon, Home, LogOut } from "lucide-react"; // Added CircleIcon, Home, LogOut
+import {
+  Users,
+  User,
+  Settings,
+  Activity,
+  Shield,
+  CircleIcon,
+  Home,
+  LogOut,
+  Hexagon,
+  Folder,
+  Bolt,
+  Hammer,
+} from "lucide-react"; // Added CircleIcon, Home, LogOut
 import { AppSidebar } from "@/components/app-sidebar";
 import { Separator } from "@/components/ui/separator"; // Assuming this exists
 import {
@@ -50,8 +63,7 @@ function UserMenu() {
       <>
         <Link
           href="/pricing"
-          className="text-sm font-medium text-gray-700 hover:text-gray-900"
-        >
+          className="text-sm font-medium text-gray-700 hover:text-gray-900">
           Preise
         </Link>
         <Button asChild className="rounded-full">
@@ -81,7 +93,12 @@ function UserMenu() {
             <span>Dashboard</span>
           </Link>
         </DropdownMenuItem>
-        <form onSubmit={async (e) => { e.preventDefault(); await handleSignOut(); }} className="w-full">
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            await handleSignOut();
+          }}
+          className="w-full">
           <button type="submit" className="flex w-full">
             <DropdownMenuItem className="w-full flex-1 cursor-pointer">
               <LogOut className="mr-2 h-4 w-4" />
@@ -106,7 +123,25 @@ const sidebarData = {
   versions: ["1.0.1", "1.1.0-alpha", "2.0.0-beta1"],
   navMain: [
     {
-      title: "Navigation",
+      title: "Projekt",
+      url: "#",
+      items: [
+        {
+          title: "Projektauswahl",
+          url: "/dashboard/pauswahl",
+          icon: Hexagon,
+        },
+        { title: "Vault", url: "/dashboard/pfolder", icon: Folder },
+        {
+          title: "Konfig",
+          url: "/dashboard/einstellungen",
+          icon: Bolt,
+        },
+        { title: "Tools", url: "/dashboard/tools", icon: Hammer },
+      ],
+    },
+    {
+      title: "System",
       url: "#",
       items: [
         { title: "Team", url: "/dashboard", icon: Users },
@@ -140,7 +175,7 @@ export default function DashboardLayout({
           <div className="flex items-center gap-2">
             <SidebarTrigger className="-ml-1" />
             {/* Separator is hidden on larger screens as the logo provides visual separation */}
-            <Separator orientation="vertical" className="mr-2 h-4 lg:hidden" /> 
+            <Separator orientation="vertical" className="mr-2 h-4 lg:hidden" />
             <Link href="/" className="flex items-center">
               <CircleIcon className="h-6 w-6 text-orange-500" />
               <span className="ml-2 text-xl font-semibold text-gray-900">
