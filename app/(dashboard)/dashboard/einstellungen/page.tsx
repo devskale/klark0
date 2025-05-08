@@ -419,7 +419,7 @@ export default function GeneralPage() {
                       value: newWebsites,
                     }),
                   });
-                  mutate(); // Revalidate the SWR cache
+                  mutate({ ...externalWebsites, ...newWebsites }, false); // Ensure state updates without re-fetching
                 }}
               >
                 {externalWebsitesConfig.options.map((option) => (
@@ -428,17 +428,8 @@ export default function GeneralPage() {
                       type="checkbox"
                       id={option.id}
                       name={option.id}
-                      checked={externalWebsites?.[option.id] || false}
-                      onChange={(e) =>
-                        mutate((prev) => {
-                          const updatedSettings: FileSystemSettings = {
-                            ...(prev || {}),
-                            type: prev?.type || "local", // Ensure 'type' is always defined
-                            [option.id]: e.target.checked,
-                          };
-                          return updatedSettings;
-                        })}
-                        className="h-4 w-4"
+                      defaultChecked={externalWebsites?.[option.id] || false}
+                      className="h-4 w-4"
                     />
                     <Label htmlFor={option.id}>{option.label}</Label>
                   </div>
@@ -476,7 +467,7 @@ export default function GeneralPage() {
                     name="fileSystemSetting"
                     value={dbSettings.type}
                     onValueChange={(value) =>
-                      mutate({ ...dbSettings, type: value as FileSystemType })
+                      mutate({ ...dbSettings, type: value as FileSystemType }, false) // Ensure state updates without re-fetching
                     }
                   >
                     <SelectTrigger id="fileSystemSetting">
