@@ -13,6 +13,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { useSidebar } from "@/components/ui/sidebar"; // Import useSidebar to access the sidebar state
 
 // Placeholder for SearchForm component
 /**
@@ -77,11 +78,18 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
  * @returns JSX.Element
  */
 export function AppSidebar({ versions, navMain, ...props }: AppSidebarProps) {
+  const { state } = useSidebar(); // Access the sidebar state (expanded or collapsed)
+
   return (
     <Sidebar {...props}>
       <SidebarHeader>
-        <SearchForm />
-        <VersionSwitcher versions={versions} defaultVersion={versions[0]} />
+        {/* Hide SearchForm and VersionSwitcher in collapsed state */}
+        {state === "expanded" && (
+          <>
+            <SearchForm />
+            <VersionSwitcher versions={versions} defaultVersion={versions[0]} />
+          </>
+        )}
       </SidebarHeader>
       <SidebarContent>
         {/* We create a SidebarGroup for each parent. */}

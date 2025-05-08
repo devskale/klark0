@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link"; // Added
-import { Suspense, useState } from "react"; // Added
+import Link from "next/link";
+import { Suspense, useState } from "react";
 import {
   Users,
   User,
@@ -19,42 +19,33 @@ import {
   Check,
   List,
   Brain,
-} from "lucide-react"; // Added CircleIcon, Home, LogOut
+} from "lucide-react";
 import { AppSidebar } from "@/components/app-sidebar";
-import { Separator } from "@/components/ui/separator"; // Assuming this exists
+import { Separator } from "@/components/ui/separator";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button"; // Added
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"; // Added
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; // Added
-import { signOut } from "@/app/(login)/actions"; // Added
-import { useRouter } from "next/navigation"; // Added
-import { User as DbUser } from "@/lib/db/schema"; // Added and aliased User to DbUser
-import useSWR from "swr"; // Added
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { signOut } from "@/app/(login)/actions";
+import { useRouter } from "next/navigation";
+import { User as DbUser } from "@/lib/db/schema";
+import useSWR from "swr";
 
-// Function to fetch data
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-/**
- * UserMenu component displays user avatar and a dropdown menu for navigation and sign out.
- * @returns JSX.Element
- */
 function UserMenu() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { data: user } = useSWR<DbUser>("/api/user", fetcher);
   const router = useRouter();
 
-  /**
-   * Handles the sign out process.
-   */
   async function handleSignOut() {
     await signOut();
     router.refresh();
@@ -77,12 +68,12 @@ function UserMenu() {
   }
 
   return (
-    <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+    <DropdownMenu>
       <DropdownMenuTrigger>
         <Avatar className="cursor-pointer size-9">
           <AvatarImage alt={user.name || ""} />
           <AvatarFallback>
-            {user.email // Ensure user and user.email exist
+            {user.email
               ?.split(" ")
               .map((n) => n[0])
               .join("")}
@@ -114,14 +105,6 @@ function UserMenu() {
   );
 }
 
-/**
- * DashboardLayout component that provides the main structure for the dashboard pages,
- * including the AppSidebar and a content area with a header.
- * @param {object} props - The props for the component.
- * @param {React.ReactNode} props.children - The content to be rendered within the layout.
- * @returns JSX.Element
- */
-// Define the data for the AppSidebar
 const sidebarData = {
   versions: ["1.0.1", "1.1.0-alpha", "2.0.0-beta1"],
   navMain: [
@@ -175,7 +158,7 @@ const sidebarData = {
           url: "/dashboard/einstellungen",
           icon: Settings,
         },
-        { title: "Models", url: "/dashboard/models", icon:  Brain},
+        { title: "Models", url: "/dashboard/models", icon: Brain },
         { title: "Aktivität", url: "/dashboard/activity", icon: Activity },
         { title: "Sicherheit", url: "/dashboard/security", icon: Shield },
       ],
@@ -189,17 +172,16 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={true}>
       <AppSidebar
         versions={sidebarData.versions}
         navMain={sidebarData.navMain}
+        collapsible="icon"
       />
       <SidebarInset>
-        {/* Header with Klark0 logo, brand name, and UserMenu */}
         <header className="flex h-16 shrink-0 items-center justify-between border-b px-4">
           <div className="flex items-center gap-2">
             <SidebarTrigger className="-ml-1" />
-            {/* Separator is hidden on larger screens as the logo provides visual separation */}
             <Separator orientation="vertical" className="mr-2 h-4 lg:hidden" />
             <Link href="/" className="flex items-center">
               <CircleIcon className="h-6 w-6 text-orange-500" />
@@ -215,7 +197,6 @@ export default function DashboardLayout({
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4">
-          {/* The children prop will render the specific page content here */}
           {children}
         </div>
       </SidebarInset>
