@@ -264,7 +264,7 @@ export default function GeneralPage() {
       const type = formData.get("fileSystemSetting") as FileSystemType;
       const newSettings: FileSystemSettings = { type };
 
-      const config = fileSystemConfigurations[type];
+      const config = type !== "" ? fileSystemConfigurations[type] : undefined;
       if (config) {
         config.fields.forEach((field) => {
           const value = formData.get(field.id);
@@ -369,7 +369,7 @@ export default function GeneralPage() {
                       id={field.id}
                       name={field.id}
                       type={field.type}
-                      placeholder={field.placeholder}
+                      placeholder={"placeholder" in field ? (field.placeholder as string | undefined) : ""}
                       defaultValue={infoSettings?.[field.id] || ""}
                     />
                   </div>
@@ -430,12 +430,15 @@ export default function GeneralPage() {
                       name={option.id}
                       checked={externalWebsites?.[option.id] || false}
                       onChange={(e) =>
-                        mutate({
-                          ...externalWebsites,
-                          [option.id]: e.target.checked,
-                        })
-                      }
-                      className="h-4 w-4"
+                        mutate((prev) => {
+                          const updatedSettings: FileSystemSettings = {
+                            ...(prev || {}),
+                            type: prev?.type || "local", // Ensure 'type' is always defined
+                            [option.id]: e.target.checked,
+                          };
+                          return updatedSettings;
+                        })}
+                        className="h-4 w-4"
                     />
                     <Label htmlFor={option.id}>{option.label}</Label>
                   </div>
@@ -473,7 +476,7 @@ export default function GeneralPage() {
                     name="fileSystemSetting"
                     value={dbSettings.type}
                     onValueChange={(value) =>
-                      mutate({ ...dbSettings, type: value })
+                      mutate({ ...dbSettings, type: value as FileSystemType })
                     }
                   >
                     <SelectTrigger id="fileSystemSetting">
