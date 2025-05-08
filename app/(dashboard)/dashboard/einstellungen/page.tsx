@@ -20,7 +20,14 @@ import {
 } from "@/components/ui/collapsible";
 
 // Define FileSystemType
-export type FileSystemType = "local" | "klark0fs" | "oci" | "sftp" | "webdav" | "";
+export type FileSystemType =
+  | "local"
+  | "klark0fs"
+  | "oci"
+  | "sftp"
+  | "webdav"
+  | "proto"
+  | "";
 
 // Define FormField structure
 export type FormField = {
@@ -37,46 +44,175 @@ type FileSystemDetail = {
   fields: FormField[];
 };
 
+// Define structure for external websites configuration
+type ExternalWebsiteConfig = {
+  displayName: string;
+  options: {
+    id: string;
+    label: string;
+    defaultValue: boolean;
+  }[];
+};
+
 // Configuration object for all file system types and their fields
-const fileSystemConfigurations: Record<Exclude<FileSystemType, "">, FileSystemDetail> = {
+const fileSystemConfigurations: Record<
+  Exclude<FileSystemType, "">,
+  FileSystemDetail
+> = {
+  proto: {
+    displayName: "Proto",
+    fields: [
+      {
+        id: "protoEndpoint",
+        label: "Proto Endpoint",
+        type: "text",
+        placeholder: "https://proto.example.com",
+        defaultValue: "https://proto.example.com",
+      },
+      {
+        id: "protoToken",
+        label: "Proto Token",
+        type: "password",
+        placeholder: "Your Proto Token",
+        defaultValue: "",
+      },
+      {
+        id: "protoNamespace",
+        label: "Namespace",
+        type: "text",
+        placeholder: "default",
+        defaultValue: "default",
+      },
+    ],
+  },
   local: {
     displayName: "Lokal",
     fields: [
-      { id: "path", label: "Lokaler Pfad", type: "text", placeholder: "/pfad/zum/ordner", defaultValue: "" },
+      {
+        id: "path",
+        label: "Lokaler Pfad",
+        type: "text",
+        placeholder: "/pfad/zum/ordner",
+        defaultValue: "",
+      },
     ],
   },
   klark0fs: {
     displayName: "Klark0FS",
     fields: [
-      { id: "klark0fsApiKey", label: "Klark0 FS API Key", type: "password", placeholder: "Ihr API Key", defaultValue: "" },
+      {
+        id: "klark0fsApiKey",
+        label: "Klark0 FS API Key",
+        type: "password",
+        placeholder: "Ihr API Key",
+        defaultValue: "",
+      },
     ],
   },
   oci: {
     displayName: "OCI Bucket",
     fields: [
-      { id: "bucketName", label: "Bucket Name", type: "text", placeholder: "Ihr Bucket Name", defaultValue: "" },
-      { id: "region", label: "Region", type: "text", placeholder: "z.B. eu-frankfurt-1", defaultValue: "" },
-      { id: "accessKeyId", label: "Access Key ID", type: "text", placeholder: "Ihr Access Key ID", defaultValue: "" },
-      { id: "secretAccessKey", label: "Secret Access Key", type: "password", placeholder: "Ihr Secret Access Key", defaultValue: "" },
+      {
+        id: "bucketName",
+        label: "Bucket Name",
+        type: "text",
+        placeholder: "Ihr Bucket Name",
+        defaultValue: "",
+      },
+      {
+        id: "region",
+        label: "Region",
+        type: "text",
+        placeholder: "z.B. eu-frankfurt-1",
+        defaultValue: "",
+      },
+      {
+        id: "accessKeyId",
+        label: "Access Key ID",
+        type: "text",
+        placeholder: "Ihr Access Key ID",
+        defaultValue: "",
+      },
+      {
+        id: "secretAccessKey",
+        label: "Secret Access Key",
+        type: "password",
+        placeholder: "Ihr Secret Access Key",
+        defaultValue: "",
+      },
     ],
   },
   sftp: {
     displayName: "SFTP/SSH",
     fields: [
-      { id: "host", label: "Host", type: "text", placeholder: "sftp.example.com", defaultValue: "" },
-      { id: "port", label: "Port", type: "number", placeholder: "22", defaultValue: 22 },
-      { id: "username", label: "Benutzername", type: "text", placeholder: "Ihr Benutzername", defaultValue: "" },
-      { id: "password", label: "Passwort", type: "password", placeholder: "Ihr Passwort", defaultValue: "" },
-      { id: "path", label: "Pfad (optional)", type: "text", placeholder: "/remote/pfad", defaultValue: "" },
+      {
+        id: "host",
+        label: "Host",
+        type: "text",
+        placeholder: "sftp.example.com",
+        defaultValue: "",
+      },
+      {
+        id: "port",
+        label: "Port",
+        type: "number",
+        placeholder: "22",
+        defaultValue: 22,
+      },
+      {
+        id: "username",
+        label: "Benutzername",
+        type: "text",
+        placeholder: "Ihr Benutzername",
+        defaultValue: "",
+      },
+      {
+        id: "password",
+        label: "Passwort",
+        type: "password",
+        placeholder: "Ihr Passwort",
+        defaultValue: "",
+      },
+      {
+        id: "path",
+        label: "Pfad (optional)",
+        type: "text",
+        placeholder: "/remote/pfad",
+        defaultValue: "",
+      },
     ],
   },
   webdav: {
     displayName: "WebDAV",
     fields: [
-      { id: "host", label: "Host URL", type: "text", placeholder: "https://webdav.example.com/remote.php/dav/files/username", defaultValue: "" },
-      { id: "username", label: "Benutzername", type: "text", placeholder: "Ihr Benutzername", defaultValue: "" },
-      { id: "password", label: "Passwort", type: "password", placeholder: "Ihr Passwort", defaultValue: "" },
-      { id: "path", label: "Pfad auf Server (optional, oft Teil der Host URL)", type: "text", placeholder: "/optionaler/pfad", defaultValue: "" },
+      {
+        id: "host",
+        label: "Host URL",
+        type: "text",
+        placeholder: "https://webdav.example.com/remote.php/dav/files/username",
+        defaultValue: "",
+      },
+      {
+        id: "username",
+        label: "Benutzername",
+        type: "text",
+        placeholder: "Ihr Benutzername",
+        defaultValue: "",
+      },
+      {
+        id: "password",
+        label: "Passwort",
+        type: "password",
+        placeholder: "Ihr Passwort",
+        defaultValue: "",
+      },
+      {
+        id: "path",
+        label: "Pfad auf Server (optional, oft Teil der Host URL)",
+        type: "text",
+        placeholder: "/optionaler/pfad",
+        defaultValue: "",
+      },
     ],
   },
 };
@@ -94,11 +230,13 @@ type ActionState = {
 };
 
 // Helper to get initial settings based on type
-const getInitialSettings = (type: Exclude<FileSystemType, "">): FileSystemSettings => {
+const getInitialSettings = (
+  type: Exclude<FileSystemType, "">
+): FileSystemSettings => {
   const settings: FileSystemSettings = { type };
   const config = fileSystemConfigurations[type];
   if (config) {
-    config.fields.forEach(field => {
+    config.fields.forEach((field) => {
       settings[field.id] = field.defaultValue;
     });
   }
@@ -121,14 +259,19 @@ async function updateFileSystemSettings(
   const newSettings: FileSystemSettings = { type };
   const config = fileSystemConfigurations[type];
 
-  config.fields.forEach(field => {
+  config.fields.forEach((field) => {
     const value = formData.get(field.id);
     if (value !== null && value !== undefined) {
-      if (field.type === "number" && typeof value === 'string') {
+      if (field.type === "number" && typeof value === "string") {
         const numValue = parseInt(value, 10);
         newSettings[field.id] = isNaN(numValue) ? field.defaultValue : numValue;
       } else {
-        newSettings[field.id] = (value === "" && field.type !== "password" && field.defaultValue !== undefined) ? field.defaultValue : value;
+        newSettings[field.id] =
+          value === "" &&
+          field.type !== "password" &&
+          field.defaultValue !== undefined
+            ? field.defaultValue
+            : value;
       }
     } else {
       newSettings[field.id] = field.defaultValue;
@@ -136,10 +279,10 @@ async function updateFileSystemSettings(
   });
 
   try {
-    const response = await fetch('/api/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ settingKey: 'fileSystem', value: newSettings }),
+    const response = await fetch("/api/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ settingKey: "fileSystem", value: newSettings }),
     });
 
     // BEST PRACTICE for caching DB values:
@@ -148,8 +291,12 @@ async function updateFileSystemSettings(
     // This ensures that subsequent reads will fetch the fresh data.
 
     if (!response.ok) {
-        const errorData = await response.json();
-        return { error: `Fehler beim Speichern: ${errorData.error || response.statusText}` };
+      const errorData = await response.json();
+      return {
+        error: `Fehler beim Speichern: ${
+          errorData.error || response.statusText
+        }`,
+      };
     }
 
     // Returning newSettings here allows the client to update its state (client-side cache)
@@ -164,9 +311,109 @@ async function updateFileSystemSettings(
   }
 }
 
+// Server action to update info settings
+async function updateInfoSettings(
+  prevState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  const newSettings: Record<string, string> = {};
+  infoConfig.fields.forEach((field) => {
+    const value = formData.get(field.id);
+    newSettings[field.id] = value ? String(value) : "";
+  });
+
+  try {
+    const response = await fetch("/api/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ settingKey: "info", value: newSettings }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      return {
+        error: `Fehler beim Speichern: ${
+          errorData.error || response.statusText
+        }`,
+      };
+    }
+
+    return {
+      success: "Info-Einstellungen erfolgreich gespeichert!",
+    };
+  } catch (e: any) {
+    console.error("Error saving info settings:", e);
+    return { error: `Fehler beim Speichern der Einstellungen: ${e.message}` };
+  }
+}
+
+// Server action to update external websites settings
+async function updateExternalWebsitesSettings(
+  prevState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  const newSettings: Record<string, boolean> = {};
+  externalWebsitesConfig.options.forEach((option) => {
+    const value = formData.get(option.id);
+    newSettings[option.id] = value === "on";
+  });
+
+  try {
+    const response = await fetch("/api/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        settingKey: "externalWebsites",
+        value: newSettings,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      return {
+        error: `Fehler beim Speichern: ${
+          errorData.error || response.statusText
+        }`,
+      };
+    }
+
+    return {
+      success: "Externe Webseiten-Einstellungen erfolgreich gespeichert!",
+    };
+  } catch (e: any) {
+    console.error("Error saving external websites settings:", e);
+    return { error: `Fehler beim Speichern der Einstellungen: ${e.message}` };
+  }
+}
+
 const defaultInitialType: Exclude<FileSystemType, ""> = "local";
 const initialActionState: ActionState = {
   settings: getInitialSettings(defaultInitialType),
+};
+
+// Configuration for external websites
+const externalWebsitesConfig: ExternalWebsiteConfig = {
+  displayName: "Externe Webseiten",
+  options: [
+    { id: "anko", label: "ankö", defaultValue: false },
+    { id: "euted", label: "euted", defaultValue: false },
+    { id: "openfirmenbuch", label: "openfirmenbuch", defaultValue: false },
+    { id: "web", label: "web", defaultValue: false },
+  ],
+};
+
+// Configuration for info section
+const infoConfig = {
+  displayName: "Infos",
+  fields: [
+    {
+      id: "vergabestelle",
+      label: "Vergabestelle",
+      type: "text",
+      defaultValue: "",
+    },
+    { id: "adresse", label: "Adresse", type: "text", defaultValue: "" },
+  ],
 };
 
 export default function GeneralPage() {
@@ -174,11 +421,14 @@ export default function GeneralPage() {
     updateFileSystemSettings,
     initialActionState
   );
-  const [selectedFileSystem, setSelectedFileSystem] = useState<Exclude<FileSystemType, "">>(defaultInitialType);
+  const [selectedFileSystem, setSelectedFileSystem] =
+    useState<Exclude<FileSystemType, "">>(defaultInitialType);
   // dbSettings state acts as a client-side cache for the fetched settings.
   const [dbSettings, setDbSettings] = useState<FileSystemSettings | null>(null);
   const [isLoadingDbSettings, setIsLoadingDbSettings] = useState(true);
   const [isFileSystemCardOpen, setIsFileSystemCardOpen] = useState(true);
+  const [isInfoCardOpen, setIsInfoCardOpen] = useState(true);
+  const [isWebsitesCardOpen, setIsWebsitesCardOpen] = useState(true);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -190,7 +440,7 @@ export default function GeneralPage() {
         // 2. The /api/settings GET endpoint should also set appropriate HTTP Cache-Control headers.
         //    This allows the browser to cache the response, potentially avoiding network requests altogether
         //    if the cached data is still fresh according to the headers.
-        const response = await fetch('/api/settings?key=fileSystem');
+        const response = await fetch("/api/settings?key=fileSystem");
         if (response.ok) {
           const data = await response.json();
           if (data && data.type) {
@@ -203,9 +453,9 @@ export default function GeneralPage() {
             setSelectedFileSystem(defaultInitialType);
           }
         } else if (response.status === 404) {
-           // Settings not found (e.g., API returns 404 if no settings exist), initialize with defaults.
-           setDbSettings(getInitialSettings(defaultInitialType));
-           setSelectedFileSystem(defaultInitialType);
+          // Settings not found (e.g., API returns 404 if no settings exist), initialize with defaults.
+          setDbSettings(getInitialSettings(defaultInitialType));
+          setSelectedFileSystem(defaultInitialType);
         }
       } catch (error) {
         console.error("Failed to fetch file system settings:", error);
@@ -228,9 +478,10 @@ export default function GeneralPage() {
       setSelectedFileSystem(state.settings.type as Exclude<FileSystemType, "">);
       setDbSettings(state.settings); // Update client-side cache with the latest settings from the action.
     }
-  }, [state.success, state.settings]); 
+  }, [state.success, state.settings]);
 
-  const currentFields = fileSystemConfigurations[selectedFileSystem]?.fields || [];
+  const currentFields =
+    fileSystemConfigurations[selectedFileSystem]?.fields || [];
 
   if (isLoadingDbSettings) {
     return (
@@ -247,7 +498,99 @@ export default function GeneralPage() {
         Allgemeine Einstellungen
       </h1>
 
-      <Collapsible open={isFileSystemCardOpen} onOpenChange={setIsFileSystemCardOpen}>
+      {/* Info Section */}
+      <Collapsible
+        open={isInfoCardOpen}
+        onOpenChange={setIsInfoCardOpen}
+        className="mb-8">
+        <Card className="w-full">
+          <CardHeader className="flex flex-row items-center justify-between cursor-pointer">
+            <CollapsibleTrigger asChild>
+              <div className="flex items-center justify-between w-full">
+                <CardTitle>{infoConfig.displayName}</CardTitle>
+                <ChevronDown
+                  className={`h-5 w-5 transition-transform ${
+                    isInfoCardOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </div>
+            </CollapsibleTrigger>
+          </CardHeader>
+          <CollapsibleContent>
+            <CardContent className="space-y-4 pt-0">
+              <form
+                className="space-y-4"
+                action={(formData) => updateInfoSettings(state, formData)}>
+                {infoConfig.fields.map((field) => (
+                  <div key={field.id}>
+                    <Label htmlFor={field.id}>{field.label}</Label>
+                    <Input
+                      id={field.id}
+                      name={field.id}
+                      type={field.type}
+                      placeholder={field.placeholder}
+                      defaultValue={field.defaultValue}
+                    />
+                  </div>
+                ))}
+                <Button type="submit" className="bg-orange-500 text-white">
+                  Speichern
+                </Button>
+              </form>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
+      {/* External Websites Section */}
+      <Collapsible
+        open={isWebsitesCardOpen}
+        onOpenChange={setIsWebsitesCardOpen}
+        className="mb-8">
+        <Card className="w-full">
+          <CardHeader className="flex flex-row items-center justify-between cursor-pointer">
+            <CollapsibleTrigger asChild>
+              <div className="flex items-center justify-between w-full">
+                <CardTitle>{externalWebsitesConfig.displayName}</CardTitle>
+                <ChevronDown
+                  className={`h-5 w-5 transition-transform ${
+                    isWebsitesCardOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </div>
+            </CollapsibleTrigger>
+          </CardHeader>
+          <CollapsibleContent>
+            <CardContent className="space-y-4 pt-0">
+              <form
+                className="space-y-4"
+                action={(formData) =>
+                  updateExternalWebsitesSettings(state, formData)
+                }>
+                {externalWebsitesConfig.options.map((option) => (
+                  <div key={option.id} className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id={option.id}
+                      name={option.id}
+                      defaultChecked={option.defaultValue}
+                      className="h-4 w-4"
+                    />
+                    <Label htmlFor={option.id}>{option.label}</Label>
+                  </div>
+                ))}
+                <Button type="submit" className="bg-orange-500 text-white">
+                  Speichern
+                </Button>
+              </form>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
+      <Collapsible
+        open={isFileSystemCardOpen}
+        onOpenChange={setIsFileSystemCardOpen}>
         <Card>
           <CollapsibleTrigger asChild>
             <CardHeader className="flex flex-row items-center justify-between cursor-pointer">
@@ -268,33 +611,52 @@ export default function GeneralPage() {
                     name="fileSystemSetting"
                     value={selectedFileSystem}
                     onValueChange={(value) =>
-                      setSelectedFileSystem(value as Exclude<FileSystemType, "">)
+                      setSelectedFileSystem(
+                        value as Exclude<FileSystemType, "">
+                      )
                     }>
                     <SelectTrigger id="fileSystemSetting">
                       <SelectValue placeholder="Wählen Sie einen Typ" />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.entries(fileSystemConfigurations).map(([key, config]) => (
-                        <SelectItem key={key} value={key}>{config.displayName}</SelectItem>
-                      ))}
+                      {Object.entries(fileSystemConfigurations).map(
+                        ([key, config]) => (
+                          <SelectItem key={key} value={key}>
+                            {config.displayName}
+                          </SelectItem>
+                        )
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
 
-                {currentFields.map(field => {
-                  let Gtv = field.defaultValue !== undefined ? String(field.defaultValue) : "";
+                {currentFields.map((field) => {
+                  let Gtv =
+                    field.defaultValue !== undefined
+                      ? String(field.defaultValue)
+                      : "";
 
-                  if (dbSettings && dbSettings.type === selectedFileSystem && dbSettings[field.id] !== undefined) {
+                  if (
+                    dbSettings &&
+                    dbSettings.type === selectedFileSystem &&
+                    dbSettings[field.id] !== undefined
+                  ) {
                     Gtv = String(dbSettings[field.id]);
-                  } else if (state.settings?.type === selectedFileSystem && state.settings?.[field.id] !== undefined && state.success) {
+                  } else if (
+                    state.settings?.type === selectedFileSystem &&
+                    state.settings?.[field.id] !== undefined &&
+                    state.success
+                  ) {
                     // This condition ensures that if an action just succeeded and state.settings reflects that for the *current* selection,
                     // it can be used. This is mostly a fallback or for immediate reflection if dbSettings update is perceived as delayed.
                     // Given dbSettings is updated in the effect above, this might often be covered by the dbSettings check.
                     Gtv = String(state.settings[field.id]);
                   }
-                  
+
                   return (
-                    <div key={`${selectedFileSystem}-${field.id}`} className="space-y-2 pt-4">
+                    <div
+                      key={`${selectedFileSystem}-${field.id}`}
+                      className="space-y-2 pt-4">
                       <Label htmlFor={field.id}>{field.label}</Label>
                       <Input
                         id={field.id}

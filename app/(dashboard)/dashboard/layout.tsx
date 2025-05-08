@@ -17,6 +17,7 @@ import {
   Bolt,
   Hammer,
   Check,
+  List,
 } from "lucide-react"; // Added CircleIcon, Home, LogOut
 import { AppSidebar } from "@/components/app-sidebar";
 import { Separator } from "@/components/ui/separator"; // Assuming this exists
@@ -133,6 +134,7 @@ const sidebarData = {
           icon: Hexagon,
         },
         { title: "Vault", url: "/dashboard/afolder", icon: Folder },
+        { title: "Kriterien", url: "/dashboard/akriterien", icon: List },
         {
           title: "Konfig",
           url: "/dashboard/akonfig",

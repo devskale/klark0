@@ -159,3 +159,26 @@ export async function updateAppSetting(teamId: number, settingKey: string, value
     })
     .returning();
 }
+
+// Function to get info settings for a team
+export async function getInfoSettings(teamId: number) {
+  return await getAppSetting(teamId, "info");
+}
+
+// Function to update info settings for a team
+export async function updateInfoSettings(teamId: number, value: any) {
+  return await updateAppSetting(teamId, "info", value);
+}
+
+// Function to get external websites settings for a team
+export async function getExternalWebsitesSettings(teamId: number) {
+  return await getAppSetting(teamId, "externalWebsites");
+}
+
+// Function to update external websites settings for a team
+export async function updateExternalWebsitesSettings(
+  teamId: number,
+  value: any
+) {
+  return await updateAppSetting(teamId, "externalWebsites", value);
+}
