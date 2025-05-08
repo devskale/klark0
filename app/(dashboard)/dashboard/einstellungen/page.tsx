@@ -307,8 +307,8 @@ export default function GeneralPage() {
   );
 
   const [isInfoCardOpen, setIsInfoCardOpen] = useState(true);
-  const [isWebsitesCardOpen, setIsWebsitesCardOpen] = useState(true);
-  const [isFileSystemCardOpen, setIsFileSystemCardOpen] = useState(true);
+  const [isWebsitesCardOpen, setIsWebsitesCardOpen] = useState(false);
+  const [isFileSystemCardOpen, setIsFileSystemCardOpen] = useState(false);
 
   const currentFields =
     fileSystemConfigurations[dbSettings?.type || "local"]?.fields || [];

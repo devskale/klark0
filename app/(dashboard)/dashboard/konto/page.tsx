@@ -82,7 +82,7 @@ export default function GeneralPage() {
     updateAccount,
     {}
   );
-  const [isCardOpen, setIsCardOpen] = useState(true);
+  const [isCardOpen, setIsCardOpen] = useState(false); // Default state is collapsed
 
   return (
     <section className="flex-1 p-4 lg:p-8">

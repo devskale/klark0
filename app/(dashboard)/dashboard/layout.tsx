@@ -18,6 +18,7 @@ import {
   Hammer,
   Check,
   List,
+  Brain,
 } from "lucide-react"; // Added CircleIcon, Home, LogOut
 import { AppSidebar } from "@/components/app-sidebar";
 import { Separator } from "@/components/ui/separator"; // Assuming this exists
@@ -174,6 +175,7 @@ const sidebarData = {
           url: "/dashboard/einstellungen",
           icon: Settings,
         },
+        { title: "Models", url: "/dashboard/models", icon:  Brain},
         { title: "Aktivität", url: "/dashboard/activity", icon: Activity },
         { title: "Sicherheit", url: "/dashboard/security", icon: Shield },
       ],
