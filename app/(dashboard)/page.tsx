@@ -21,12 +21,12 @@ export default function HomePage() {
                 Verfahren.
               </p>
               <div className="mt-8 sm:max-w-lg sm:mx-auto sm:text-center lg:text-left lg:mx-0">
-                <a href="https://skale.dev" target="_blank">
+                <a href="/dashboard">
                   <Button
                     size="lg"
                     variant="outline"
                     className="text-lg rounded-full">
-                    Jetzt Projekte entdecken
+                    Zum Projekt Dashboard
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </a>
