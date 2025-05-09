@@ -86,7 +86,7 @@ export function AppSidebar({ versions, navMain, ...props }: AppSidebarProps) {
     <Sidebar {...props}>
       <SidebarHeader>
         {selectedProject ? (
-          <div className="px-4 py-2 bg-gray-200 text-xl font-bold mb-2">
+          <div className="p-2 text-sm bg-gray-100 text-gray-900 font-semibold">
             {selectedProject}
           </div>
         ) : (

@@ -318,8 +318,8 @@ function SidebarTrigger({
   // It uses the variant and size passed in props, or defaults to "ghost" and "icon".
   return (
     <Button
-      variant={props.variant || variant} // Use variant from props or the default
-      size={props.size || size}         // Use size from props or the default
+      variant={variant} // Use the destructured variant or the default
+      size={size}         // Use the destructured size or the default
       className={cn("size-7", className)} // Specific styling for the default trigger icon button
       {...commonTriggerProps}
       {...props} // Spread other props (ensure variant/size from props take precedence if already handled)
