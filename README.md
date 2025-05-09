@@ -133,3 +133,35 @@ Für den Produktiveinsatz empfehlen wir eine Bereitstellung auf [Vercel](https:/
 ## Versionierung
 
 v0.0 initiale Version in deutsch. Boilperplate webapp mit Basis Layout und Design.
+
+## Opinionated Filesystem
+
+Dateiordnersystem
+
+ORDNERNAME: Im Root Ordner ist es ein Ordner eine Ausschreibung
+    - ausschreibung.json
+        - holds info about the ausschreibungs project
+        - Datum, Status, etc
+    - A: hält die unterschiedlichen Vergabe/Ausschreibungs Dokumente
+        md: kann md ordner enthalten mit markdown versionen der dokumente
+    - B: Hält die unterschiedlichen Bieterordner
+        - BIETERORDNER: Ordner für Bieterdokumente
+            - md: kann md ordner enthalten mit markdown versionen der dokumente
+
+archiv: Ordner, reservierte für archivierte projekte
+.NAME: versteckte ordner sind reserviert für system
+.processed: reservierter ordner für processed dateien
+.md: reservierter ordnername für markdown files
+md: reservierter ordnername der markdown files enthält
+
+Dateiendungen
+.md: Markdown Files
+
+## Abstracted Filesystem Layer
+
+Um die opinionated Dateistruktur zu abstrahieren, wurde eine Middleware-Schicht entwickelt, die zwischen den physischen Dateien/Ordnern und ihrer logischen Darstellung vermittelt. Diese Schicht:
+- Filtert Elemente, die als *hidden* oder *noshow* markiert sind (z.B. Ordner, beginnend mit einem Punkt oder explizit in der Konfiguration ausgeschlossen),
+- Zeigt nur *show*-Elemente an,
+- Fügt Metadaten wie Erstellungs- und Änderungsdaten sowie Dateigrößen hinzu.
+
+Diese Abstraktion ermöglicht eine einheitliche API und eine flexible Darstellung des Dateisystems.

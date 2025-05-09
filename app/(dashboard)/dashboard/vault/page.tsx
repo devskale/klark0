@@ -2,50 +2,45 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronRight, Loader2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Loader2, Menu } from "lucide-react";
+import { abstractFileSystemView, FileEntry } from "@/fs/abstractFilesystem"; // Import the abstraction layer
 
-type FileTreeNode = {
-  name: string;
-  type: "file" | "directory";
-  path: string;
-  children?: FileTreeNode[];
-};
+type FileTreeNode = FileEntry; // Reuse FileEntry type
+
+// Utility to normalize paths (ensure trailing slash)
+function normalizePath(path: string) {
+  return path.endsWith("/") ? path : path + "/";
+}
 
 export default function VaultPage() {
   const [fileTree, setFileTree] = useState<FileTreeNode[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [webdavSettings, setWebdavSettings] = useState<Record<string, string | undefined> | null>(null);
-  const [debugResponse, setDebugResponse] = useState<any>(null); // Store the raw API response for debugging
+  const [showSettings, setShowSettings] = useState(false); // state for burger menu toggle
 
-  const fetchFileTree = async (path = "/klark0") => {
+  const fetchFileTree = async (currentPath = "/klark0") => {
     if (!webdavSettings) {
       console.error("WebDAV settings are not available.");
       return;
     }
-
     setLoading(true);
     try {
       const queryParams = new URLSearchParams({
         type: "webdav",
-        path,
+        path: currentPath,
         host: webdavSettings.host || "",
         username: webdavSettings.username || "",
         password: webdavSettings.password || "",
       });
-
       console.log("Making request to /api/fs with query params:", queryParams.toString());
-
       const response = await fetch(`/api/fs?${queryParams.toString()}`);
       const data = await response.json();
-
       console.log("API response:", data);
-
-      // Store the raw response for debugging
-      setDebugResponse(data);
-
-      // Ensure the response is an array
       if (Array.isArray(data)) {
-        setFileTree(data);
+        // Apply abstraction and then filter out the current folder entry
+        const rawEntries = abstractFileSystemView(data, { showHidden: false, noshowList: ["archive", ".archive"] });
+        const filtered = rawEntries.filter(entry => normalizePath(entry.path) !== normalizePath(currentPath));
+        setFileTree(filtered);
       } else {
         console.error("Unexpected API response:", data);
         setFileTree([]);
@@ -62,9 +57,7 @@ export default function VaultPage() {
     try {
       const response = await fetch(`/api/settings?key=fileSystem`);
       const data = await response.json();
-
       console.log("Fetched WebDAV settings:", data);
-
       if (data.type === "webdav") {
         setWebdavSettings(data);
       } else {
@@ -77,25 +70,18 @@ export default function VaultPage() {
     }
   };
 
-  useEffect(() => {
-    fetchWebdavSettings();
-  }, []);
+  useEffect(() => { fetchWebdavSettings(); }, []);
+  useEffect(() => { if (webdavSettings) { fetchFileTree(); } }, [webdavSettings]);
 
-  useEffect(() => {
-    if (webdavSettings) {
-      fetchFileTree();
-    }
-  }, [webdavSettings]);
-
-  const renderFileTree = (nodes: FileTreeNode[]) => {
+  const renderFileTree = (nodes: FileTreeNode[], currentPath: string) => {
     return (
       <ul className="pl-4">
         {nodes.map((node) => (
           <li key={node.path} className="mb-2">
             {node.type === "directory" ? (
-              <FolderNode node={node} />
+              <FolderNode node={node} parentPath={currentPath} />
             ) : (
-              <span>{node.name}</span>
+              <span>{node.name} { node.size && <>({node.size} bytes)</> }</span>
             )}
           </li>
         ))}
@@ -103,7 +89,7 @@ export default function VaultPage() {
     );
   };
 
-  const FolderNode = ({ node }: { node: FileTreeNode }) => {
+  const FolderNode = ({ node, parentPath }: { node: FileTreeNode; parentPath: string }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [children, setChildren] = useState<FileTreeNode[] | null>(null);
 
@@ -112,25 +98,20 @@ export default function VaultPage() {
         try {
           const queryParams = new URLSearchParams({
             type: "webdav",
-            path: node.path || "/klark0", // Default to /klark0 if path is empty
+            path: node.path || "/klark0",
             host: webdavSettings.host || "",
             username: webdavSettings.username || "",
             password: webdavSettings.password || "",
           });
-
           console.log("Making request to /api/fs with query params:", queryParams.toString());
-
           const response = await fetch(`/api/fs?${queryParams.toString()}`);
           const data = await response.json();
-
           console.log("API response for folder:", data);
-
-          // Store the raw response for debugging
-          setDebugResponse(data);
-
-          // Ensure the response is an array
           if (Array.isArray(data)) {
-            setChildren(data);
+            const rawEntries = abstractFileSystemView(data, { showHidden: false, noshowList: ["archive", ".archive"] });
+            // Filter out entry matching the folder itself
+            const filtered = rawEntries.filter(entry => normalizePath(entry.path) !== normalizePath(node.path));
+            setChildren(filtered);
           } else {
             console.error("Unexpected API response:", data);
             setChildren([]);
@@ -145,44 +126,38 @@ export default function VaultPage() {
 
     return (
       <div>
-        <div
-          className="flex items-center cursor-pointer"
-          onClick={toggleFolder}
-        >
-          {isOpen ? <ChevronDown /> : <ChevronRight />}
-          <span className="ml-2">{node.name}</span>
+        <div className="flex items-center cursor-pointer" onClick={toggleFolder}>
+          <span className="mr-1">{isOpen ? <ChevronDown /> : <ChevronRight />}</span>
+          <span>{node.name}</span>
         </div>
-        {isOpen && children && renderFileTree(children)}
+        {isOpen && children && renderFileTree(children, node.path)}
       </div>
     );
   };
 
   return (
     <section className="p-4">
-      <h1 className="text-lg font-medium mb-4">Vault Viewer</h1>
-      {webdavSettings && (
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-lg font-medium">Vault Viewer</h1>
+        <button className="p-2 focus:outline-none" onClick={() => setShowSettings(prev => !prev)} title="Toggle WebDAV Settings">
+          <Menu className="h-6 w-6" />
+        </button>
+      </div>
+
+      {showSettings && webdavSettings && (
         <div className="mb-4 p-4 border rounded bg-gray-100">
-          <h2 className="text-md font-medium mb-2">WebDAV Settings (Debug)</h2>
-          <pre className="text-sm text-gray-700">
-            {JSON.stringify(webdavSettings, null, 2)}
-          </pre>
+          <h2 className="text-md font-medium mb-2">WebDAV Settings</h2>
+          <pre className="text-sm text-gray-700">{JSON.stringify(webdavSettings, null, 2)}</pre>
         </div>
       )}
-      {debugResponse && (
-        <div className="mb-4 p-4 border rounded bg-gray-100">
-          <h2 className="text-md font-medium mb-2">API Response (Debug)</h2>
-          <pre className="text-sm text-gray-700">
-            {JSON.stringify(debugResponse, null, 2)}
-          </pre>
-        </div>
-      )}
+      
       {loading ? (
         <div className="flex items-center">
           <Loader2 className="h-6 w-6 animate-spin" />
           <span className="ml-2">Loading...</span>
         </div>
       ) : fileTree ? (
-        renderFileTree(fileTree)
+        renderFileTree(fileTree, "/klark0")
       ) : (
         <Button onClick={() => fetchFileTree()} className="bg-orange-500 text-white">
           Load File Tree

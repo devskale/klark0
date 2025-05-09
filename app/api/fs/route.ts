@@ -69,10 +69,26 @@ export async function GET(request: Request) {
           const isDirectory = node["D:propstat"]?.["D:prop"]?.["D:resourcetype"]?.["D:collection"] !== undefined ||
                               node["d:propstat"]?.["d:prop"]?.["d:resourcetype"]?.["d:collection"] !== undefined ||
                               node["propstat"]?.["prop"]?.["resourcetype"]?.["collection"] !== undefined;
+          let size;
+          if (!isDirectory) {
+            size = node["D:propstat"]?.["D:prop"]?.["D:getcontentlength"] ||
+                   node["d:propstat"]?.["d:prop"]?.["d:getcontentlength"] ||
+                   node["propstat"]?.["prop"]?.["getcontentlength"];
+          }
+          // Extract last modified date and creation date (if available)
+          const lastModified = node["D:propstat"]?.["D:prop"]?.["D:getlastmodified"] ||
+                               node["d:propstat"]?.["d:prop"]?.["d:getlastmodified"] ||
+                               node["propstat"]?.["prop"]?.["getlastmodified"];
+          const creationDate = node["D:propstat"]?.["D:prop"]?.["D:creationdate"] ||
+                               node["d:propstat"]?.["d:prop"]?.["d:creationdate"] ||
+                               node["propstat"]?.["prop"]?.["creationdate"];
           return {
             name: decodeURIComponent(href.split("/").filter(Boolean).pop() || ""),
             type: isDirectory ? "directory" : "file",
             path: href,
+            ...(size !== undefined && { size }),
+            ...(lastModified && { lastModified }),
+            ...(creationDate && { creationDate })
           };
         });
 
