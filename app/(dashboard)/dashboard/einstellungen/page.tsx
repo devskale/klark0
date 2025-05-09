@@ -296,7 +296,7 @@ export default function GeneralPage() {
     fetcher
   );
 
-  const { data: externalWebsites } = useSWR<Record<string, boolean>>(
+  const { data: externalWebsites, mutate: mutateExternalWebsites } = useSWR<Record<string, boolean>>(
     "/api/settings?key=externalWebsites",
     fetcher
   );
@@ -419,7 +419,7 @@ export default function GeneralPage() {
                       value: newWebsites,
                     }),
                   });
-                  mutate({ ...externalWebsites, ...newWebsites }, false); // Ensure state updates without re-fetching
+                  mutateExternalWebsites({ ...externalWebsites, ...newWebsites }); // Ensure state updates without re-fetching
                 }}
               >
                 {externalWebsitesConfig.options.map((option) => (

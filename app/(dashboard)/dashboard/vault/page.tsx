@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronRight, Loader2, Menu } from "lucide-react";
-import { abstractFileSystemView, FileEntry } from "@/fs/abstractFilesystem"; // Import the abstraction layer
+import { abstractFileSystemView, FileEntry } from "@/fs/abstractFilesystem";
 
-type FileTreeNode = FileEntry; // Reuse FileEntry type
+type FileTreeNode = FileEntry;
 
 // Utility to normalize paths (ensure trailing slash)
 function normalizePath(path: string) {
@@ -16,17 +16,25 @@ export default function VaultPage() {
   const [fileTree, setFileTree] = useState<FileTreeNode[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [webdavSettings, setWebdavSettings] = useState<Record<string, string | undefined> | null>(null);
-  const [showSettings, setShowSettings] = useState(false); // state for burger menu toggle
+  const [showSettings, setShowSettings] = useState(false);
 
-  const fetchFileTree = async (currentPath = "/klark0") => {
+  // Centralized filesystem configuration – can be extended to support other filesystems
+  const fileSystemConfig = {
+    type: "webdav",
+    basePath: "/klark0",
+    noshowList: ["archive", ".archive"],
+    // future config: local, OCI Bucket, etc.
+  };
+
+  const fetchFileTree = async (currentPath = fileSystemConfig.basePath) => {
     if (!webdavSettings) {
-      console.error("WebDAV settings are not available.");
+      console.error("Filesystem settings are not available.");
       return;
     }
     setLoading(true);
     try {
       const queryParams = new URLSearchParams({
-        type: "webdav",
+        type: fileSystemConfig.type,
         path: currentPath,
         host: webdavSettings.host || "",
         username: webdavSettings.username || "",
@@ -37,8 +45,8 @@ export default function VaultPage() {
       const data = await response.json();
       console.log("API response:", data);
       if (Array.isArray(data)) {
-        // Apply abstraction and then filter out the current folder entry
-        const rawEntries = abstractFileSystemView(data, { showHidden: false, noshowList: ["archive", ".archive"] });
+        // Apply abstraction layer and filter out current folder from its own listing
+        const rawEntries = abstractFileSystemView(data, { showHidden: false, noshowList: fileSystemConfig.noshowList });
         const filtered = rawEntries.filter(entry => normalizePath(entry.path) !== normalizePath(currentPath));
         setFileTree(filtered);
       } else {
@@ -57,15 +65,15 @@ export default function VaultPage() {
     try {
       const response = await fetch(`/api/settings?key=fileSystem`);
       const data = await response.json();
-      console.log("Fetched WebDAV settings:", data);
-      if (data.type === "webdav") {
+      console.log("Fetched filesystem settings:", data);
+      if (data.type === fileSystemConfig.type) {
         setWebdavSettings(data);
       } else {
-        console.error("WebDAV is not the configured filesystem type:", data);
+        console.error("Configured filesystem type mismatch:", data);
         setWebdavSettings(null);
       }
     } catch (error) {
-      console.error("Error fetching WebDAV settings:", error);
+      console.error("Error fetching filesystem settings:", error);
       setWebdavSettings(null);
     }
   };
@@ -81,7 +89,7 @@ export default function VaultPage() {
             {node.type === "directory" ? (
               <FolderNode node={node} parentPath={currentPath} />
             ) : (
-              <span>{node.name} { node.size && <>({node.size} bytes)</> }</span>
+              <span>{node.name}{ node.size && <>({node.size} bytes)</> }</span>
             )}
           </li>
         ))}
@@ -97,8 +105,8 @@ export default function VaultPage() {
       if (!isOpen && !children && webdavSettings) {
         try {
           const queryParams = new URLSearchParams({
-            type: "webdav",
-            path: node.path || "/klark0",
+            type: fileSystemConfig.type,
+            path: node.path || fileSystemConfig.basePath,
             host: webdavSettings.host || "",
             username: webdavSettings.username || "",
             password: webdavSettings.password || "",
@@ -108,8 +116,7 @@ export default function VaultPage() {
           const data = await response.json();
           console.log("API response for folder:", data);
           if (Array.isArray(data)) {
-            const rawEntries = abstractFileSystemView(data, { showHidden: false, noshowList: ["archive", ".archive"] });
-            // Filter out entry matching the folder itself
+            const rawEntries = abstractFileSystemView(data, { showHidden: false, noshowList: fileSystemConfig.noshowList });
             const filtered = rawEntries.filter(entry => normalizePath(entry.path) !== normalizePath(node.path));
             setChildren(filtered);
           } else {
@@ -139,14 +146,17 @@ export default function VaultPage() {
     <section className="p-4">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-lg font-medium">Vault Viewer</h1>
-        <button className="p-2 focus:outline-none" onClick={() => setShowSettings(prev => !prev)} title="Toggle WebDAV Settings">
+        <button
+          className="p-2 focus:outline-none"
+          onClick={() => setShowSettings(prev => !prev)}
+          title="Toggle Filesystem Settings"
+        >
           <Menu className="h-6 w-6" />
         </button>
       </div>
-
       {showSettings && webdavSettings && (
         <div className="mb-4 p-4 border rounded bg-gray-100">
-          <h2 className="text-md font-medium mb-2">WebDAV Settings</h2>
+          <h2 className="text-md font-medium mb-2">Filesystem Settings</h2>
           <pre className="text-sm text-gray-700">{JSON.stringify(webdavSettings, null, 2)}</pre>
         </div>
       )}
@@ -157,7 +167,7 @@ export default function VaultPage() {
           <span className="ml-2">Loading...</span>
         </div>
       ) : fileTree ? (
-        renderFileTree(fileTree, "/klark0")
+        renderFileTree(fileTree, fileSystemConfig.basePath)
       ) : (
         <Button onClick={() => fetchFileTree()} className="bg-orange-500 text-white">
           Load File Tree
