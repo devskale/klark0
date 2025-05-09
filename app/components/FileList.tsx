@@ -1,6 +1,6 @@
 import React from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { FileEntry as BaseFileEntry } from "@/fs/abstractFilesystem"; // Reuse the FileEntry type
+import { FileEntry as BaseFileEntry } from "@/lib/fs/abstractFilesystem"; // Reuse the FileEntry type
 
 interface FileEntry extends BaseFileEntry {
   children?: FileEntry[]; // Add children property for directories

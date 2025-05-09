@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronRight, Loader2, Menu } from "lucide-react";
-import { abstractFileSystemView, FileEntry } from "@/fs/abstractFilesystem";
+import { abstractFileSystemView, FileEntry } from "@/lib/fs/abstractFilesystem";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 type FileTreeNode = FileEntry;
 
@@ -83,13 +84,16 @@ export default function VaultPage() {
 
   const renderFileTree = (nodes: FileTreeNode[], currentPath: string) => {
     return (
-      <ul className="pl-4">
+      <ul className="pl-4 bg-sidebar rounded-lg p-2 text-sidebar-foreground">
         {nodes.map((node) => (
           <li key={node.path} className="mb-2">
             {node.type === "directory" ? (
               <FolderNode node={node} parentPath={currentPath} />
             ) : (
-              <span>{node.name}{ node.size && <>({node.size} bytes)</> }</span>
+              <div className="px-2 py-1 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md transition-colors">
+                {node.name}
+                {node.size && <span className="ml-1 text-xs">({node.size} bytes)</span>}
+              </div>
             )}
           </li>
         ))}
@@ -133,7 +137,10 @@ export default function VaultPage() {
 
     return (
       <div>
-        <div className="flex items-center cursor-pointer" onClick={toggleFolder}>
+        <div 
+          className="flex items-center cursor-pointer px-2 py-1 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md transition-colors"
+          onClick={toggleFolder}
+        >
           <span className="mr-1">{isOpen ? <ChevronDown /> : <ChevronRight />}</span>
           <span>{node.name}</span>
         </div>
@@ -160,14 +167,20 @@ export default function VaultPage() {
           <pre className="text-sm text-gray-700">{JSON.stringify(webdavSettings, null, 2)}</pre>
         </div>
       )}
-      
       {loading ? (
         <div className="flex items-center">
           <Loader2 className="h-6 w-6 animate-spin" />
           <span className="ml-2">Loading...</span>
         </div>
       ) : fileTree ? (
-        renderFileTree(fileTree, fileSystemConfig.basePath)
+        <Card className="rounded-lg shadow-lg">
+          <CardHeader>
+            <h2 className="text-md font-medium">Dateibrowser</h2>
+          </CardHeader>
+          <CardContent>
+            {renderFileTree(fileTree, fileSystemConfig.basePath)}
+          </CardContent>
+        </Card>
       ) : (
         <Button onClick={() => fetchFileTree()} className="bg-orange-500 text-white">
           Load File Tree
