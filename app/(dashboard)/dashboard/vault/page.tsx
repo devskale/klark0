@@ -95,36 +95,17 @@ export default function VaultPage() {
 
   const FolderNode = ({ node, parentPath }: { node: FileTreeNode; parentPath: string }) => {
     const [isOpen, setIsOpen] = useState(false);
-    const [children, setChildren] = useState<FileTreeNode[] | null>(null);
+    const { data: children, error: folderError, mutate: mutateFolder } = useSWR(
+      webdavSettings ? [node.path, webdavSettings] : null,
+      fileTreeFetcher,
+      { revalidateOnFocus: false }
+    );
 
-    const toggleFolder = async () => {
-      if (!isOpen && !children && webdavSettings) {
-        try {
-          const queryParams = new URLSearchParams({
-            type: fileSystemConfig.type,
-            path: node.path || fileSystemConfig.basePath,
-            host: webdavSettings.host || "",
-            username: webdavSettings.username || "",
-            password: webdavSettings.password || "",
-          });
-          console.log("Making request to /api/fs with query params:", queryParams.toString());
-          const response = await fetch(`/api/fs?${queryParams.toString()}`);
-          const data = await response.json();
-          console.log("API response for folder:", data);
-          if (Array.isArray(data)) {
-            const rawEntries = abstractFileSystemView(data, { showHidden: false, noshowList: fileSystemConfig.noshowList });
-            const filtered = rawEntries.filter(entry => normalizePath(entry.path) !== normalizePath(node.path));
-            setChildren(filtered);
-          } else {
-            console.error("Unexpected API response:", data);
-            setChildren([]);
-          }
-        } catch (error) {
-          console.error("Error fetching folder contents:", error);
-          setChildren([]);
-        }
-      }
+    const toggleFolder = () => {
       setIsOpen(!isOpen);
+      if (!isOpen && !children && webdavSettings) {
+        mutateFolder();
+      }
     };
 
     return (
