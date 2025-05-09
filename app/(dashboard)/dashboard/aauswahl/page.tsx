@@ -103,6 +103,7 @@ export default function aauswahl() {
           <section className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold">Bestehendes Projekt wählen</h2>
+              {/* Replace the project creation dialog with only project name input */}
               <Dialog>
                 <DialogTrigger asChild>
                   <Button variant="outline" className="w-10 h-10 rounded-full">+</Button>
@@ -118,30 +119,6 @@ export default function aauswahl() {
                       value={newProjectName}
                       onChange={(e) => setNewProjectName(e.target.value)}
                     />
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium">
-                        Dokumente von URL importieren:
-                      </label>
-                      <Input
-                        type="text"
-                        placeholder="URL eingeben"
-                        value={importUrl}
-                        onChange={(e) => setImportUrl(e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium">
-                        Dokumente hochladen:
-                      </label>
-                      <Input
-                        type="file"
-                        onChange={(e) => {
-                          if (e.target.files && e.target.files[0]) {
-                            setImportFile(e.target.files[0]);
-                          }
-                        }}
-                      />
-                    </div>
                   </div>
                   <DialogFooter>
                     <Button onClick={() => {/* project creation handler */}}>
@@ -167,36 +144,55 @@ export default function aauswahl() {
             {selectedProject && (
               <>
                 <p className="text-green-600">Gewähltes Projekt: {selectedProject}</p>
-                {/* New add docs fields */}
-                <section className="mt-4 space-y-4">
-                  <h2 className="text-xl font-semibold">Dokumente hinzufügen</h2>
-                  <Input
-                    type="text"
-                    placeholder="Dokumente von URL importieren"
-                    value={docImportUrl}
-                    onChange={(e) => setDocImportUrl(e.target.value)}
-                  />
-                  <Input
-                    type="file"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        setDocUploadFile(e.target.files[0]);
-                      }
-                    }}
-                  />
-                  <div
-                    className="border-2 border-dashed p-4 text-center text-gray-500"
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                        setDocUploadFile(e.dataTransfer.files[0]);
-                      }
-                    }}
-                  >
-                    Drag and drop files here
-                  </div>
-                </section>
+                {/* Modal for "Dokumente hinzufügen" with file upload card */}
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline">Vergabe Doks hinzufügen</Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Vergabe Doks hinzufügen</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <Input
+                        type="text"
+                        placeholder="Dokumente von URL importieren"
+                        value={docImportUrl}
+                        onChange={(e) => setDocImportUrl(e.target.value)}
+                      />
+                      {/* New file upload card */}
+                      <div 
+                        className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-gray-50"
+                        onClick={() => document.getElementById('hiddenFileInput')?.click()}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                            setDocUploadFile(e.dataTransfer.files[0]);
+                          }
+                        }}
+                      >
+                        <p className="text-sm text-gray-600">Drag and drop files here, or click to upload</p>
+                        <input
+                          id="hiddenFileInput"
+                          type="file"
+                          className="hidden"
+                          onChange={(e) => {
+                            if (e.target.files && e.target.files[0]) {
+                              setDocUploadFile(e.target.files[0]);
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button onClick={() => {/* add documents handler */}}>
+                        Hinzufügen
+                      </Button>
+                    </DialogFooter>
+                    <DialogClose />
+                  </DialogContent>
+                </Dialog>
               </>
             )}
           </section>
@@ -206,6 +202,7 @@ export default function aauswahl() {
           <section className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold">Bestehendes Projekt wählen (WebDAV)</h2>
+              {/* For webdav, project creation dialog only asks for project name */}
               <Dialog>
                 <DialogTrigger asChild>
                   <Button variant="outline" className="w-10 h-10 rounded-full">+</Button>
@@ -221,30 +218,6 @@ export default function aauswahl() {
                       value={newProjectName}
                       onChange={(e) => setNewProjectName(e.target.value)}
                     />
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium">
-                        Dokumente von URL importieren:
-                      </label>
-                      <Input
-                        type="text"
-                        placeholder="URL eingeben"
-                        value={importUrl}
-                        onChange={(e) => setImportUrl(e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium">
-                        Dokumente hochladen:
-                      </label>
-                      <Input
-                        type="file"
-                        onChange={(e) => {
-                          if (e.target.files && e.target.files[0]) {
-                            setImportFile(e.target.files[0]);
-                          }
-                        }}
-                      />
-                    </div>
                   </div>
                   <DialogFooter>
                     <Button onClick={() => {/* project creation handler */}}>
@@ -278,36 +251,55 @@ export default function aauswahl() {
             {selectedProject && (
               <>
                 <p className="text-green-600">Gewähltes Projekt: {selectedProject}</p>
-                {/* New add docs fields */}
-                <section className="mt-4 space-y-4">
-                  <h2 className="text-xl font-semibold">Dokumente hinzufügen</h2>
-                  <Input
-                    type="text"
-                    placeholder="Dokumente von URL importieren"
-                    value={docImportUrl}
-                    onChange={(e) => setDocImportUrl(e.target.value)}
-                  />
-                  <Input
-                    type="file"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        setDocUploadFile(e.target.files[0]);
-                      }
-                    }}
-                  />
-                  <div
-                    className="border-2 border-dashed p-4 text-center text-gray-500"
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                        setDocUploadFile(e.dataTransfer.files[0]);
-                      }
-                    }}
-                  >
-                    Drag and drop files here
-                  </div>
-                </section>
+                {/* Modal for "Dokumente hinzufügen" with file upload card */}
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline">Vergabe Doks hinzufügen</Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Vergabe Doks hinzufügen</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <Input
+                        type="text"
+                        placeholder="Dokumente von URL importieren"
+                        value={docImportUrl}
+                        onChange={(e) => setDocImportUrl(e.target.value)}
+                      />
+                      {/* New file upload card */}
+                      <div 
+                        className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-gray-50"
+                        onClick={() => document.getElementById('hiddenFileInput')?.click()}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                            setDocUploadFile(e.dataTransfer.files[0]);
+                          }
+                        }}
+                      >
+                        <p className="text-sm text-gray-600">Drag and drop files here, or click to upload</p>
+                        <input
+                          id="hiddenFileInput"
+                          type="file"
+                          className="hidden"
+                          onChange={(e) => {
+                            if (e.target.files && e.target.files[0]) {
+                              setDocUploadFile(e.target.files[0]);
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button onClick={() => {/* add documents handler */}}>
+                        Hinzufügen
+                      </Button>
+                    </DialogFooter>
+                    <DialogClose />
+                  </DialogContent>
+                </Dialog>
               </>
             )}
           </section>
