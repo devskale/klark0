@@ -53,6 +53,30 @@ function useSidebar() {
   return context
 }
 
+type SelectedProjectContextType = {
+	selectedProject: string | null;
+	setSelectedProject: (s: string | null) => void;
+};
+
+const SelectedProjectContext = React.createContext<SelectedProjectContextType | undefined>(undefined);
+
+export function SelectedProjectProvider({ children }: { children: React.ReactNode }) {
+	const [selectedProject, setSelectedProject] = React.useState<string | null>(null);
+	return (
+		<SelectedProjectContext.Provider value={{ selectedProject, setSelectedProject }}>
+			{children}
+		</SelectedProjectContext.Provider>
+	);
+}
+
+export function useSelectedProject() {
+	const context = React.useContext(SelectedProjectContext);
+	if (!context) {
+		throw new Error("useSelectedProject must be used within a SelectedProjectProvider");
+	}
+	return context;
+}
+
 function SidebarProvider({
   defaultOpen = true,
   open: openProp,
@@ -750,4 +774,6 @@ export {
   SidebarSeparator,
   SidebarTrigger,
   useSidebar,
+  SelectedProjectProvider,
+  useSelectedProject,
 }

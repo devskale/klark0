@@ -14,6 +14,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { useSidebar } from "@/components/ui/sidebar"; // Import useSidebar to access the sidebar state
+import { useSelectedProject } from "@/components/ui/sidebar"; // Import useSelectedProject to access the selected project
 
 // Placeholder for SearchForm component
 /**
@@ -79,12 +80,16 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
  */
 export function AppSidebar({ versions, navMain, ...props }: AppSidebarProps) {
   const { state } = useSidebar(); // Access the sidebar state (expanded or collapsed)
+  const { selectedProject } = useSelectedProject(); // Destructure selectedProject from context
 
   return (
     <Sidebar {...props}>
       <SidebarHeader>
-        {/* Hide SearchForm and VersionSwitcher in collapsed state */}
-        {state === "expanded" && (
+        {selectedProject ? (
+          <div className="px-4 py-2 bg-gray-200 text-xl font-bold mb-2">
+            {selectedProject}
+          </div>
+        ) : (
           <>
             <SearchForm />
             <VersionSwitcher versions={versions} defaultVersion={versions[0]} />
