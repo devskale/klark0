@@ -268,7 +268,7 @@ export default function GeneralPage() {
       if (config) {
         config.fields.forEach((field) => {
           const value = formData.get(field.id);
-          newSettings[field.id] = value || field.defaultValue;
+          newSettings[field.id] = value || field.defaultValue; // Ensure all fields are captured
         });
       }
 
@@ -467,7 +467,7 @@ export default function GeneralPage() {
                     name="fileSystemSetting"
                     value={dbSettings.type}
                     onValueChange={(value) =>
-                      mutate({ ...dbSettings, type: value as FileSystemType }, false) // Ensure state updates without re-fetching
+                      mutate({ ...dbSettings, type: value as FileSystemType }, false)
                     }
                   >
                     <SelectTrigger id="fileSystemSetting">

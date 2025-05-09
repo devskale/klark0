@@ -117,7 +117,7 @@ const sidebarData = {
           url: "/dashboard/aauswahl",
           icon: Hexagon,
         },
-        { title: "Vault", url: "/dashboard/afolder", icon: Folder },
+        { title: "Vault", url: "/dashboard/vault", icon: Folder },
         { title: "Kriterien", url: "/dashboard/akriterien", icon: List },
         {
           title: "Konfig",
