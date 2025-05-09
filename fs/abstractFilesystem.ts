@@ -18,7 +18,7 @@ export function abstractFileSystemView(
   rawEntries: FileEntry[],
   options: AbstractionOptions = { showHidden: false, noshowList: [] }
 ): FileEntry[] {
-  const { showHidden, noshowList } = options;
+  const { showHidden, noshowList = [] } = options;
   return rawEntries.filter(entry => {
     // Hide by default if name starts with '.' and showHidden is false
     if (!showHidden && entry.name.startsWith(".")) return false;
