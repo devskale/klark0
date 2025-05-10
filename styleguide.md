@@ -117,6 +117,26 @@
 
 ## UI Patterns
 
+### Sidebar Navigation
+
+**Layout**
+
+- Structure: `flex flex-col w-64 min-h-screen bg-white border-r border-gray-200`
+- Spacing: `px-4 py-6` (16px × 24px)
+- Breakpoints: `hidden md:flex` (mobile toggle pattern)
+
+**Navigation Items**
+
+- Active state: `bg-orange-50 text-orange-700`
+- Hover state: `hover:bg-gray-50`
+- Spacing: `px-3 py-2 mb-1` (12px × 8px × 4px)
+- Icon: `w-5 h-5 mr-3` (20px × 20px × 12px)
+
+**Submenus**
+
+- Indentation: `ml-8` (32px)
+- Transition: `transition-all duration-200 ease-in-out`
+
 ### Hero Sections
 
 - Headline: `text-4xl`/`text-5xl`
