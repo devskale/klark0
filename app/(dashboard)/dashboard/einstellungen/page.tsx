@@ -296,10 +296,9 @@ export default function GeneralPage() {
     fetcher
   );
 
-  const { data: externalWebsites, mutate: mutateExternalWebsites } = useSWR<Record<string, boolean>>(
-    "/api/settings?key=externalWebsites",
-    fetcher
-  );
+  const { data: externalWebsites, mutate: mutateExternalWebsites } = useSWR<
+    Record<string, boolean>
+  >("/api/settings?key=externalWebsites", fetcher);
 
   const { data: infoSettings } = useSWR<Record<string, string>>(
     "/api/settings?key=info",
@@ -329,7 +328,10 @@ export default function GeneralPage() {
       </h1>
 
       {/* Info Section */}
-      <Collapsible open={isInfoCardOpen} onOpenChange={setIsInfoCardOpen} className="mb-8">
+      <Collapsible
+        open={isInfoCardOpen}
+        onOpenChange={setIsInfoCardOpen}
+        className="mb-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between cursor-pointer">
             <CollapsibleTrigger asChild>
@@ -360,16 +362,21 @@ export default function GeneralPage() {
                     }),
                   });
                   mutate();
-                }}
-              >
+                }}>
                 {infoConfig.fields.map((field) => (
-                  <div key={field.id}>
-                    <Label htmlFor={field.id}>{field.label}</Label>
+                  <div key={field.id} className="mb-6">
+                    <Label htmlFor={field.id} className="mb-3">
+                      {field.label}
+                    </Label>
                     <Input
                       id={field.id}
                       name={field.id}
                       type={field.type}
-                      placeholder={"placeholder" in field ? (field.placeholder as string | undefined) : ""}
+                      placeholder={
+                        "placeholder" in field
+                          ? (field.placeholder as string | undefined)
+                          : ""
+                      }
                       defaultValue={infoSettings?.[field.id] || ""}
                     />
                   </div>
@@ -384,7 +391,10 @@ export default function GeneralPage() {
       </Collapsible>
 
       {/* External Websites Section */}
-      <Collapsible open={isWebsitesCardOpen} onOpenChange={setIsWebsitesCardOpen} className="mb-8">
+      <Collapsible
+        open={isWebsitesCardOpen}
+        onOpenChange={setIsWebsitesCardOpen}
+        className="mb-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between cursor-pointer">
             <CollapsibleTrigger asChild>
@@ -419,11 +429,15 @@ export default function GeneralPage() {
                       value: newWebsites,
                     }),
                   });
-                  mutateExternalWebsites({ ...externalWebsites, ...newWebsites }); // Ensure state updates without re-fetching
-                }}
-              >
+                  mutateExternalWebsites({
+                    ...externalWebsites,
+                    ...newWebsites,
+                  }); // Ensure state updates without re-fetching
+                }}>
                 {externalWebsitesConfig.options.map((option) => (
-                  <div key={option.id} className="flex items-center space-x-2">
+                  <div
+                    key={option.id}
+                    className="flex items-center space-x-2 mb-4">
                     <input
                       type="checkbox"
                       id={option.id}
@@ -444,7 +458,9 @@ export default function GeneralPage() {
       </Collapsible>
 
       {/* File System Section */}
-      <Collapsible open={isFileSystemCardOpen} onOpenChange={setIsFileSystemCardOpen}>
+      <Collapsible
+        open={isFileSystemCardOpen}
+        onOpenChange={setIsFileSystemCardOpen}>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between cursor-pointer">
             <CollapsibleTrigger asChild>
@@ -461,22 +477,29 @@ export default function GeneralPage() {
           <CollapsibleContent>
             <CardContent>
               <form className="space-y-4" action={formAction}>
-                <div>
-                  <Label htmlFor="fileSystemSetting">Dateisystem Typ</Label>
+                <div className="space-y-2 mb-4">
+                  <Label htmlFor="fileSystemSetting" className="block mb-2">
+                    Dateisystem Typ
+                  </Label>
                   <Select
                     name="fileSystemSetting"
                     value={dbSettings.type}
                     onValueChange={(value) =>
-                      mutate({ ...dbSettings, type: value as FileSystemType }, false)
-                    }
-                  >
+                      mutate(
+                        { ...dbSettings, type: value as FileSystemType },
+                        false
+                      )
+                    }>
                     <SelectTrigger id="fileSystemSetting">
                       <SelectValue placeholder="Wählen Sie einen Typ" />
                     </SelectTrigger>
                     <SelectContent>
                       {Object.entries(fileSystemConfigurations).map(
                         ([key, config]) => (
-                          <SelectItem key={key} value={key}>
+                          <SelectItem
+                            key={key}
+                            value={key}
+                            className="py-2 px-4 my-1">
                             {config.displayName}
                           </SelectItem>
                         )
@@ -487,7 +510,9 @@ export default function GeneralPage() {
 
                 {currentFields.map((field) => (
                   <div key={field.id} className="space-y-2 pt-4">
-                    <Label htmlFor={field.id}>{field.label}</Label>
+                    <Label htmlFor={field.id} className="mb-2">
+                      {field.label}
+                    </Label>
                     <Input
                       id={field.id}
                       name={field.id}
@@ -507,8 +532,7 @@ export default function GeneralPage() {
                 <Button
                   type="submit"
                   className="bg-orange-500 hover:bg-orange-600 text-white"
-                  disabled={isPending}
-                >
+                  disabled={isPending}>
                   {isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />

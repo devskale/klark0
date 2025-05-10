@@ -31,7 +31,10 @@ function normalizePath(path: string) {
   return path.endsWith("/") ? path : path + "/";
 }
 
-const fileTreeFetcher = async ([currentPath, settings]: [string, Record<string, string | undefined>]) => {
+const fileTreeFetcher = async ([currentPath, settings]: [
+  string,
+  Record<string, string | undefined>
+]) => {
   const fileSystemConfig = {
     type: "webdav",
     basePath: "/klark0",
@@ -47,8 +50,13 @@ const fileTreeFetcher = async ([currentPath, settings]: [string, Record<string, 
   const response = await fetch(`/api/fs?${queryParams.toString()}`);
   const data = await response.json();
   if (Array.isArray(data)) {
-    const rawEntries = abstractFileSystemView(data, { showHidden: false, noshowList: fileSystemConfig.noshowList });
-    return rawEntries.filter((entry) => normalizePath(entry.path) !== normalizePath(currentPath));
+    const rawEntries = abstractFileSystemView(data, {
+      showHidden: false,
+      noshowList: fileSystemConfig.noshowList,
+    });
+    return rawEntries.filter(
+      (entry) => normalizePath(entry.path) !== normalizePath(currentPath)
+    );
   }
   throw new Error("Unexpected API response");
 };
@@ -71,9 +79,14 @@ export default function aauswahl() {
   const [docImportUrl, setDocImportUrl] = useState<string>("");
   const [docUploadFile, setDocUploadFile] = useState<File | null>(null);
 
-  const { data: settings, error } = useSWR("/api/settings?key=fileSystem", fetcher);
+  const { data: settings, error } = useSWR(
+    "/api/settings?key=fileSystem",
+    fetcher
+  );
   const { data: webdavFileTree, error: fileTreeError } = useSWR(
-    settings && settings.type === "webdav" ? [fileSystemConfig.basePath, settings] : null,
+    settings && settings.type === "webdav"
+      ? [fileSystemConfig.basePath, settings]
+      : null,
     fileTreeFetcher,
     { revalidateOnFocus: false }
   );
@@ -102,11 +115,15 @@ export default function aauswahl() {
         <>
           <section className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Bestehendes Projekt wählen</h2>
+              <h2 className="text-xl font-semibold">
+                Bestehendes Projekt wählen
+              </h2>
               {/* Replace the project creation dialog with only project name input */}
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button variant="outline" className="w-10 h-10 rounded-full">+</Button>
+                  <Button variant="outline" className="w-10 h-10 rounded-full">
+                    +
+                  </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
@@ -121,7 +138,10 @@ export default function aauswahl() {
                     />
                   </div>
                   <DialogFooter>
-                    <Button onClick={() => {/* project creation handler */}}>
+                    <Button
+                      onClick={() => {
+                        /* project creation handler */
+                      }}>
                       Projekt erstellen
                     </Button>
                   </DialogFooter>
@@ -129,7 +149,9 @@ export default function aauswahl() {
                 </DialogContent>
               </Dialog>
             </div>
-            <Select value={selectedProject || ""} onValueChange={setSelectedProject}>
+            <Select
+              value={selectedProject || ""}
+              onValueChange={setSelectedProject}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Projekt auswählen" />
               </SelectTrigger>
@@ -143,11 +165,15 @@ export default function aauswahl() {
             </Select>
             {selectedProject && (
               <>
-                <p className="text-green-600">Gewähltes Projekt: {selectedProject}</p>
+                <p className="text-green-600">
+                  Gewähltes Projekt: {selectedProject}
+                </p>
                 {/* Modal for "Dokumente hinzufügen" with file upload card */}
                 <Dialog>
                   <DialogTrigger asChild>
-                    <Button variant="outline">Vergabe Doks hinzufügen</Button>
+                    <Button className="bg-orange-500 hover:bg-orange-600 text-white">
+                      Vergabe Doks hinzufügen
+                    </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
@@ -161,18 +187,21 @@ export default function aauswahl() {
                         onChange={(e) => setDocImportUrl(e.target.value)}
                       />
                       {/* New file upload card */}
-                      <div 
+                      <div
                         className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-gray-50"
-                        onClick={() => document.getElementById('hiddenFileInput')?.click()}
+                        onClick={() =>
+                          document.getElementById("hiddenFileInput")?.click()
+                        }
                         onDragOver={(e) => e.preventDefault()}
                         onDrop={(e) => {
                           e.preventDefault();
                           if (e.dataTransfer.files && e.dataTransfer.files[0]) {
                             setDocUploadFile(e.dataTransfer.files[0]);
                           }
-                        }}
-                      >
-                        <p className="text-sm text-gray-600">Drag and drop files here, or click to upload</p>
+                        }}>
+                        <p className="text-sm text-gray-600">
+                          Drag and drop files here, or click to upload
+                        </p>
                         <input
                           id="hiddenFileInput"
                           type="file"
@@ -186,7 +215,10 @@ export default function aauswahl() {
                       </div>
                     </div>
                     <DialogFooter>
-                      <Button onClick={() => {/* add documents handler */}}>
+                      <Button
+                        onClick={() => {
+                          /* add documents handler */
+                        }}>
                         Hinzufügen
                       </Button>
                     </DialogFooter>
@@ -201,11 +233,15 @@ export default function aauswahl() {
         <>
           <section className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Bestehendes Projekt wählen (WebDAV)</h2>
+              <h2 className="text-xl font-semibold">
+                Bestehendes Projekt wählen (WebDAV)
+              </h2>
               {/* For webdav, project creation dialog only asks for project name */}
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button variant="outline" className="w-10 h-10 rounded-full">+</Button>
+                  <Button variant="outline" className="w-10 h-10 rounded-full">
+                    +
+                  </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
@@ -220,7 +256,10 @@ export default function aauswahl() {
                     />
                   </div>
                   <DialogFooter>
-                    <Button onClick={() => {/* project creation handler */}}>
+                    <Button
+                      onClick={() => {
+                        /* project creation handler */
+                      }}>
                       Projekt erstellen
                     </Button>
                   </DialogFooter>
@@ -233,7 +272,9 @@ export default function aauswahl() {
             ) : !webdavFileTree ? (
               <p>Projekte werden geladen...</p>
             ) : (
-              <Select value={selectedProject || ""} onValueChange={setSelectedProject}>
+              <Select
+                value={selectedProject || ""}
+                onValueChange={setSelectedProject}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Projekt auswählen" />
                 </SelectTrigger>
@@ -250,11 +291,15 @@ export default function aauswahl() {
             )}
             {selectedProject && (
               <>
-                <p className="text-green-600">Gewähltes Projekt: {selectedProject}</p>
+                <p className="text-green-600">
+                  Gewähltes Projekt: {selectedProject}
+                </p>
                 {/* Modal for "Dokumente hinzufügen" with file upload card */}
                 <Dialog>
                   <DialogTrigger asChild>
-                    <Button variant="outline">Vergabe Doks hinzufügen</Button>
+                    <Button className="bg-orange-500 hover:bg-orange-600 text-white">
+                      Vergabe Doks hinzufügen
+                    </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
@@ -268,18 +313,21 @@ export default function aauswahl() {
                         onChange={(e) => setDocImportUrl(e.target.value)}
                       />
                       {/* New file upload card */}
-                      <div 
+                      <div
                         className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-gray-50"
-                        onClick={() => document.getElementById('hiddenFileInput')?.click()}
+                        onClick={() =>
+                          document.getElementById("hiddenFileInput")?.click()
+                        }
                         onDragOver={(e) => e.preventDefault()}
                         onDrop={(e) => {
                           e.preventDefault();
                           if (e.dataTransfer.files && e.dataTransfer.files[0]) {
                             setDocUploadFile(e.dataTransfer.files[0]);
                           }
-                        }}
-                      >
-                        <p className="text-sm text-gray-600">Drag and drop files here, or click to upload</p>
+                        }}>
+                        <p className="text-sm text-gray-600">
+                          Drag and drop files here, or click to upload
+                        </p>
                         <input
                           id="hiddenFileInput"
                           type="file"
@@ -293,7 +341,10 @@ export default function aauswahl() {
                       </div>
                     </div>
                     <DialogFooter>
-                      <Button onClick={() => {/* add documents handler */}}>
+                      <Button
+                        onClick={() => {
+                          /* add documents handler */
+                        }}>
                         Hinzufügen
                       </Button>
                     </DialogFooter>
