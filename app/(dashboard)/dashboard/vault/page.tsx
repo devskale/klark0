@@ -40,87 +40,6 @@ const fileTreeFetcher = async ([currentPath, settings]: [string, Record<string, 
 // Define reserved directory names
 const reservedDirs = ["B", "archive", "md"];
 
-// Modified: update OpBrowserItem to use selectedProject for expansion
-function OpBrowserItem({ 
-  project, 
-  webdavSettings,
-  selectedProject,
-  setSelectedProject,
-  selectedBieter,
-  setSelectedBieter
-}: { 
-  project: FileTreeNode; 
-  webdavSettings: Record<string, string | undefined>;
-  selectedProject: string | null;
-  setSelectedProject: (p: string | null) => void;
-  selectedBieter: string | null;
-  setSelectedBieter: (b: string | null) => void;
-}) {
-  // Derive expanded state from selectedProject
-  const expanded = selectedProject === project.path;
-  
-  const { data: bFolderChildrenRaw } = useSWR( 
-    webdavSettings ? [project.path + "/B", webdavSettings] : null, // Changed: Fetch regardless of 'expanded' state
-    fileTreeFetcher,
-    { revalidateOnFocus: false }
-  );
-
-  // Filter Bieter children: only include directories not in reservedDirs
-  const filteredBFolderChildren = Array.isArray(bFolderChildrenRaw)
-    ? bFolderChildrenRaw.filter(child => child.type === "directory" && !reservedDirs.includes(child.name))
-    : [];
-  
-  // Count of bieters (only names displayed), based on filtered children
-  let bCount = filteredBFolderChildren.length;
-    
-  const toggleProject = () => {
-    if (expanded) {
-      setSelectedProject(null);
-      setSelectedBieter(null);
-    } else {
-      setSelectedProject(project.path);
-      setSelectedBieter(null);
-    }
-  };
-
-  const toggleBieter = (bieterPath: string) => {
-    setSelectedBieter(selectedBieter === bieterPath ? null : bieterPath);
-  };
-
-  return (
-    <li>
-      <div
-        className="flex justify-between items-center border-b py-2 cursor-pointer"
-        onClick={toggleProject}
-      >
-        <span className={`flex items-center ${selectedProject === project.path ? "font-bold" : ""}`}>
-          {expanded ? <ChevronDown className="mr-1" /> : <ChevronRight className="mr-1" />}
-          {project.name}
-        </span>
-        <span className="px-2 py-1 bg-blue-200 text-blue-600 rounded-full text-xs">
-          B: {bCount}
-        </span>
-      </div>
-      {expanded && (
-        <ul className="pl-6">
-          {filteredBFolderChildren.map(child => (
-            <li 
-              key={child.path} 
-              className={`py-1 border-b cursor-pointer ${selectedBieter === child.path ? "font-bold" : ""}`}
-              onClick={(e) => { 
-                 e.stopPropagation(); 
-                 toggleBieter(child.path);
-              }}
-            >
-              {child.name}
-            </li>
-          ))}
-        </ul>
-      )}
-    </li>
-  );
-}
-
 export default function VaultPage() {
   const [webdavSettings, setWebdavSettings] = useState<Record<string, string | undefined> | null>(null);
   const [showSettings, setShowSettings] = useState(false);
@@ -160,6 +79,17 @@ export default function VaultPage() {
     fileTreeFetcher,
     { revalidateOnFocus: false }
   );
+
+  // SWR hook for fetching Bieter data for the selected project
+  const { data: bieterFolderChildrenRaw, error: bieterError } = useSWR(
+    webdavSettings && selectedProject ? [`${selectedProject}/B`, webdavSettings] : null,
+    fileTreeFetcher,
+    { revalidateOnFocus: false }
+  );
+
+  const filteredBieterChildren = Array.isArray(bieterFolderChildrenRaw)
+    ? bieterFolderChildrenRaw.filter(child => child.type === "directory" && !reservedDirs.includes(child.name))
+    : [];
 
   const renderFileTree = (nodes: FileTreeNode[], currentPath: string, applyFilter: boolean) => {
     const itemsToRender = applyFilter
@@ -290,28 +220,78 @@ export default function VaultPage() {
           <span className="ml-2">Loading...</span>
         </div>
       ) : selectedView === "Op-Browser" ? (
-        <Card className="rounded-lg shadow-lg">
-          <CardHeader>
-            <h2 className="text-md font-medium">{selectedView}</h2>
-          </CardHeader>
-          <CardContent>
-            <ul>
-              {fileTree
-                .filter(node => node.type === "directory" && !reservedDirs.includes(node.name)) // filter out reserved dirs
-                .map(project => (
-                  <OpBrowserItem 
-                    key={project.path} 
-                    project={project} 
-                    webdavSettings={webdavSettings as Record<string, string | undefined>}
-                    selectedProject={selectedProject}
-                    setSelectedProject={setSelectedProject}
-                    selectedBieter={selectedBieter}
-                    setSelectedBieter={setSelectedBieter}
-                  />
-                ))}
-            </ul>
-          </CardContent>
-        </Card>
+        <div className="flex space-x-4">
+          {/* Left Card: Ausschreibungen */}
+          <Card className="rounded-lg shadow-lg w-1/2">
+            <CardHeader>
+              <h2 className="text-md font-medium">Ausschreibungen</h2>
+            </CardHeader>
+            <CardContent>
+              <ul>
+                {fileTree
+                  .filter(node => node.type === "directory" && !reservedDirs.includes(node.name))
+                  .map(project => (
+                    <li
+                      key={project.path}
+                      className={`py-2 px-3 border-b cursor-pointer hover:bg-gray-100 ${selectedProject === project.path ? "font-bold bg-gray-100" : ""}`}
+                      onClick={() => {
+                        if (selectedProject === project.path) {
+                          setSelectedProject(null);
+                          setSelectedBieter(null);
+                        } else {
+                          setSelectedProject(project.path);
+                          setSelectedBieter(null); // Reset bieter selection when project changes
+                        }
+                      }}
+                    >
+                      {project.name}
+                    </li>
+                  ))}
+              </ul>
+            </CardContent>
+          </Card>
+
+          {/* Right Card: Bieter */}
+          {selectedProject && (
+            <Card className="rounded-lg shadow-lg w-1/2">
+              <CardHeader>
+                <h2 className="text-md font-medium">
+                  Bieter für: {fileTree.find(p => p.path === selectedProject)?.name || 'Ausgewähltes Projekt'}
+                </h2>
+              </CardHeader>
+              <CardContent>
+                {bieterError ? (
+                  <div className="text-red-500">Error fetching bieter list.</div>
+                ) : !bieterFolderChildrenRaw && selectedProject ? (
+                  <div className="flex items-center">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span className="ml-2 text-sm">Lade Bieter...</span>
+                  </div>
+                ) : filteredBieterChildren.length > 0 ? (
+                  <ul>
+                    {filteredBieterChildren.map(bieter => (
+                      <li
+                        key={bieter.path}
+                        className={`py-2 px-3 border-b cursor-pointer hover:bg-gray-100 ${selectedBieter === bieter.path ? "font-bold bg-gray-100" : ""}`}
+                        onClick={() => {
+                          if (selectedBieter === bieter.path) {
+                            setSelectedBieter(null);
+                          } else {
+                            setSelectedBieter(bieter.path);
+                          }
+                        }}
+                      >
+                        {bieter.name}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-gray-500">Keine Bieter gefunden oder Projekt enthält keine "B"-Mappe.</p>
+                )}
+              </CardContent>
+            </Card>
+          )}
+        </div>
       ) : (
         <Card className="rounded-lg shadow-lg">
           <CardHeader>
