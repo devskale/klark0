@@ -6,18 +6,16 @@ klark0 ist eine Webapplikation für die digitale Prüfung von Ausschreibungsdoku
 ## Hauptfunktionen
 - **Ausschreibungsprojekt erstellen**
   - Benutzer können neue Ausschreibungsprojekte anlegen.
-  
 - **Dokumente hochladen**
   - Upload von Ausschreibungsdokumenten und Bieterdokumenten.
-  
 - **Dokumentkonvertierung**
   - Automatische Umwandlung von hochgeladenen Dokumenten (z. B. DOC, PDF) in Markdown.
-  
 - **Automatische Dateiumbenennung**
   - Automatische Umbenennung von Dateien basierend auf einem kurzen zusammenfassenden Titel.
-  
 - **Anonymisierung auf Anfrage**
   - Möglichkeit zur Anonymisierung von Dokumenteninhalten, falls erforderlich.
+- **Projekt- und Bieterauswahl im Vault**
+  - Ermöglicht Benutzern, im Op-Browser (Vault) ein Ausschreibungsprojekt und optional einen Bieter auszuwählen, um diesen Kontext für weitere Aktionen zu übernehmen.
 
 ## Benutzerrollen und Szenarien
 ### Primäre Anwender
@@ -40,6 +38,9 @@ klark0 ist eine Webapplikation für die digitale Prüfung von Ausschreibungsdoku
   - „Als Benutzer möchte ich, dass Dateien automatisch umbenannt werden, sodass nur eine kurze Zusammenfassung als Titel verwendet wird.“
 - **Anonymisierung**
   - „Auf Wunsch möchte ich, dass Dokumente anonymisiert werden, um sensible Informationen zu schützen.“
+- **Auswahl im Vault**
+  - „Als Benutzer möchte ich im Vault ein Ausschreibungsprojekt auswählen, um den Arbeitskontext festzulegen.“
+  - „Als Benutzer möchte ich im Vault einen Bieter innerhalb eines Projekts auswählen, um Dokumente eines Bieters zu prüfen.“
 
 ## Technische Anforderungen
 - **Framework und Sprache**

@@ -3,10 +3,28 @@
 import { useState, useEffect } from "react";
 import useSWR from "swr";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronRight, Loader2, Menu, RefreshCw } from "lucide-react";
+import { ChevronDown, ChevronRight, Loader2, Menu, RefreshCw, MoreHorizontal } from "lucide-react"; // Added MoreHorizontal
 import { abstractFileSystemView, FileEntry } from "@/lib/fs/abstractFilesystem";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useSelectedProject } from "@/components/ui/sidebar"; // Assuming this is the correct path and hook
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 type FileTreeNode = FileEntry;
 
@@ -55,6 +73,10 @@ export default function VaultPage() {
   // Global context setters
   const { setSelectedProject: setGlobalSelectedProject, setSelectedBieter: setGlobalSelectedBieter } = useSelectedProject();
   const [showSelectionConfirmation, setShowSelectionConfirmation] = useState(false);
+
+  // State for Add Project Dialog
+  const [isAddProjectDialogOpen, setIsAddProjectDialogOpen] = useState(false);
+  const [newProjectName, setNewProjectName] = useState("");
 
   const fileSystemConfig = {
     type: "webdav",
@@ -162,6 +184,26 @@ export default function VaultPage() {
     }
   };
 
+  const handleCreateProject = () => {
+    // Placeholder for actual project creation logic
+    console.log("Neues Projekt erstellen:", newProjectName);
+    // Potentially call an API to create the directory
+    // Then mutate the fileTree SWR cache to reflect the new project
+    // mutate(); // Example: revalidate fileTree
+    setNewProjectName(""); // Reset input
+    setIsAddProjectDialogOpen(false); // Close dialog
+  };
+
+  const handleProjectAction = (action: string, projectPath: string) => {
+    console.log(`Project Action: ${action} on ${projectPath}`);
+    // Implement actual logic for edit, archive, stats
+  };
+
+  const handleBieterAction = (action: string, bieterPath: string) => {
+    console.log(`Bieter Action: ${action} on ${bieterPath}`);
+    // Implement actual logic for edit, archive, stats
+  };
+
   return (
     <section className="p-4">
       <div className="flex justify-between items-center mb-4">
@@ -211,13 +253,56 @@ export default function VaultPage() {
               neu eingelesen
             </div>
           )}
-          <button
-            className="p-2 focus:outline-none"
-            onClick={() => setShowSettings(prev => !prev)}
-            title="Toggle Filesystem Settings"
-          >
-            <Menu className="h-6 w-6" />
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="p-2 focus:outline-none hover:bg-gray-200 rounded-md">
+                <Menu className="h-6 w-6" />
+                <span className="sr-only">Menü öffnen</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Optionen</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => setShowSettings(prev => !prev)}>
+                Server Info {showSettings ? "ausblenden" : "anzeigen"}
+              </DropdownMenuItem>
+              <Dialog open={isAddProjectDialogOpen} onOpenChange={setIsAddProjectDialogOpen}>
+                <DialogTrigger asChild>
+                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}> 
+                    {/* Prevent default to control dialog manually */}
+                    Projekt hinzufügen
+                  </DropdownMenuItem>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Neues Projekt hinzufügen</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <Input
+                      type="text"
+                      placeholder="Projektname"
+                      value={newProjectName}
+                      onChange={(e) => setNewProjectName(e.target.value)}
+                    />
+                  </div>
+                  <DialogFooter>
+                    <DialogClose asChild>
+                      <Button variant="outline">Abbrechen</Button>
+                    </DialogClose>
+                    <Button onClick={handleCreateProject} disabled={!newProjectName.trim()}>
+                      Erstellen
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+              <DropdownMenuItem 
+                onSelect={() => console.log("Add Bieter clicked")}
+                disabled={!currentProjectInVault}
+              >
+                Bieter hinzufügen
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -252,18 +337,41 @@ export default function VaultPage() {
                     .map(project => (
                       <li
                         key={project.path}
-                        className={`py-2 px-3 border-b cursor-pointer hover:bg-gray-100 ${currentProjectInVault === project.path ? "font-bold bg-gray-100" : ""}`}
-                        onClick={() => {
-                          if (currentProjectInVault === project.path) {
-                            setCurrentProjectInVault(null);
-                            setCurrentBieterInVault(null);
-                          } else {
-                            setCurrentProjectInVault(project.path);
-                            setCurrentBieterInVault(null); 
-                          }
-                        }}
+                        className={`py-2 px-3 border-b hover:bg-gray-50 flex justify-between items-center ${currentProjectInVault === project.path ? "bg-gray-100" : ""}`}
                       >
-                        {project.name}
+                        <span 
+                          className={`cursor-pointer flex-grow ${currentProjectInVault === project.path ? "font-bold" : ""}`}
+                          onClick={() => {
+                            if (currentProjectInVault === project.path) {
+                              setCurrentProjectInVault(null);
+                              setCurrentBieterInVault(null);
+                            } else {
+                              setCurrentProjectInVault(project.path);
+                              setCurrentBieterInVault(null);
+                            }
+                          }}
+                        >
+                          {project.name}
+                        </span>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="ml-2 h-8 w-8 p-0" onClick={(e) => e.stopPropagation()}>
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Projektoptionen</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenuItem onSelect={() => handleProjectAction("edit", project.path)}>
+                              Bearbeiten
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleProjectAction("archive", project.path)}>
+                              Archivieren
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleProjectAction("stats", project.path)}>
+                              Statistiken
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </li>
                     ))}
                 </ul>
@@ -291,16 +399,39 @@ export default function VaultPage() {
                       {filteredBieterChildren.map(bieter => (
                         <li
                           key={bieter.path}
-                          className={`py-2 px-3 border-b cursor-pointer hover:bg-gray-100 ${currentBieterInVault === bieter.path ? "font-bold bg-gray-100" : ""}`}
-                          onClick={() => {
-                            if (currentBieterInVault === bieter.path) {
-                              setCurrentBieterInVault(null);
-                            } else {
-                              setCurrentBieterInVault(bieter.path);
-                            }
-                          }}
+                          className={`py-2 px-3 border-b hover:bg-gray-50 flex justify-between items-center ${currentBieterInVault === bieter.path ? "bg-gray-100" : ""}`}
                         >
-                          {bieter.name}
+                          <span
+                            className={`cursor-pointer flex-grow ${currentBieterInVault === bieter.path ? "font-bold" : ""}`}
+                            onClick={() => {
+                              if (currentBieterInVault === bieter.path) {
+                                setCurrentBieterInVault(null);
+                              } else {
+                                setCurrentBieterInVault(bieter.path);
+                              }
+                            }}
+                          >
+                            {bieter.name}
+                          </span>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="ml-2 h-8 w-8 p-0" onClick={(e) => e.stopPropagation()}>
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">Bieteroptionen</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                              <DropdownMenuItem onSelect={() => handleBieterAction("edit", bieter.path)}>
+                                Bearbeiten
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onSelect={() => handleBieterAction("archive", bieter.path)}>
+                                Archivieren
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onSelect={() => handleBieterAction("stats", bieter.path)}>
+                                Statistiken
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </li>
                       ))}
                     </ul>
