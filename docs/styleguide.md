@@ -1,171 +1,185 @@
 # Klark0 Design System
 
-## Design Principles
+## Designprinzipien
 
-- Clean, modern aesthetic with orange accents
-- Mobile-first approach
-- Consistent spacing and responsive layouts
-- Clear typographic hierarchy
-- Balance of visual warmth and professional restraint
+- Klare, moderne Ästhetik mit warmen, orangen Akzenten
+- Mobile-first Ansatz
+- Konsistente Abstände und responsive Layouts
+- Deutliche typografische Hierarchie
+- Ausgewogene visuelle Wärme und professionelle Zurückhaltung
 
 ## Design Tokens
 
-### Colors
+### Farben
 
-**Primary**
+**Primärfarbe**
 
 - `orange-500` (#F97316)
 
-**Text**
+**Textfarben**
 
-- Headings: `gray-900` (#111827)
-- Body: `gray-500` (#6B7280)
-- Links: `gray-700` (#374151) → `gray-900` on hover
+- Überschriften: `gray-900` (#111827)
+- Fließtext: `gray-500` (#6B7280)
+- Links: `gray-700` (#374151) – → `gray-900` beim Hover
 
-**Backgrounds**
+**Hintergründe**
 
-- Light: `white` (#FFFFFF)
-- Secondary: `gray-50` (#F9FAFB)
+- Haupt: `white` (#FFFFFF)
+- Sekundär: `gray-50` (#F9FAFB)
 
-### Typography
+### Typografie
 
-**Font**
+**Schriftart**
 
-- Family: Inter (system sans-serif)
+- Primär: Manrope (wie in layout.tsx definiert)
 
-**Weights**
+**Gewichte**
 
-- Regular: `font-medium` (500)
-- Bold: `font-bold` (700)
+- Normal: `font-medium` (500)
+- Fett: `font-bold` (700)
 
-**Sizes**
+**Größen**
 
-- H1: `text-4xl`/`text-5xl` (36px/48px)
-- H2: `text-3xl` (30px)
-- H3: `text-lg` (18px)
-- Body: `text-base` (16px)
+- H1: `text-4xl` / `text-5xl` (ca. 36–48px)
+- H2: `text-3xl` (ca. 30px)
+- H3: `text-lg` (ca. 18px)
+- Fließtext: `text-base` (ca. 16px)
 
-### Spacing
+### Abstände
 
-**Vertical**
+**Vertikal**
 
-- Sections: `py-16` (64px) / `py-20` (80px)
-- Between elements: `mt-3` (12px) to `mt-8` (32px)
+- Abschnitte: `py-16` (64px) / `py-20` (80px)
+- Zwischen Elementen: `mt-3` (12px) bis `mt-8` (32px)
 
 **Horizontal**
 
-- Container padding: `px-4` (16px) / `px-6` (24px)
-- Grid gaps: `gap-8` (32px)
+- Container-Padding: `px-4` (16px) bis `px-6` (24px)
+- Grid-Abstände: `gap-8` (32px)
 
-## Components
+## Komponenten
 
 ### Buttons
 
-**Primary**
+**Primär**
 
-- Style: `rounded-full` with `text-lg`
-- Size: `size="lg"`
+- Stil: `rounded-full` mit `text-lg`
+- Größe: `size="lg"`
 
-**Variants**
+**Varianten**
 
 - Outline: `variant="outline"`
 
-**Icon Placement**
+**Icon-Platzierung**
 
-- `ml-2` (8px) / `ml-3` (12px)
+- Zwischenräume: `ml-2` (8px) oder `ml-3` (12px)
 
-### Form Fields
+### Formularfelder
 
-**Spacing**
+**Abstände**
 
-- Between fields: `space-y-4` (16px)
+- Zwischenfelder: `space-y-4` (16px)
 - Labels: `mb-2` (8px)
-- Sections: `mb-4` (16px)
+- Abschnittsabstände: `mb-4` (16px)
 
-**Input Fields**
+**Inputfelder**
 
-- Padding: `px-3 py-2` (12px × 8px)
+- Innenabstand: `px-3 py-2` (z. B. 12px horizontal, 8px vertikal)
 
-**Select Components**
+### Select-Komponenten
 
-- Item padding: `py-2 px-4 my-1` (8px × 16px × 4px)
+- Element-Innenabstand: `py-2 px-4 my-1` (8px vertikal, 16px horizontal, 4px Margin)
 
-### Select Components
+### Karten
 
-- Item padding: `py-2 px-4 my-1` (8px vertical, 16px horizontal, 4px margin)
-- Trigger padding: default (matches input fields)
-- Content spacing: consistent with form field spacing
+**Icons**
 
-### Cards
+- Größe: `h-12 w-12`
+- Stil: `rounded-md bg-orange-500 text-white`
 
-**Icon**
+**Inhalt**
 
-- Size: `h-12 w-12`
-- Style: `rounded-md bg-orange-500 text-white`
+- Abstand: `mt-5` (20px)
 
-**Content**
+**Karten-Komponenten**
 
-- Spacing: `mt-5` (20px)
+- **Standardkarte**
+  - Verwendung: Dient zur Darstellung zusammenhängender Informationen in einem abgetrennten Container.
+  - Merkmale:
+    - Abgerundete Ecken (`rounded-lg`)
+    - Optionaler Header, Inhalt und Footer
+    - Schatten (`shadow-lg`) für visuelle Tiefe
+
+- **Header**
+  - Textstil: `text-xl font-bold`
+  - Optionaler Hintergrund und Padding (`p-4`)
+
+- **Inhalt**
+  - Polsterung: `p-4` bis `p-6`
+  - Konsistente interne Abstände zwischen Elementen
+
+- **Footer**
+  - Optionale Aktionselemente oder Zusammenfassungen
 
 ### Layout
 
-- Page Structure: `flex flex-col min-h-screen`
-- Grid Layouts:
-  - 2-column: `lg:grid lg:grid-cols-2 lg:gap-8`
-  - 3-column: `lg:grid lg:grid-cols-3 lg:gap-8`
-  - 12-column: `lg:grid lg:grid-cols-12 lg:gap-8`
+- Seitenstruktur: `flex flex-col min-h-screen`
+- Grid-Layouts:
+  - Zweispaltig: `lg:grid lg:grid-cols-2 lg:gap-8`
+  - Dreispaltig: `lg:grid lg:grid-cols-3 lg:gap-8`
+  - Zwölfspaltig: `lg:grid lg:grid-cols-12 lg:gap-8`
 
-## UI Patterns
+## UI-Muster
 
 ### Sidebar Navigation
 
 **Layout**
 
-- Structure: `flex flex-col w-64 min-h-screen bg-white border-r border-gray-200`
-- Spacing: `px-4 py-6` (16px × 24px)
-- Breakpoints: `hidden md:flex` (mobile toggle pattern)
+- Struktur: `flex flex-col w-64 min-h-screen bg-white border-r border-gray-200`
+- Abstände: `px-4 py-6` (16px × 24px)
+- Breakpoints: sichtbar ab `md:` (mobile über Toggle)
 
-**Navigation Items**
+**Navigationselemente**
 
-- Active state: `bg-orange-50 text-orange-700`
-- Hover state: `hover:bg-gray-50`
-- Spacing: `px-3 py-2 mb-1` (12px × 8px × 4px)
-- Icon: `w-5 h-5 mr-3` (20px × 20px × 12px)
+- Aktiver Zustand: `bg-orange-50 text-orange-700`
+- Hover-Zustand: `hover:bg-gray-50`
+- Abstände: `px-3 py-2 mb-1` (12px horizontal, 8px vertikal, 4px Margin)
+- Icon: `w-5 h-5 mr-3` (20px × 20px mit 12px Abstand)
 
-**Submenus**
+**Submenüs**
 
-- Indentation: `ml-8` (32px)
+- Einrückung: `ml-8` (32px)
 - Transition: `transition-all duration-200 ease-in-out`
 
-### Hero Sections
+### Hero-Bereiche
 
-- Headline: `text-4xl`/`text-5xl`
-- Subheading: `text-3xl block text-orange-500`
-- CTA: Button with arrow icon
+- Überschrift: `text-4xl`/`text-5xl`
+- Unterüberschrift: `text-3xl block text-orange-500`
+- Call-to-Action: Button mit Pfeilsymbol
 
-### Feature Sections
+### Feature-Bereiche
 
-- Layout: Icon + heading + description
-- Spacing: Consistent `mt-5`
+- Layout: Kombination aus Icon, Überschrift und Beschreibung
+- Abstand: Konsistente `mt-5`
 
-### Forms
+### Formulare
 
-- Spacing: `space-y-4` between fields
-- Labels: `mb-2` below
-- Messages: `text-sm` with `text-red-500`/`text-green-500`
-- Loading: `animate-spin` icon
+- Abstand: `space-y-4` zwischen Feldern
+- Labels: `mb-2`
+- Meldungen: `text-sm` mit `text-red-500` oder `text-green-500`
+- Ladezustände: `animate-spin` für Icons
 
-### Activity Log
+### Aktivitätsprotokoll
 
 - Icon: `bg-orange-100 rounded-full p-2`
-- Icon size: `w-5 h-5 text-orange-600`
-- Item spacing: `flex items-center space-x-4`
+- Icon-Größe: `w-5 h-5 text-orange-600`
+- Elementabstand: `flex items-center space-x-4`
 - Text:
-  - Main: `text-sm font-medium text-gray-900`
-  - Timestamp: `text-xs text-gray-500`
+  - Haupt: `text-sm font-medium text-gray-900`
+  - Zeitstempel: `text-xs text-gray-500`
 
-## Responsive Design
+## Responsives Design
 
-- Mobile-first approach with `sm:`, `md:`, `lg:` breakpoints
-- Text alignment: `sm:text-center lg:text-left`
-- Grid adjustments per breakpoint
+- Mobile-first Ansatz mit `sm:`, `md:`, `lg:` Breakpoints
+- Textausrichtung: `sm:text-center`, `lg:text-left`
+- Grid-Anpassungen je Breakpoint

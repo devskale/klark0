@@ -79,25 +79,39 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
  * @returns JSX.Element
  */
 export function AppSidebar({ versions, navMain, ...props }: AppSidebarProps) {
-  const { state } = useSidebar(); // Access the sidebar state (expanded or collapsed)
-  const { selectedProject } = useSelectedProject(); // Destructure selectedProject from context
+  const { state } = useSidebar(); // "expanded" or "collapsed"
+  const { selectedProject } = useSelectedProject();
+  // Placeholder values – these may be driven by routing in the future.
+  const selectedSection = "Projekt"; 
+  const selectedElement = selectedProject || "Kein Projekt ausgewählt";
 
   return (
     <Sidebar {...props}>
       <SidebarHeader>
-        {selectedProject ? (
-          <div className="p-2 text-sm bg-gray-100 text-gray-900 font-semibold">
-            {selectedProject}
+        {state === "collapsed" ? (
+          // In collapsed mode, show abbreviated brand name only.
+          <div className="p-4 bg-gray-200 text-gray-800 font-bold text-xl">
+            K0
           </div>
         ) : (
+          // When expanded, show full brand name and selection.
           <>
-            <SearchForm />
-            <VersionSwitcher versions={versions} defaultVersion={versions[0]} />
+            <div className="p-4 bg-gray-200 text-gray-800 font-bold text-xl">
+              klark0
+            </div>
+            <div className="p-2 text-sm bg-gray-100 text-gray-900">
+              Aktuelle Auswahl: {selectedSection} - {selectedElement}
+            </div>
+            {!selectedProject && (
+              <>
+                <SearchForm />
+                <VersionSwitcher versions={versions} defaultVersion={versions[0]} />
+              </>
+            )}
           </>
         )}
       </SidebarHeader>
       <SidebarContent>
-        {/* We create a SidebarGroup for each parent. */}
         {navMain.map((item) => (
           <SidebarGroup key={item.title}>
             <SidebarGroupLabel>{item.title}</SidebarGroupLabel>
@@ -107,9 +121,7 @@ export function AppSidebar({ versions, navMain, ...props }: AppSidebarProps) {
                   <SidebarMenuItem key={subItem.title}>
                     <SidebarMenuButton asChild isActive={subItem.isActive}>
                       <a href={subItem.url}>
-                        {subItem.icon && (
-                          <subItem.icon className="mr-2 h-4 w-4" />
-                        )}
+                        {subItem.icon && (<subItem.icon className="mr-2 h-4 w-4" />)}
                         {subItem.title}
                       </a>
                     </SidebarMenuButton>
