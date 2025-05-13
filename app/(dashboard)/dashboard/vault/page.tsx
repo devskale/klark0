@@ -42,6 +42,7 @@ export default function VaultPage() {
   const [showSettings, setShowSettings] = useState(false);
   const [showRefreshMessage, setShowRefreshMessage] = useState(false); // new state for refresh message
   const [refreshing, setRefreshing] = useState(false); // new state for refresh spinner
+  const [selectedView, setSelectedView] = useState("Op-Browser"); // New state for selected view, default is "Op-Browser"
 
   const fileSystemConfig = {
     type: "webdav",
@@ -125,7 +126,28 @@ export default function VaultPage() {
   return (
     <section className="p-4">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-lg font-medium">Vault Viewer</h1>
+        {/* MenuBar for view selection */}
+        <div className="flex space-x-4">
+          <button
+            className={`px-3 py-1 border rounded ${selectedView === 'Dateibrowser' ? 'bg-gray-200' : ''}`}
+            onClick={() => setSelectedView("Dateibrowser")}
+          >
+            Dateibrowser
+          </button>
+          <button
+            className={`px-3 py-1 border rounded ${selectedView === 'Op-Browser' ? 'bg-gray-200' : ''}`}
+            onClick={() => setSelectedView("Op-Browser")}
+          >
+            Op-Browser
+          </button>
+          <button
+            className={`px-3 py-1 border rounded ${selectedView === 'Docs' ? 'bg-gray-200' : ''}`}
+            onClick={() => setSelectedView("Docs")}
+          >
+            Docs
+          </button>
+        </div>
+        {/* Inline refresh and settings */}
         <div className="flex items-center space-x-2">
           <button
             className="p-2 focus:outline-none hover:bg-gray-200 rounded-md"
@@ -159,6 +181,7 @@ export default function VaultPage() {
           </button>
         </div>
       </div>
+
       {showSettings && webdavSettings && (
         <div className="mb-4 p-4 border rounded bg-gray-100">
           <h2 className="text-md font-medium mb-2">Filesystem Settings</h2>
@@ -167,6 +190,7 @@ export default function VaultPage() {
           </pre>
         </div>
       )}
+
       {error ? (
         <div className="text-red-500">Error fetching file tree</div>
       ) : !fileTree ? (
@@ -177,7 +201,8 @@ export default function VaultPage() {
       ) : (
         <Card className="rounded-lg shadow-lg">
           <CardHeader>
-            <h2 className="text-md font-medium">Dateibrowser</h2>
+            {/* Card title shows the selected view */}
+            <h2 className="text-md font-medium">{selectedView}</h2>
           </CardHeader>
           <CardContent>
             {renderFileTree(fileTree, fileSystemConfig.basePath)}
