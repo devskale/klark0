@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import useSWR from "swr";
+import useSWR, { useSWRConfig } from "swr";
 import { abstractFileSystemView } from "@/lib/fs/abstractFilesystem";
 // New shadcn UI imports
 import { Button } from "@/components/ui/button";
@@ -90,6 +90,26 @@ export default function aauswahl() {
     fileTreeFetcher,
     { revalidateOnFocus: false }
   );
+
+  const { mutate } = useSWRConfig();
+
+  const handleCreateProject = async () => {
+    if (!newProjectName || !settings) return;
+    const params = new URLSearchParams({
+      type: "webdav",
+      path: `${fileSystemConfig.basePath}/${newProjectName}`,
+      host: settings.host || "",
+      username: settings.username || "",
+      password: settings.password || "",
+    });
+    const res = await fetch(`/api/fs/mkdir?${params.toString()}`, { method: "POST" });
+    if (res.ok) {
+      setNewProjectName("");
+      mutate([fileSystemConfig.basePath, settings]);
+    } else {
+      console.error("Fehler beim Erstellen des Projekts:", await res.text());
+    }
+  };
 
   if (error) {
     return <p>Fehler beim Laden der Einstellungen.</p>;
@@ -256,10 +276,7 @@ export default function aauswahl() {
                     />
                   </div>
                   <DialogFooter>
-                    <Button
-                      onClick={() => {
-                        /* project creation handler */
-                      }}>
+                    <Button onClick={handleCreateProject}>
                       Projekt erstellen
                     </Button>
                   </DialogFooter>
