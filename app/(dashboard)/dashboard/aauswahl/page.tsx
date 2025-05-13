@@ -25,6 +25,14 @@ import {
 } from "@/components/ui/dialog";
 // Import useSelectedProject from Sidebar context
 import { useSelectedProject } from "@/components/ui/sidebar";
+// Dropdown menu imports
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { Menu as MenuIcon } from "lucide-react";
 
 // --- Added for webdav support ---
 function normalizePath(path: string) {
@@ -108,6 +116,39 @@ export default function aauswahl() {
       mutate([fileSystemConfig.basePath, settings]);
     } else {
       console.error("Fehler beim Erstellen des Projekts:", await res.text());
+    }
+  };
+
+  const handleArchiveProject = async () => {
+    if (!selectedProject || !settings) return;
+    const params = new URLSearchParams({
+      type: "webdav",
+      path: `${fileSystemConfig.basePath}/${selectedProject}`,
+      destination: `${fileSystemConfig.basePath}/archive/${selectedProject}`,
+      host: settings.host || "",
+      username: settings.username || "",
+      password: settings.password || "",
+    });
+    const res = await fetch(`/api/fs/rename?${params}`, { method: "POST" });
+    if (res.ok) mutate([fileSystemConfig.basePath, settings]);
+    else console.error("Archivieren fehlgeschlagen:", await res.text());
+  };
+
+  const handleDeleteProject = async () => {
+    if (!selectedProject || !settings) return;
+    const params = new URLSearchParams({
+      type: "webdav",
+      path: `${fileSystemConfig.basePath}/${selectedProject}`,
+      host: settings.host || "",
+      username: settings.username || "",
+      password: settings.password || "",
+    });
+    const res = await fetch(`/api/fs/delete?${params}`, { method: "POST" });
+    if (res.ok) {
+      setSelectedProject("");
+      mutate([fileSystemConfig.basePath, settings]);
+    } else {
+      console.error("Löschen fehlgeschlagen:", await res.text());
     }
   };
 
@@ -256,33 +297,31 @@ export default function aauswahl() {
               <h2 className="text-xl font-semibold">
                 Bestehendes Projekt wählen (WebDAV)
               </h2>
-              {/* For webdav, project creation dialog only asks for project name */}
-              <Dialog>
-                <DialogTrigger asChild>
+              {/* For webdav, replaced + with burger menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="w-10 h-10 rounded-full">
-                    +
+                    <MenuIcon className="h-5 w-5" />
                   </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Neues Projekt erstellen</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <Input
-                      type="text"
-                      placeholder="Projektnamen eingeben"
-                      value={newProjectName}
-                      onChange={(e) => setNewProjectName(e.target.value)}
-                    />
-                  </div>
-                  <DialogFooter>
-                    <Button onClick={handleCreateProject}>
-                      Projekt erstellen
-                    </Button>
-                  </DialogFooter>
-                  <DialogClose />
-                </DialogContent>
-              </Dialog>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleCreateProject}>
+                    Neues Projekt erstellen
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={handleArchiveProject}
+                    disabled={!selectedProject}
+                  >
+                    Projekt archivieren
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={handleDeleteProject}
+                    disabled={!selectedProject}
+                  >
+                    Projekt löschen
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             {fileTreeError ? (
               <p className="text-red-600">Error fetching projects</p>
