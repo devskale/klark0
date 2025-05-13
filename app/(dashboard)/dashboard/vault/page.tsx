@@ -37,6 +37,9 @@ const fileTreeFetcher = async ([currentPath, settings]: [string, Record<string, 
   throw new Error("Unexpected API response");
 }
 
+// Define reserved directory names
+const reservedDirs = ["B", "archive", "md"];
+
 // Modified: update OpBrowserItem to use selectedProject for expansion
 function OpBrowserItem({ 
   project, 
@@ -56,15 +59,19 @@ function OpBrowserItem({
   // Derive expanded state from selectedProject
   const expanded = selectedProject === project.path;
   
-  const { data: bFolderChildren } = useSWR(
+  const { data: bFolderChildrenRaw } = useSWR( // Renamed to bFolderChildrenRaw
     expanded && webdavSettings ? [project.path + "/B", webdavSettings] : null,
     fileTreeFetcher,
     { revalidateOnFocus: false }
   );
-  // Count of bieters (only names displayed)
-  let bCount = Array.isArray(bFolderChildren)
-    ? bFolderChildren.length
-    : 0;
+
+  // Filter Bieter children: only include directories not in reservedDirs
+  const filteredBFolderChildren = Array.isArray(bFolderChildrenRaw)
+    ? bFolderChildrenRaw.filter(child => child.type === "directory" && !reservedDirs.includes(child.name))
+    : [];
+  
+  // Count of bieters (only names displayed), based on filtered children
+  let bCount = filteredBFolderChildren.length;
     
   const toggleProject = () => {
     if (expanded) {
@@ -94,9 +101,9 @@ function OpBrowserItem({
           B: {bCount}
         </span>
       </div>
-      {expanded && Array.isArray(bFolderChildren) && (
+      {expanded && (
         <ul className="pl-6">
-          {bFolderChildren.map(child => (
+          {filteredBFolderChildren.map(child => (
             <li 
               key={child.path} 
               className={`py-1 border-b cursor-pointer ${selectedBieter === child.path ? "font-bold" : ""}`}
@@ -154,26 +161,31 @@ export default function VaultPage() {
     { revalidateOnFocus: false }
   );
 
-  const renderFileTree = (nodes: FileTreeNode[], currentPath: string) => {
+  const renderFileTree = (nodes: FileTreeNode[], currentPath: string, applyFilter: boolean) => {
+    const itemsToRender = applyFilter
+      ? nodes.filter(node => !(node.type === "directory" && reservedDirs.includes(node.name)))
+      : nodes;
+
     return (
       <ul className="pl-4 bg-sidebar rounded-lg p-2 text-sidebar-foreground">
-        {nodes.map((node) => (
-          <li key={node.path} className="mb-2">
-            {node.type === "directory" ? (
-              <FolderNode node={node} parentPath={currentPath} />
-            ) : (
-              <div className="px-2 py-1 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md transition-colors">
-                {node.name}
-                {node.size && <span className="ml-1 text-xs">({node.size} bytes)</span>}
-              </div>
-            )}
-          </li>
-        ))}
+        {itemsToRender
+          .map((node) => (
+            <li key={node.path} className="mb-2">
+              {node.type === "directory" ? (
+                <FolderNode node={node} parentPath={currentPath} applyFilter={applyFilter} />
+              ) : (
+                <div className="px-2 py-1 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md transition-colors">
+                  {node.name}
+                  {node.size && <span className="ml-1 text-xs">({node.size} bytes)</span>}
+                </div>
+              )}
+            </li>
+          ))}
       </ul>
     );
   };
 
-  const FolderNode = ({ node, parentPath }: { node: FileTreeNode; parentPath: string }) => {
+  const FolderNode = ({ node, parentPath, applyFilter }: { node: FileTreeNode; parentPath: string; applyFilter: boolean }) => {
     const [isOpen, setIsOpen] = useState(false);
     const { data: children, error: folderError, mutate: mutateFolder } = useSWR(
       webdavSettings ? [node.path, webdavSettings] : null,
@@ -197,7 +209,7 @@ export default function VaultPage() {
           <span className="mr-1">{isOpen ? <ChevronDown /> : <ChevronRight />}</span>
           <span>{node.name}</span>
         </div>
-        {isOpen && children && renderFileTree(children, node.path)}
+        {isOpen && children && renderFileTree(children, node.path, applyFilter)}
       </div>
     );
   };
@@ -285,7 +297,7 @@ export default function VaultPage() {
           <CardContent>
             <ul>
               {fileTree
-                .filter(node => node.type === "directory" && node.name !== "B") // changed: filter out reserved dir "B"
+                .filter(node => node.type === "directory" && !reservedDirs.includes(node.name)) // filter out reserved dirs
                 .map(project => (
                   <OpBrowserItem 
                     key={project.path} 
@@ -306,7 +318,7 @@ export default function VaultPage() {
             <h2 className="text-md font-medium">{selectedView}</h2>
           </CardHeader>
           <CardContent>
-            {renderFileTree(fileTree, fileSystemConfig.basePath)}
+            {renderFileTree(fileTree, fileSystemConfig.basePath, false)} {/* Pass false to disable reservedDirs filter for Dateibrowser */}
           </CardContent>
         </Card>
       )}
