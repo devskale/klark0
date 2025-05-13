@@ -35,7 +35,84 @@ const fileTreeFetcher = async ([currentPath, settings]: [string, Record<string, 
     return rawEntries.filter(entry => normalizePath(entry.path) !== normalizePath(currentPath));
   }
   throw new Error("Unexpected API response");
-};
+}
+
+// Modified: update OpBrowserItem to use selectedProject for expansion
+function OpBrowserItem({ 
+  project, 
+  webdavSettings,
+  selectedProject,
+  setSelectedProject,
+  selectedBieter,
+  setSelectedBieter
+}: { 
+  project: FileTreeNode; 
+  webdavSettings: Record<string, string | undefined>;
+  selectedProject: string | null;
+  setSelectedProject: (p: string | null) => void;
+  selectedBieter: string | null;
+  setSelectedBieter: (b: string | null) => void;
+}) {
+  // Derive expanded state from selectedProject
+  const expanded = selectedProject === project.path;
+  
+  const { data: bFolderChildren } = useSWR(
+    expanded && webdavSettings ? [project.path + "/B", webdavSettings] : null,
+    fileTreeFetcher,
+    { revalidateOnFocus: false }
+  );
+  // Count of bieters (only names displayed)
+  let bCount = Array.isArray(bFolderChildren)
+    ? bFolderChildren.length
+    : 0;
+    
+  const toggleProject = () => {
+    if (expanded) {
+      setSelectedProject(null);
+      setSelectedBieter(null);
+    } else {
+      setSelectedProject(project.path);
+      setSelectedBieter(null);
+    }
+  };
+
+  const toggleBieter = (bieterPath: string) => {
+    setSelectedBieter(selectedBieter === bieterPath ? null : bieterPath);
+  };
+
+  return (
+    <li>
+      <div
+        className="flex justify-between items-center border-b py-2 cursor-pointer"
+        onClick={toggleProject}
+      >
+        <span className={`flex items-center ${selectedProject === project.path ? "font-bold" : ""}`}>
+          {expanded ? <ChevronDown className="mr-1" /> : <ChevronRight className="mr-1" />}
+          {project.name}
+        </span>
+        <span className="px-2 py-1 bg-blue-200 text-blue-600 rounded-full text-xs">
+          B: {bCount}
+        </span>
+      </div>
+      {expanded && Array.isArray(bFolderChildren) && (
+        <ul className="pl-6">
+          {bFolderChildren.map(child => (
+            <li 
+              key={child.path} 
+              className={`py-1 border-b cursor-pointer ${selectedBieter === child.path ? "font-bold" : ""}`}
+              onClick={(e) => { 
+                 e.stopPropagation(); 
+                 toggleBieter(child.path);
+              }}
+            >
+              {child.name}
+            </li>
+          ))}
+        </ul>
+      )}
+    </li>
+  );
+}
 
 export default function VaultPage() {
   const [webdavSettings, setWebdavSettings] = useState<Record<string, string | undefined> | null>(null);
@@ -43,6 +120,8 @@ export default function VaultPage() {
   const [showRefreshMessage, setShowRefreshMessage] = useState(false); // new state for refresh message
   const [refreshing, setRefreshing] = useState(false); // new state for refresh spinner
   const [selectedView, setSelectedView] = useState("Op-Browser"); // New state for selected view, default is "Op-Browser"
+  const [selectedProject, setSelectedProject] = useState<string | null>(null); // Added: selected Ausschreibung
+  const [selectedBieter, setSelectedBieter] = useState<string | null>(null); // Added: selected Bieter
 
   const fileSystemConfig = {
     type: "webdav",
@@ -198,10 +277,32 @@ export default function VaultPage() {
           <Loader2 className="h-6 w-6 animate-spin" />
           <span className="ml-2">Loading...</span>
         </div>
+      ) : selectedView === "Op-Browser" ? (
+        <Card className="rounded-lg shadow-lg">
+          <CardHeader>
+            <h2 className="text-md font-medium">{selectedView}</h2>
+          </CardHeader>
+          <CardContent>
+            <ul>
+              {fileTree
+                .filter(node => node.type === "directory" && node.name !== "B") // changed: filter out reserved dir "B"
+                .map(project => (
+                  <OpBrowserItem 
+                    key={project.path} 
+                    project={project} 
+                    webdavSettings={webdavSettings as Record<string, string | undefined>}
+                    selectedProject={selectedProject}
+                    setSelectedProject={setSelectedProject}
+                    selectedBieter={selectedBieter}
+                    setSelectedBieter={setSelectedBieter}
+                  />
+                ))}
+            </ul>
+          </CardContent>
+        </Card>
       ) : (
         <Card className="rounded-lg shadow-lg">
           <CardHeader>
-            {/* Card title shows the selected view */}
             <h2 className="text-md font-medium">{selectedView}</h2>
           </CardHeader>
           <CardContent>
