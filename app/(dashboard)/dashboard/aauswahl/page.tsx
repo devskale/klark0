@@ -3,6 +3,7 @@
 import { useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import { abstractFileSystemView } from "@/lib/fs/abstractFilesystem";
+import { initdir } from "@/lib/fs/initdir";
 // New shadcn UI imports
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -110,10 +111,15 @@ export default function aauswahl() {
       username: settings.username || "",
       password: settings.password || "",
     });
-    const res = await fetch(`/api/fs/mkdir?${params.toString()}`, { method: "POST" });
+    const res = await fetch(`/api/fs/mkdir?${params.toString()}`, {
+      method: "POST",
+    });
     if (res.ok) {
+      // reset & reload
       setNewProjectName("");
       mutate([fileSystemConfig.basePath, settings]);
+      // scaffold the new directory (stubbed, implement later)
+      await initdir(newProjectName);
     } else {
       console.error("Fehler beim Erstellen des Projekts:", await res.text());
     }
@@ -297,7 +303,35 @@ export default function aauswahl() {
               <h2 className="text-xl font-semibold">
                 Bestehendes Projekt wählen (WebDAV)
               </h2>
-              {/* For webdav, replaced + with burger menu */}
+
+              {/* Neues Projekt erstellen Modal */}
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="w-10 h-10 rounded-full">
+                    +
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Neues Projekt erstellen</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <Input
+                      type="text"
+                      placeholder="Projektnamen eingeben"
+                      value={newProjectName}
+                      onChange={(e) => setNewProjectName(e.target.value)}
+                    />
+                  </div>
+                  <DialogFooter>
+                    <Button onClick={handleCreateProject}>
+                      Projekt erstellen
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
+              {/* …existing DropdownMenu (archive/delete only)… */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="w-10 h-10 rounded-full">
@@ -305,9 +339,6 @@ export default function aauswahl() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={handleCreateProject}>
-                    Neues Projekt erstellen
-                  </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={handleArchiveProject}
                     disabled={!selectedProject}
