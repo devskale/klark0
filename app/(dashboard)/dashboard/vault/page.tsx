@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronRight, Loader2, Menu, RefreshCw } from "lucide-react";
 import { abstractFileSystemView, FileEntry } from "@/lib/fs/abstractFilesystem";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { useSelectedProject } from "@/components/ui/sidebar"; // Assuming this is the correct path and hook
 
 type FileTreeNode = FileEntry;
 
@@ -43,11 +44,17 @@ const reservedDirs = ["B", "archive", "md"];
 export default function VaultPage() {
   const [webdavSettings, setWebdavSettings] = useState<Record<string, string | undefined> | null>(null);
   const [showSettings, setShowSettings] = useState(false);
-  const [showRefreshMessage, setShowRefreshMessage] = useState(false); // new state for refresh message
-  const [refreshing, setRefreshing] = useState(false); // new state for refresh spinner
-  const [selectedView, setSelectedView] = useState("Op-Browser"); // New state for selected view, default is "Op-Browser"
-  const [selectedProject, setSelectedProject] = useState<string | null>(null); // Added: selected Ausschreibung
-  const [selectedBieter, setSelectedBieter] = useState<string | null>(null); // Added: selected Bieter
+  const [showRefreshMessage, setShowRefreshMessage] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedView, setSelectedView] = useState("Op-Browser");
+
+  // Local state for selections within VaultPage UI
+  const [currentProjectInVault, setCurrentProjectInVault] = useState<string | null>(null);
+  const [currentBieterInVault, setCurrentBieterInVault] = useState<string | null>(null);
+
+  // Global context setters
+  const { setSelectedProject: setGlobalSelectedProject, setSelectedBieter: setGlobalSelectedBieter } = useSelectedProject();
+  const [showSelectionConfirmation, setShowSelectionConfirmation] = useState(false);
 
   const fileSystemConfig = {
     type: "webdav",
@@ -82,7 +89,7 @@ export default function VaultPage() {
 
   // SWR hook for fetching Bieter data for the selected project
   const { data: bieterFolderChildrenRaw, error: bieterError } = useSWR(
-    webdavSettings && selectedProject ? [`${selectedProject}/B`, webdavSettings] : null,
+    webdavSettings && currentProjectInVault ? [`${currentProjectInVault}/B`, webdavSettings] : null,
     fileTreeFetcher,
     { revalidateOnFocus: false }
   );
@@ -142,6 +149,17 @@ export default function VaultPage() {
         {isOpen && children && renderFileTree(children, node.path, applyFilter)}
       </div>
     );
+  };
+
+  const handleSelectProjectAndBieter = () => {
+    if (currentProjectInVault) { // Only project is mandatory
+      setGlobalSelectedProject(currentProjectInVault);
+      setGlobalSelectedBieter(currentBieterInVault); // Pass bieter, which might be null
+      setShowSelectionConfirmation(true);
+      setTimeout(() => {
+        setShowSelectionConfirmation(false);
+      }, 2000); // Hide message after 2 seconds
+    }
   };
 
   return (
@@ -220,78 +238,96 @@ export default function VaultPage() {
           <span className="ml-2">Loading...</span>
         </div>
       ) : selectedView === "Op-Browser" ? (
-        <div className="flex space-x-4">
-          {/* Left Card: Ausschreibungen */}
-          <Card className="rounded-lg shadow-lg w-1/2">
-            <CardHeader>
-              <h2 className="text-md font-medium">Ausschreibungen</h2>
-            </CardHeader>
-            <CardContent>
-              <ul>
-                {fileTree
-                  .filter(node => node.type === "directory" && !reservedDirs.includes(node.name))
-                  .map(project => (
-                    <li
-                      key={project.path}
-                      className={`py-2 px-3 border-b cursor-pointer hover:bg-gray-100 ${selectedProject === project.path ? "font-bold bg-gray-100" : ""}`}
-                      onClick={() => {
-                        if (selectedProject === project.path) {
-                          setSelectedProject(null);
-                          setSelectedBieter(null);
-                        } else {
-                          setSelectedProject(project.path);
-                          setSelectedBieter(null); // Reset bieter selection when project changes
-                        }
-                      }}
-                    >
-                      {project.name}
-                    </li>
-                  ))}
-              </ul>
-            </CardContent>
-          </Card>
-
-          {/* Right Card: Bieter */}
-          {selectedProject && (
+        <>
+          <div className="flex space-x-4">
+            {/* Left Card: Ausschreibungen */}
             <Card className="rounded-lg shadow-lg w-1/2">
               <CardHeader>
-                <h2 className="text-md font-medium">
-                  Bieter für: {fileTree.find(p => p.path === selectedProject)?.name || 'Ausgewähltes Projekt'}
-                </h2>
+                <h2 className="text-md font-medium">Ausschreibungen</h2>
               </CardHeader>
               <CardContent>
-                {bieterError ? (
-                  <div className="text-red-500">Error fetching bieter list.</div>
-                ) : !bieterFolderChildrenRaw && selectedProject ? (
-                  <div className="flex items-center">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    <span className="ml-2 text-sm">Lade Bieter...</span>
-                  </div>
-                ) : filteredBieterChildren.length > 0 ? (
-                  <ul>
-                    {filteredBieterChildren.map(bieter => (
+                <ul>
+                  {fileTree
+                    .filter(node => node.type === "directory" && !reservedDirs.includes(node.name))
+                    .map(project => (
                       <li
-                        key={bieter.path}
-                        className={`py-2 px-3 border-b cursor-pointer hover:bg-gray-100 ${selectedBieter === bieter.path ? "font-bold bg-gray-100" : ""}`}
+                        key={project.path}
+                        className={`py-2 px-3 border-b cursor-pointer hover:bg-gray-100 ${currentProjectInVault === project.path ? "font-bold bg-gray-100" : ""}`}
                         onClick={() => {
-                          if (selectedBieter === bieter.path) {
-                            setSelectedBieter(null);
+                          if (currentProjectInVault === project.path) {
+                            setCurrentProjectInVault(null);
+                            setCurrentBieterInVault(null);
                           } else {
-                            setSelectedBieter(bieter.path);
+                            setCurrentProjectInVault(project.path);
+                            setCurrentBieterInVault(null); 
                           }
                         }}
                       >
-                        {bieter.name}
+                        {project.name}
                       </li>
                     ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-gray-500">Keine Bieter gefunden oder Projekt enthält keine "B"-Mappe.</p>
-                )}
+                </ul>
               </CardContent>
             </Card>
+
+            {/* Right Card: Bieter */}
+            {currentProjectInVault && (
+              <Card className="rounded-lg shadow-lg w-1/2">
+                <CardHeader>
+                  <h2 className="text-md font-medium">
+                    Bieter für: {fileTree.find(p => p.path === currentProjectInVault)?.name || 'Ausgewähltes Projekt'}
+                  </h2>
+                </CardHeader>
+                <CardContent>
+                  {bieterError ? (
+                    <div className="text-red-500">Error fetching bieter list.</div>
+                  ) : !bieterFolderChildrenRaw && currentProjectInVault ? (
+                    <div className="flex items-center">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <span className="ml-2 text-sm">Lade Bieter...</span>
+                    </div>
+                  ) : filteredBieterChildren.length > 0 ? (
+                    <ul>
+                      {filteredBieterChildren.map(bieter => (
+                        <li
+                          key={bieter.path}
+                          className={`py-2 px-3 border-b cursor-pointer hover:bg-gray-100 ${currentBieterInVault === bieter.path ? "font-bold bg-gray-100" : ""}`}
+                          onClick={() => {
+                            if (currentBieterInVault === bieter.path) {
+                              setCurrentBieterInVault(null);
+                            } else {
+                              setCurrentBieterInVault(bieter.path);
+                            }
+                          }}
+                        >
+                          {bieter.name}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-gray-500">Keine Bieter gefunden oder Projekt enthält keine "B"-Mappe.</p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </div>
+          {currentProjectInVault && ( // Button appears if a project is selected
+            <div className="mt-6 flex flex-col items-center">
+              <Button
+                onClick={handleSelectProjectAndBieter}
+                size="lg"
+                className="bg-orange-500 hover:bg-orange-600 text-white rounded-full text-lg px-6 py-3"
+              >
+                {currentBieterInVault ? "Ausgewähltes Projekt & Bieter übernehmen" : "Ausgewähltes Projekt übernehmen"}
+              </Button>
+              {showSelectionConfirmation && (
+                <p className="text-green-600 mt-2 text-sm">
+                  {currentBieterInVault ? "Projekt & Bieter wurden übernommen!" : "Projekt wurde übernommen!"}
+                </p>
+              )}
+            </div>
           )}
-        </div>
+        </>
       ) : (
         <Card className="rounded-lg shadow-lg">
           <CardHeader>
