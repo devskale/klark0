@@ -1,14 +1,32 @@
 # Opinionated Filesystem Structure
 
+Ausschreibungsdokumente sind die Unterlagen, die ein Auftraggeber erstellt und veröffentlicht, um potenzielle Anbieter über eine geplante Vergabeleistung zu informieren. Sie enthalten u. a. die Leistungsbeschreibung, Teilnahmebedingungen, Vertragsbedingungen und Fristen.
+
+Bieterdokumente sind die Unterlagen, die ein Bieter (Anbieter) im Rahmen einer Ausschreibung einreicht. Sie umfassen z. B. das Angebot, Preisblätter, Nachweise zur Eignung sowie ggf. Konzepte oder technische Lösungen.
+
+
 ## Supported Filetypes
 - pdf (Textbasiert oder als Scan)
 - Office-Dokumente (docx, xlsx, pptx)
 - txt
 - Bilder (jpg, jpeg, png)
 
+# Verzeichnisstruktur
+
+## Verzeichnisstruktur Top Level
+Beinhaltet die aktuellen aktiven Ausschreibungsverzeichnisse (Projektordner):
+
+- **Ausschreibungsname**
+  - **A** (enthält Ausschreibungsdokumente)
+    - **md** (enthält Markdown-Versionen der Ausschreibungsdokumente)
+  - **B** (Bieterverzeichnisse)
+    - **BIETERA** (enthält Bieterdokumente)
+       - **md/** (enthält Markdown-Versionen der Bieterdokumente; unterstützte Dateitypen siehe "Supported Filetypes")
+
+
 ## Reserved Directory Names
 - **md**: Für ein Verzeichnis, das Markdown-Dateien enthält.
-- **proc**: Enthält verarbeitete Versionen von Dokumenten.
+- **proc**: Enthält verarbeitete Versionen von Dokumenten. 
 - **archive**: Reserviert für ein Verzeichnis mit archivierten Projekten.
 
 ## Reserved Filenames
@@ -18,14 +36,6 @@
   - Enthält automatisch extrahierte Informationen von *PROJEKTNAME*.
 - **PROJEKTNAME/PROJEKTNAME.json**
   - Enthält Informationen über das Projekt und zugehörige Dokumente.
-
-## Top Level
-Beinhaltet die aktuellen aktiven Ausschreibungsverzeichnisse (Projektordner):
-
-- **Ausschreibungsname**
-  - **A** (enthält Ausschreibungsdokumente)
-    - **md** (enthält Markdown-Versionen der Ausschreibungsdokumente)
-  - **B** (Bieterverzeichnisse)
-    - **BIETERA** (enthält Bieterdokumente)
-       - **md/** (enthält Markdown-Versionen der Bieterdokumente; unterstützte Dateitypen siehe "Supported Filetypes")
+  - Enthält zu jedem Dokument den original dateiname, die original dateigröße, den original hash wert.
+  - enthält zu jedem
 
