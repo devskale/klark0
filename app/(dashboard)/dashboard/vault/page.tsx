@@ -318,11 +318,11 @@ export default function VaultPage() {
                 size="lg"
                 className="bg-orange-500 hover:bg-orange-600 text-white rounded-full text-lg px-6 py-3"
               >
-                {currentBieterInVault ? "Ausgewähltes Projekt & Bieter übernehmen" : "Ausgewähltes Projekt übernehmen"}
+                {currentBieterInVault ? "Bieter übernehmen" : "Projekt übernehmen"}
               </Button>
               {showSelectionConfirmation && (
                 <p className="text-green-600 mt-2 text-sm">
-                  {currentBieterInVault ? "Projekt & Bieter wurden übernommen!" : "Projekt wurde übernommen!"}
+                  {currentBieterInVault ? "Bieter wurde übernommen!" : "Projekt wurde übernommen!"}
                 </p>
               )}
             </div>
