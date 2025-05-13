@@ -59,8 +59,8 @@ function OpBrowserItem({
   // Derive expanded state from selectedProject
   const expanded = selectedProject === project.path;
   
-  const { data: bFolderChildrenRaw } = useSWR( // Renamed to bFolderChildrenRaw
-    expanded && webdavSettings ? [project.path + "/B", webdavSettings] : null,
+  const { data: bFolderChildrenRaw } = useSWR( 
+    webdavSettings ? [project.path + "/B", webdavSettings] : null, // Changed: Fetch regardless of 'expanded' state
     fileTreeFetcher,
     { revalidateOnFocus: false }
   );
