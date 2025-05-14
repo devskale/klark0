@@ -45,3 +45,4 @@ postgres_data/
 
 #Drizzle Migrations
 lib/db/migrations/
+data/**

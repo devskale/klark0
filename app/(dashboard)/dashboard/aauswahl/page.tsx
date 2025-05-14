@@ -87,6 +87,7 @@ export default function aauswahl() {
   // New states for adding docs on an existing project
   const [docImportUrl, setDocImportUrl] = useState<string>("");
   const [docUploadFile, setDocUploadFile] = useState<File | null>(null);
+  const [openCreateProject, setOpenCreateProject] = useState<boolean>(false);
 
   const { data: settings, error } = useSWR(
     "/api/settings?key=fileSystem",
@@ -116,10 +117,11 @@ export default function aauswahl() {
     });
     if (res.ok) {
       // reset & reload
-      setNewProjectName("");
+      setNewProjectName(newProjectName);
       mutate([fileSystemConfig.basePath, settings]);
       // scaffold the new directory (stubbed, implement later)
       await initdir(newProjectName);
+      setOpenCreateProject(false); // Close modal after creation
     } else {
       console.error("Fehler beim Erstellen des Projekts:", await res.text());
     }
@@ -304,10 +306,13 @@ export default function aauswahl() {
                 Bestehendes Projekt wählen (WebDAV)
               </h2>
 
-              {/* Neues Projekt erstellen Modal */}
-              <Dialog>
+              {/* Neues Projekt erstellen Modal with controlled state */}
+              <Dialog open={openCreateProject} onOpenChange={setOpenCreateProject}>
                 <DialogTrigger asChild>
-                  <Button variant="outline" className="w-10 h-10 rounded-full">
+                  <Button
+                    variant="outline"
+                    className="w-10 h-10 rounded-full"
+                    onClick={() => setOpenCreateProject(true)}>
                     +
                   </Button>
                 </DialogTrigger>
