@@ -118,6 +118,12 @@ export default function VaultPage() {
   const [isBieterUploadDialogOpen, setIsBieterUploadDialogOpen] =
     useState(false);
   const [bieterUploadFiles, setBieterUploadFiles] = useState<File[]>([]);
+  const [uploadingProject, setUploadingProject] = useState(false);
+  const [uploadingBieter, setUploadingBieter] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isDraggingProject, setIsDraggingProject] = useState(false);
+  const [isDraggingBieter, setIsDraggingBieter] = useState(false);
 
   const handleCreateBieter = async () => {
     if (!newBieterName.trim() || !webdavSettings || !currentProjectInVault)
@@ -312,6 +318,152 @@ export default function VaultPage() {
     else console.error("Löschen fehlgeschlagen:", await res.text());
   };
 
+  // Verbesserte Handler für Drag & Drop
+  const handleProjectFileDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setIsDraggingProject(true);
+    } else if (e.type === "dragleave" || e.type === "drop") {
+      setIsDraggingProject(false);
+    }
+  };
+
+  const handleProjectFileDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingProject(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      setProjectUploadFiles(Array.from(e.dataTransfer.files));
+    }
+  };
+
+  const handleBieterFileDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setIsDraggingBieter(true);
+    } else if (e.type === "dragleave" || e.type === "drop") {
+      setIsDraggingBieter(false);
+    }
+  };
+
+  const handleBieterFileDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingBieter(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      setBieterUploadFiles(Array.from(e.dataTransfer.files));
+    }
+  };
+
+  const handleProjectUpload = async () => {
+    if (!projectUploadFiles.length || !webdavSettings || !currentProjectInVault)
+      return;
+
+    setUploadingProject(true);
+    setUploadError(null);
+
+    try {
+      const formData = new FormData();
+      projectUploadFiles.forEach((file) => {
+        formData.append("files", file);
+      });
+
+      // Modifiziert, um in den A-Unterordner hochzuladen (für Projekt/Ausschreibungsdaten)
+      const uploadPath = `${currentProjectInVault}/A`;
+
+      const queryParams = new URLSearchParams({
+        type: fileSystemConfig.type,
+        path: uploadPath,
+        host: webdavSettings.host || "",
+        username: webdavSettings.username || "",
+        password: webdavSettings.password || "",
+      });
+
+      const response = await fetch(`/api/fs/upload?${queryParams.toString()}`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      // Upload erfolgreich
+      setUploadSuccess(`${projectUploadFiles.length} Dateien hochgeladen`);
+      setTimeout(() => setUploadSuccess(null), 3000);
+      setProjectUploadFiles([]);
+      setIsProjectUploadDialogOpen(false);
+
+      // Optional: Tree neu laden falls notwendig
+      await mutate();
+    } catch (error) {
+      console.error("Fehler beim Upload:", error);
+      setUploadError(
+        error instanceof Error
+          ? error.message
+          : "Unbekannter Fehler beim Upload"
+      );
+    } finally {
+      setUploadingProject(false);
+    }
+  };
+
+  const handleBieterUpload = async () => {
+    if (!bieterUploadFiles.length || !webdavSettings || !currentBieterInVault)
+      return;
+
+    setUploadingBieter(true);
+    setUploadError(null);
+
+    try {
+      const formData = new FormData();
+      bieterUploadFiles.forEach((file) => {
+        formData.append("files", file);
+      });
+
+      const queryParams = new URLSearchParams({
+        type: fileSystemConfig.type,
+        path: currentBieterInVault,
+        host: webdavSettings.host || "",
+        username: webdavSettings.username || "",
+        password: webdavSettings.password || "",
+      });
+
+      const response = await fetch(`/api/fs/upload?${queryParams.toString()}`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      // Upload erfolgreich
+      setUploadSuccess(`${bieterUploadFiles.length} Dateien hochgeladen`);
+      setTimeout(() => setUploadSuccess(null), 3000);
+      setBieterUploadFiles([]);
+      setIsBieterUploadDialogOpen(false);
+
+      // Bieter-Liste bzw. Dateiliste neu laden
+      await mutateBieter();
+    } catch (error) {
+      console.error("Fehler beim Upload:", error);
+      setUploadError(
+        error instanceof Error
+          ? error.message
+          : "Unbekannter Fehler beim Upload"
+      );
+    } finally {
+      setUploadingBieter(false);
+    }
+  };
+
   const handleProjectAction = (action: string, projectPath: string) => {
     console.log(`Project Action: ${action} on ${projectPath}`);
     // Implement actual logic for edit, archive, stats
@@ -437,6 +589,18 @@ export default function VaultPage() {
         </div>
       )}
 
+      {uploadSuccess && (
+        <div className="fixed top-4 right-4 bg-green-100 text-green-800 p-3 rounded-md shadow-md z-50">
+          {uploadSuccess}
+        </div>
+      )}
+
+      {uploadError && (
+        <div className="fixed top-4 right-4 bg-red-100 text-red-800 p-3 rounded-md shadow-md z-50">
+          {uploadError}
+        </div>
+      )}
+
       {error ? (
         <div className="text-red-500">Error fetching file tree</div>
       ) : !fileTree ? (
@@ -504,27 +668,72 @@ export default function VaultPage() {
                             </DialogTitle>
                           </DialogHeader>
                           <div className="space-y-4 py-4">
-                            <div className="border border-dashed p-4 rounded text-center">
-                              <p className="mb-2 text-sm text-gray-600">
-                                Dateien hier ablegen oder klicken
-                              </p>
+                            <div
+                              className={`border-2 ${
+                                isDraggingProject
+                                  ? "border-primary"
+                                  : "border-dashed"
+                              } p-4 rounded-md text-center cursor-pointer relative`}
+                              onDragEnter={handleProjectFileDrag}
+                              onDragOver={handleProjectFileDrag}
+                              onDragLeave={handleProjectFileDrag}
+                              onDrop={handleProjectFileDrop}
+                              onClick={() =>
+                                document
+                                  .getElementById("project-file-upload")
+                                  ?.click()
+                              }>
                               <input
+                                id="project-file-upload"
                                 type="file"
                                 multiple
-                                className="w-full h-20 opacity-0 absolute inset-0 cursor-pointer"
+                                className="sr-only"
                                 onChange={(e) =>
                                   setProjectUploadFiles(
-                                    Array.from(e.currentTarget.files || [])
+                                    Array.from(e.target.files || [])
                                   )
                                 }
                               />
+                              <Upload className="h-10 w-10 mx-auto text-gray-400 mb-2" />
+                              <p className="mb-1 text-sm text-gray-600">
+                                Dateien hier ablegen oder{" "}
+                                <span className="text-primary font-medium">
+                                  klicken
+                                </span>{" "}
+                                zum Auswählen
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                Unterstützt werden alle Dateitypen
+                              </p>
                             </div>
                             {projectUploadFiles.length > 0 && (
-                              <ul className="text-sm">
-                                {projectUploadFiles.map((f) => (
-                                  <li key={f.name}>{f.name}</li>
-                                ))}
-                              </ul>
+                              <div>
+                                <p className="text-sm font-medium mb-2">
+                                  Ausgewählte Dateien (
+                                  {projectUploadFiles.length}):
+                                </p>
+                                <ul className="text-sm max-h-40 overflow-y-auto border rounded-md p-2">
+                                  {projectUploadFiles.map((f) => (
+                                    <li
+                                      key={f.name}
+                                      className="py-1 border-b last:border-0 flex justify-between">
+                                      <span className="truncate mr-2">
+                                        {f.name}
+                                      </span>
+                                      <span className="text-gray-400 text-xs">
+                                        {(f.size / 1024).toFixed(1)} KB
+                                      </span>
+                                    </li>
+                                  ))}
+                                </ul>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="mt-2"
+                                  onClick={() => setProjectUploadFiles([])}>
+                                  Auswahl zurücksetzen
+                                </Button>
+                              </div>
                             )}
                           </div>
                           <DialogFooter>
@@ -532,21 +741,27 @@ export default function VaultPage() {
                               <Button variant="outline">Abbrechen</Button>
                             </DialogClose>
                             <Button
-                              onClick={() => {
-                                console.log(
-                                  "Upload to project:",
-                                  projectUploadFiles
-                                );
-                                setProjectUploadFiles([]);
-                                setIsProjectUploadDialogOpen(false);
-                              }}>
-                              Zu Projekt{" "}
-                              {decodeURIComponent(
-                                currentProjectInVault
-                                  .replace(/^\/klark0\//, "")
-                                  .split("/")[0]
-                              )}{" "}
-                              hinzufügen
+                              onClick={handleProjectUpload}
+                              disabled={
+                                projectUploadFiles.length === 0 ||
+                                uploadingProject
+                              }>
+                              {uploadingProject ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                  Uploading...
+                                </>
+                              ) : (
+                                <>
+                                  Zu Projekt{" "}
+                                  {decodeURIComponent(
+                                    currentProjectInVault
+                                      .replace(/^\/klark0\//, "")
+                                      .split("/")[0]
+                                  )}{" "}
+                                  hinzufügen
+                                </>
+                              )}
                             </Button>
                           </DialogFooter>
                         </DialogContent>
@@ -726,27 +941,72 @@ export default function VaultPage() {
                               </DialogTitle>
                             </DialogHeader>
                             <div className="space-y-4 py-4">
-                              <div className="border border-dashed p-4 rounded text-center">
-                                <p className="mb-2 text-sm text-gray-600">
-                                  Dateien hier ablegen oder klicken
-                                </p>
+                              <div
+                                className={`border-2 ${
+                                  isDraggingBieter
+                                    ? "border-primary"
+                                    : "border-dashed"
+                                } p-4 rounded-md text-center cursor-pointer relative`}
+                                onDragEnter={handleBieterFileDrag}
+                                onDragOver={handleBieterFileDrag}
+                                onDragLeave={handleBieterFileDrag}
+                                onDrop={handleBieterFileDrop}
+                                onClick={() =>
+                                  document
+                                    .getElementById("bieter-file-upload")
+                                    ?.click()
+                                }>
                                 <input
+                                  id="bieter-file-upload"
                                   type="file"
                                   multiple
-                                  className="w-full h-20 opacity-0 absolute inset-0 cursor-pointer"
+                                  className="sr-only"
                                   onChange={(e) =>
                                     setBieterUploadFiles(
-                                      Array.from(e.currentTarget.files || [])
+                                      Array.from(e.target.files || [])
                                     )
                                   }
                                 />
+                                <Upload className="h-10 w-10 mx-auto text-gray-400 mb-2" />
+                                <p className="mb-1 text-sm text-gray-600">
+                                  Dateien hier ablegen oder{" "}
+                                  <span className="text-primary font-medium">
+                                    klicken
+                                  </span>{" "}
+                                  zum Auswählen
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  Unterstützt werden alle Dateitypen
+                                </p>
                               </div>
                               {bieterUploadFiles.length > 0 && (
-                                <ul className="text-sm">
-                                  {bieterUploadFiles.map((f) => (
-                                    <li key={f.name}>{f.name}</li>
-                                  ))}
-                                </ul>
+                                <div>
+                                  <p className="text-sm font-medium mb-2">
+                                    Ausgewählte Dateien (
+                                    {bieterUploadFiles.length}):
+                                  </p>
+                                  <ul className="text-sm max-h-40 overflow-y-auto border rounded-md p-2">
+                                    {bieterUploadFiles.map((f) => (
+                                      <li
+                                        key={f.name}
+                                        className="py-1 border-b last:border-0 flex justify-between">
+                                        <span className="truncate mr-2">
+                                          {f.name}
+                                        </span>
+                                        <span className="text-gray-400 text-xs">
+                                          {(f.size / 1024).toFixed(1)} KB
+                                        </span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="mt-2"
+                                    onClick={() => setBieterUploadFiles([])}>
+                                    Auswahl zurücksetzen
+                                  </Button>
+                                </div>
                               )}
                             </div>
                             <DialogFooter>
@@ -754,22 +1014,28 @@ export default function VaultPage() {
                                 <Button variant="outline">Abbrechen</Button>
                               </DialogClose>
                               <Button
-                                onClick={() => {
-                                  console.log(
-                                    "Upload to bieter:",
-                                    bieterUploadFiles
-                                  );
-                                  setBieterUploadFiles([]);
-                                  setIsBieterUploadDialogOpen(false);
-                                }}>
-                                Zu Bieter{" "}
-                                {decodeURIComponent(
-                                  currentBieterInVault
-                                    .replace(/\/$/, "")
-                                    .split("/")
-                                    .pop()!
-                                )}{" "}
-                                hinzufügen
+                                onClick={handleBieterUpload}
+                                disabled={
+                                  bieterUploadFiles.length === 0 ||
+                                  uploadingBieter
+                                }>
+                                {uploadingBieter ? (
+                                  <>
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    Uploading...
+                                  </>
+                                ) : (
+                                  <>
+                                    Zu Bieter{" "}
+                                    {decodeURIComponent(
+                                      currentBieterInVault
+                                        .replace(/\/$/, "")
+                                        .split("/")
+                                        .pop()!
+                                    )}{" "}
+                                    hinzufügen
+                                  </>
+                                )}
                               </Button>
                             </DialogFooter>
                           </DialogContent>
