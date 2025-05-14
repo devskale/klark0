@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import DoksModule from "./DoksModule"; // <-- new import
+import DateibrowserModule from "./DateibrowserModule";
 
 type FileTreeNode = FileEntry;
 
@@ -156,84 +157,6 @@ export default function VaultPage() {
           child.type === "directory" && !reservedDirs.includes(child.name)
       )
     : [];
-
-  const renderFileTree = (
-    nodes: FileTreeNode[],
-    currentPath: string,
-    applyFilter: boolean
-  ) => {
-    const itemsToRender = applyFilter
-      ? nodes.filter(
-          (node) =>
-            !(node.type === "directory" && reservedDirs.includes(node.name))
-        )
-      : nodes;
-
-    return (
-      <ul className="pl-4 bg-sidebar rounded-lg p-2 text-sidebar-foreground">
-        {itemsToRender.map((node) => (
-          <li key={node.path} className="mb-2">
-            {node.type === "directory" ? (
-              <FolderNode
-                node={node}
-                parentPath={currentPath}
-                applyFilter={applyFilter}
-              />
-            ) : (
-              <div className="px-2 py-1 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md transition-colors">
-                {node.name}
-                {node.size && (
-                  <span className="ml-1 text-xs">({node.size} bytes)</span>
-                )}
-              </div>
-            )}
-          </li>
-        ))}
-      </ul>
-    );
-  };
-
-  const FolderNode = ({
-    node,
-    parentPath,
-    applyFilter,
-  }: {
-    node: FileTreeNode;
-    parentPath: string;
-    applyFilter: boolean;
-  }) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const {
-      data: children,
-      error: folderError,
-      mutate: mutateFolder,
-    } = useSWR(
-      webdavSettings ? [node.path, webdavSettings] : null,
-      fileTreeFetcher,
-      { revalidateOnFocus: false }
-    );
-
-    const toggleFolder = () => {
-      setIsOpen(!isOpen);
-      if (!isOpen && !children && webdavSettings) {
-        mutateFolder();
-      }
-    };
-
-    return (
-      <div>
-        <div
-          className="flex items-center cursor-pointer px-2 py-1 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md transition-colors"
-          onClick={toggleFolder}>
-          <span className="mr-1">
-            {isOpen ? <ChevronDown /> : <ChevronRight />}
-          </span>
-          <span>{node.name}</span>
-        </div>
-        {isOpen && children && renderFileTree(children, node.path, applyFilter)}
-      </div>
-    );
-  };
 
   const handleCreateProject = () => {
     // Placeholder for actual project creation logic
@@ -608,15 +531,10 @@ export default function VaultPage() {
           webdavSettings={webdavSettings}
         />
       ) : (
-        <Card className="rounded-lg shadow-lg">
-          <CardHeader>
-            <h2 className="text-md font-medium">{selectedView}</h2>
-          </CardHeader>
-          <CardContent>
-            {renderFileTree(fileTree, fileSystemConfig.basePath, false)}{" "}
-            {/* Pass false to disable reservedDirs filter for Dateibrowser */}
-          </CardContent>
-        </Card>
+        <DateibrowserModule
+          fileTree={fileTree}
+          basePath={fileSystemConfig.basePath}
+        />
       )}
     </section>
   );
