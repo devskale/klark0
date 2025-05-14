@@ -9,6 +9,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+import { useSelectedDoks } from "../layout";
 
 type Props = {
   projectPath: string | null;
@@ -31,6 +32,7 @@ const fileTreeFetcher = async ([path, settings]: [string, Record<string, string 
 };
 
 export default function DoksModule({ projectPath, bieterPath, webdavSettings }: Props) {
+  const { setCurrentDok } = useSelectedDoks();
   const docsPath = bieterPath
     ? bieterPath
     : projectPath
@@ -102,10 +104,16 @@ export default function DoksModule({ projectPath, bieterPath, webdavSettings }: 
               .map((f: FileEntry) => (
                 <tr
                   key={f.path}
-                  onClick={() => toggleSelect(f.path)}
                   className={`cursor-pointer ${
                     selectedDocs.includes(f.path) ? "bg-gray-100" : ""
-                  }`}>
+                  }`}
+                  onClick={() => {
+                    const wasSelected = selectedDocs.includes(f.path);
+                    toggleSelect(f.path);
+                    // if unselecting, clear global Dok state
+                    setCurrentDok(wasSelected ? null : f.name);
+                  }}
+                >
                   <td className="px-4 py-2 whitespace-nowrap">
                     <div className="flex items-center">
                       {f.type === "directory"

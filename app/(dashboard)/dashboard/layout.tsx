@@ -42,6 +42,15 @@ import { useSelectedProject } from "@/components/ui/sidebar";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
+const DoksContext = React.createContext<{
+  currentDok: string | null;
+  setCurrentDok: (dok: string | null) => void;
+}>({
+  currentDok: null,
+  setCurrentDok: () => {},
+});
+export const useSelectedDoks = () => React.useContext(DoksContext);
+
 function UserMenu() {
   const { data: user } = useSWR<DbUser>("/api/user", fetcher);
   const router = useRouter();
@@ -180,8 +189,8 @@ export default function DashboardLayout({
 }) {
   const { selectedProject, selectedBieter } = useSelectedProject();
   const pathname = usePathname();
+  const [currentDokInVault, setCurrentDokInVault] = useState<string | null>(null);
 
-  // only show “Bieter” if a Bieter is selected, “Doks” on Doks routes
   const filteredNavMain = sidebarData.navMain.filter((section) => {
     if (section.title === "Bieter") return !!selectedBieter;
     if (section.title === "Doks") return pathname.startsWith("/dashboard/d");
@@ -208,17 +217,25 @@ export default function DashboardLayout({
                 {selectedBieter && (
                   <> / <span className="font-medium">{selectedBieter}</span></>
                 )}
+                {currentDokInVault && (
+                  <> / <span className="font-medium">{currentDokInVault}</span></>
+                )}
               </nav>
             )}
           </div>
           <div className="flex items-center space-x-4">
-            <Suspense fallback={<div className="h-9 w-9" />}>
-              <UserMenu />
-            </Suspense>
+            <UserMenu />
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4">
-          {children}
+          <DoksContext.Provider
+            value={{
+              currentDok: currentDokInVault,
+              setCurrentDok: setCurrentDokInVault,
+            }}
+          >
+            {children}
+          </DoksContext.Provider>
         </div>
       </SidebarInset>
     </SidebarProvider>
