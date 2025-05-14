@@ -98,8 +98,6 @@ export default function VaultPage() {
     setSelectedProject: setGlobalSelectedProject,
     setSelectedBieter: setGlobalSelectedBieter,
   } = useSelectedProject();
-  const [showSelectionConfirmation, setShowSelectionConfirmation] =
-    useState(false);
 
   // State for Add Project Dialog
   const [isAddProjectDialogOpen, setIsAddProjectDialogOpen] = useState(false);
@@ -235,28 +233,6 @@ export default function VaultPage() {
         {isOpen && children && renderFileTree(children, node.path, applyFilter)}
       </div>
     );
-  };
-
-  const handleSelectProjectAndBieter = () => {
-    if (currentProjectInVault) {
-      // Projekt-Name ermitteln
-      const projectName = currentProjectInVault
-        .replace(/^\/klark0\//, "")
-        .split("/")[0];
-      setGlobalSelectedProject(projectName);
-
-      // Clear bieter if none selected, otherwise set both
-      if (!currentBieterInVault) {
-        setGlobalSelectedBieter("");
-      } else {
-        const trimmed = currentBieterInVault.replace(/\/$/, "");
-        const bieterName = decodeURIComponent(trimmed.split("/").pop() || "");
-        setGlobalSelectedBieter(bieterName);
-      }
-
-      setShowSelectionConfirmation(true);
-      setTimeout(() => setShowSelectionConfirmation(false), 2000);
-    }
   };
 
   const handleCreateProject = () => {
@@ -437,12 +413,22 @@ export default function VaultPage() {
                               : ""
                           }`}
                           onClick={() => {
-                            if (currentProjectInVault === project.path) {
+                            const isSame =
+                              currentProjectInVault === project.path;
+                            const raw = project.path
+                              .replace(/^\/klark0\//, "")
+                              .split("/")[0];
+                            const projName = decodeURIComponent(raw);
+                            if (isSame) {
                               setCurrentProjectInVault(null);
                               setCurrentBieterInVault(null);
+                              setGlobalSelectedProject("");
+                              setGlobalSelectedBieter("");
                             } else {
                               setCurrentProjectInVault(project.path);
                               setCurrentBieterInVault(null);
+                              setGlobalSelectedProject(projName);
+                              setGlobalSelectedBieter("");
                             }
                           }}>
                           {project.name}
@@ -493,9 +479,11 @@ export default function VaultPage() {
                 <CardHeader>
                   <h2 className="text-md font-medium">
                     Bieter für:{" "}
-                    {currentProjectInVault
-                      ?.replace(/^\/klark0\//, "")
-                      .split("/")[0] || "Ausgewähltes Projekt"}
+                    {decodeURIComponent(
+                      currentProjectInVault
+                        ?.replace(/^\/klark0\//, "")
+                        .split("/")[0] || "Ausgewähltes Projekt"
+                    )}
                   </h2>
                 </CardHeader>
                 <CardContent>
@@ -525,10 +513,20 @@ export default function VaultPage() {
                                 : ""
                             }`}
                             onClick={() => {
-                              if (currentBieterInVault === bieter.path) {
+                              const isSame =
+                                currentBieterInVault === bieter.path;
+                              if (isSame) {
                                 setCurrentBieterInVault(null);
+                                setGlobalSelectedBieter("");
                               } else {
                                 setCurrentBieterInVault(bieter.path);
+                                const name = decodeURIComponent(
+                                  bieter.path
+                                    .replace(/\/$/, "")
+                                    .split("/")
+                                    .pop() || ""
+                                );
+                                setGlobalSelectedBieter(name);
                               }
                             }}>
                             {bieter.name}
@@ -580,25 +578,6 @@ export default function VaultPage() {
               </Card>
             )}
           </div>
-          {currentProjectInVault && ( // Button appears if a project is selected
-            <div className="mt-6 flex flex-col items-center">
-              <Button
-                onClick={handleSelectProjectAndBieter}
-                size="lg"
-                className="bg-orange-500 hover:bg-orange-600 text-white rounded-full text-lg px-6 py-3">
-                {currentBieterInVault
-                  ? "Bieter übernehmen"
-                  : "Projekt übernehmen"}
-              </Button>
-              {showSelectionConfirmation && (
-                <p className="text-green-600 mt-2 text-sm">
-                  {currentBieterInVault
-                    ? "Bieter wurde übernommen!"
-                    : "Projekt wurde übernommen!"}
-                </p>
-              )}
-            </div>
-          )}
         </>
       ) : selectedView === "Docs" ? (
         // when Docs-tab is active, render the new module
