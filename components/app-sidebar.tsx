@@ -86,17 +86,21 @@ export function AppSidebar({ versions, navMain, ...props }: AppSidebarProps) {
   return (
     <Sidebar {...props}>
       <SidebarHeader>
-        {/* always show logo + name */}
-        <div className="flex items-center p-4 text-gray-800 font-bold text-xl">
-          <CircleIcon className="h-6 w-6 mr-2 text-orange-500" />
-          {state === "collapsed" ? "" : "Klark0"}
-        </div>
+        {state === "collapsed" ? (
+          <div className="flex justify-center items-center p-2"> {/* Reduced padding and centered for collapsed state */}
+            <CircleIcon className="h-6 w-6 text-orange-500" />
+          </div>
+        ) : (
+          <div className="flex items-center p-4 text-gray-800 font-bold text-xl">
+            <CircleIcon className="h-6 w-6 mr-2 text-orange-500" />
+            Klark0
+          </div>
+        )}
         {state !== "collapsed" && (
           <>
-              
             {!selectedProject && (
               <>
-                
+                {/* Placeholder for content when not collapsed and no project selected */}
               </>
             )}
           </>
