@@ -188,8 +188,10 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { selectedProject, selectedBieter } = useSelectedProject();
+  const [currentDokInVault, setCurrentDokInVault] = useState<string | null>(
+    null
+  );
   const pathname = usePathname();
-  const [currentDokInVault, setCurrentDokInVault] = useState<string | null>(null);
 
   // only show “Bieter” if a Bieter is selected, “Doks” only if a Dok is selected
   const filteredNavMain = sidebarData.navMain.filter((section) => {
@@ -199,46 +201,46 @@ export default function DashboardLayout({
   });
 
   return (
-    <SidebarProvider defaultOpen={true}>
-      <AppSidebar
-        versions={sidebarData.versions}
-        navMain={filteredNavMain}
-        collapsible="icon"
-      />
-      <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center border-b px-4">
-          <div className="flex items-center gap-2">
-            <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 h-4 lg:hidden" />
-          </div>
-          <div className="flex-1 flex items-center justify-center">
-            {selectedProject && (
-              <nav className="text-sm text-gray-700">
-                Projekt / <span className="font-medium">{selectedProject}</span>
-                {selectedBieter && (
-                  <> / <span className="font-medium">{selectedBieter}</span></>
-                )}
-                {currentDokInVault && (
-                  <> / <span className="font-medium">{currentDokInVault}</span></>
-                )}
-              </nav>
-            )}
-          </div>
-          <div className="flex items-center space-x-4">
-            <UserMenu />
-          </div>
-        </header>
-        <div className="flex flex-1 flex-col gap-4 p-4">
-          <DoksContext.Provider
-            value={{
-              currentDok: currentDokInVault,
-              setCurrentDok: setCurrentDokInVault,
-            }}
-          >
+    <DoksContext.Provider
+      value={{
+        currentDok: currentDokInVault,
+        setCurrentDok: setCurrentDokInVault,
+      }}
+    >
+      <SidebarProvider defaultOpen={true}>
+        <AppSidebar
+          versions={sidebarData.versions}
+          navMain={filteredNavMain}
+          collapsible="icon"
+        />
+        <SidebarInset>
+          <header className="flex h-16 shrink-0 items-center border-b px-4">
+            <div className="flex items-center gap-2">
+              <SidebarTrigger className="-ml-1" />
+              <Separator orientation="vertical" className="mr-2 h-4 lg:hidden" />
+            </div>
+            <div className="flex-1 flex items-center justify-center">
+              {selectedProject && (
+                <nav className="text-sm text-gray-700">
+                  <span className="font-semibold">{selectedProject}</span>
+                  {selectedBieter && (
+                    <> > <span className="font-medium">{selectedBieter}</span></>
+                  )}
+                  {currentDokInVault && (
+                    <> > <span className="font-medium">{currentDokInVault}</span></>
+                  )}
+                </nav>
+              )}
+            </div>
+            <div className="flex items-center space-x-4">
+              <UserMenu />
+            </div>
+          </header>
+          <div className="flex flex-1 flex-col gap-4 p-4">
             {children}
-          </DoksContext.Provider>
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+          </div>
+        </SidebarInset>
+      </SidebarProvider>
+    </DoksContext.Provider>
   );
 }
