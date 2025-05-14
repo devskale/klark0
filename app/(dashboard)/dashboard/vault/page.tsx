@@ -388,7 +388,19 @@ export default function VaultPage() {
             {/* Left Card: Ausschreibungen */}
             <Card className="rounded-lg shadow-lg w-1/2">
               <CardHeader>
-                <h2 className="text-md font-medium">Ausschreibungen</h2>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-md font-medium">Ausschreibungen</h2>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <Menu />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {/* actions to come */}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </CardHeader>
               <CardContent>
                 <ul>
@@ -477,14 +489,26 @@ export default function VaultPage() {
             {currentProjectInVault && (
               <Card className="rounded-lg shadow-lg w-1/2">
                 <CardHeader>
-                  <h2 className="text-md font-medium">
-                    Bieter für:{" "}
-                    {decodeURIComponent(
-                      currentProjectInVault
-                        ?.replace(/^\/klark0\//, "")
-                        .split("/")[0] || "Ausgewähltes Projekt"
-                    )}
-                  </h2>
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-md font-medium">
+                      Bieter für:{" "}
+                      {decodeURIComponent(
+                        currentProjectInVault
+                          ?.replace(/^\/klark0\//, "")
+                          .split("/")[0] || "Ausgewähltes Projekt"
+                      )}
+                    </h2>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <Menu />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {/* actions to come */}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {bieterError ? (
@@ -569,10 +593,7 @@ export default function VaultPage() {
                       ))}
                     </ul>
                   ) : (
-                    <p className="text-sm text-gray-500">
-                      Keine Bieter gefunden oder Projekt enthält keine
-                      "B"-Mappe.
-                    </p>
+                    <p className="text-sm text-gray-500">Leer.</p>
                   )}
                 </CardContent>
               </Card>
