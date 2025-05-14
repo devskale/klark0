@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { signOut } from "@/app/(login)/actions";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { User as DbUser } from "@/lib/db/schema";
 import useSWR from "swr";
 import { useSelectedProject } from "@/components/ui/sidebar";
@@ -133,18 +133,25 @@ const sidebarData = {
       url: "#",
       items: [
         {
-          title: "Bieterauswahl",
-          url: "/dashboard/bauswahl",
-          icon: Hexagon,
-        },
-        { title: "Vault", url: "/dashboard/bfolder", icon: Folder },
-        {
           title: "Konfig",
           url: "/dashboard/bkonfig",
           icon: Bolt,
         },
         { title: "Tools", url: "/dashboard/btools", icon: Hammer },
         { title: "Freigabe", url: "/dashboard/bfreigabe", icon: Check },
+      ],
+    },
+    {
+      title: "Doks",
+      url: "#",
+      items: [
+        {
+          title: "Konfig",
+          url: "/dashboard/dkonfig",
+          icon: Bolt,
+        },
+        { title: "Tools", url: "/dashboard/dtools", icon: Hammer },
+        { title: "Freigabe", url: "/dashboard/dfreigabe", icon: Check },
       ],
     },
     {
@@ -172,12 +179,20 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { selectedProject, selectedBieter } = useSelectedProject();
+  const pathname = usePathname();
+
+  // only show “Bieter” if a Bieter is selected, “Doks” on Doks routes
+  const filteredNavMain = sidebarData.navMain.filter((section) => {
+    if (section.title === "Bieter") return !!selectedBieter;
+    if (section.title === "Doks") return pathname.startsWith("/dashboard/d");
+    return true;
+  });
 
   return (
     <SidebarProvider defaultOpen={true}>
       <AppSidebar
         versions={sidebarData.versions}
-        navMain={sidebarData.navMain}
+        navMain={filteredNavMain}
         collapsible="icon"
       />
       <SidebarInset>
