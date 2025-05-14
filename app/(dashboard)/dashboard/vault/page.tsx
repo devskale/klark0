@@ -32,6 +32,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import DoksModule from "./DoksModule"; // <-- new import
 
 type FileTreeNode = FileEntry;
 
@@ -599,6 +600,13 @@ export default function VaultPage() {
             </div>
           )}
         </>
+      ) : selectedView === "Docs" ? (
+        // when Docs-tab is active, render the new module
+        <DoksModule
+          projectPath={currentProjectInVault}
+          bieterPath={currentBieterInVault}
+          webdavSettings={webdavSettings}
+        />
       ) : (
         <Card className="rounded-lg shadow-lg">
           <CardHeader>
