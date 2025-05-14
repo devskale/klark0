@@ -106,6 +106,68 @@ export default function VaultPage() {
   const [isAddProjectDialogOpen, setIsAddProjectDialogOpen] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
 
+  // State & Handler für Add-Bieter-Dialog
+  const [isAddBieterDialogOpen, setIsAddBieterDialogOpen] = useState(false);
+  const [newBieterName, setNewBieterName] = useState("");
+
+  const handleCreateBieter = async () => {
+    if (!newBieterName.trim() || !webdavSettings || !currentProjectInVault) return;
+    try {
+      const params = new URLSearchParams({
+        type: fileSystemConfig.type,
+        path: `${currentProjectInVault}/B/${newBieterName}`,
+        host: webdavSettings.host || "",
+        username: webdavSettings.username || "",
+        password: webdavSettings.password || "",
+      });
+      const res = await fetch(`/api/fs/mkdir?${params.toString()}`, { method: "POST" });
+      if (res.ok) {
+        // Bieter-Liste neu laden:
+        await mutateBieter();
+      } else {
+        console.error("Fehler beim Erstellen des Bieters:", await res.text());
+      }
+    } catch (error) {
+      console.error("Fehler beim Erstellen des Bieters:", error);
+    }
+    setNewBieterName("");
+    setIsAddBieterDialogOpen(false);
+  };
+
+  // Neuer Handler: Bieter archivieren via WebDAV-Rename
+  const handleArchiveBieter = async (bieterPath: string) => {
+    if (!webdavSettings) return;
+    const bieterName = decodeURIComponent(
+      bieterPath.replace(/\/$/, "").split("/").pop() || ""
+    );
+    const params = new URLSearchParams({
+      type: fileSystemConfig.type,
+      path: bieterPath,
+      destination: `${currentProjectInVault}/B/archive/${bieterName}`,
+      host: webdavSettings.host || "",
+      username: webdavSettings.username || "",
+      password: webdavSettings.password || "",
+    });
+    const res = await fetch(`/api/fs/rename?${params.toString()}`, { method: "POST" });
+    if (res.ok) await mutateBieter();
+    else console.error("Archivieren des Bieters fehlgeschlagen:", await res.text());
+  };
+
+  // Neuer Handler: Bieter löschen via WebDAV-Delete
+  const handleDeleteBieter = async (bieterPath: string) => {
+    if (!webdavSettings) return;
+    const params = new URLSearchParams({
+      type: fileSystemConfig.type,
+      path: bieterPath,
+      host: webdavSettings.host || "",
+      username: webdavSettings.username || "",
+      password: webdavSettings.password || "",
+    });
+    const res = await fetch(`/api/fs/delete?${params.toString()}`, { method: "POST" });
+    if (res.ok) await mutateBieter();
+    else console.error("Löschen des Bieters fehlgeschlagen:", await res.text());
+  };
+
   const fileSystemConfig = {
     type: "webdav",
     basePath: "/klark0",
@@ -145,7 +207,12 @@ export default function VaultPage() {
   );
 
   // SWR hook for fetching Bieter data for the selected project
-  const { data: bieterFolderChildrenRaw, error: bieterError } = useSWR(
+  // → jetzt mit mutateBieter, um Liste nach Erstellung neu zu laden
+  const {
+    data: bieterFolderChildrenRaw,
+    error: bieterError,
+    mutate: mutateBieter,
+  } = useSWR(
     webdavSettings && currentProjectInVault
       ? [`${currentProjectInVault}/B`, webdavSettings]
       : null,
@@ -331,11 +398,6 @@ export default function VaultPage() {
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
-              <DropdownMenuItem
-                onSelect={() => console.log("Add Bieter clicked")}
-                disabled={!currentProjectInVault}>
-                Bieter hinzufügen
-              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -516,16 +578,54 @@ export default function VaultPage() {
                           .split("/")[0] || "Ausgewähltes Projekt"
                       )}
                     </h2>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <Menu />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {/* actions to come */}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className="flex items-center space-x-2">
+                      {/* Dialog um den '+'-Button */}
+                      <Dialog open={isAddBieterDialogOpen} onOpenChange={setIsAddBieterDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            disabled={!currentProjectInVault}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Neuen Bieter hinzufügen</DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-4 py-4">
+                            <Input
+                              type="text"
+                              placeholder="Bietername"
+                              value={newBieterName}
+                              onChange={(e) => setNewBieterName(e.target.value)}
+                            />
+                          </div>
+                          <DialogFooter>
+                            <DialogClose asChild>
+                              <Button variant="outline">Abbrechen</Button>
+                            </DialogClose>
+                            <Button
+                              onClick={handleCreateBieter}
+                              disabled={!newBieterName.trim()}
+                            >
+                              Erstellen
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <Menu />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {/* actions to come */}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -595,10 +695,17 @@ export default function VaultPage() {
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onSelect={() =>
-                                  handleBieterAction("archive", bieter.path)
+                                  handleArchiveBieter(bieter.path)
                                 }>
                                 Archivieren
                               </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onSelect={() =>
+                                  handleDeleteBieter(bieter.path)
+                                }>
+                                Löschen
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
                               <DropdownMenuItem
                                 onSelect={() =>
                                   handleBieterAction("stats", bieter.path)
