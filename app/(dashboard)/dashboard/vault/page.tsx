@@ -10,8 +10,10 @@ import {
   Menu,
   RefreshCw,
   MoreHorizontal,
-} from "lucide-react"; // Added MoreHorizontal
+  Plus, // Added Plus-Icon
+} from "lucide-react";
 import { abstractFileSystemView, FileEntry } from "@/lib/fs/abstractFilesystem";
+import { initdir } from "@/lib/fs/initdir"; // Added initdir for Directory-Scaffolding
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useSelectedProject } from "@/components/ui/sidebar"; // Assuming this is the correct path and hook
 import {
@@ -158,14 +160,30 @@ export default function VaultPage() {
       )
     : [];
 
-  const handleCreateProject = () => {
-    // Placeholder for actual project creation logic
-    console.log("Neues Projekt erstellen:", newProjectName);
-    // Potentially call an API to create the directory
-    // Then mutate the fileTree SWR cache to reflect the new project
-    // mutate(); // Example: revalidate fileTree
-    setNewProjectName(""); // Reset input
-    setIsAddProjectDialogOpen(false); // Close dialog
+  const handleCreateProject = async () => {
+    if (!newProjectName.trim() || !webdavSettings) return;
+    try {
+      const params = new URLSearchParams({
+        type: fileSystemConfig.type,
+        path: `${fileSystemConfig.basePath}/${newProjectName}`,
+        host: webdavSettings.host || "",
+        username: webdavSettings.username || "",
+        password: webdavSettings.password || "",
+      });
+      const res = await fetch(`/api/fs/mkdir?${params.toString()}`, {
+        method: "POST",
+      });
+      if (res.ok) {
+        mutate(); // File-Tree neu laden
+        await initdir(newProjectName, fileSystemConfig.basePath, webdavSettings);
+        setNewProjectName("");
+        setIsAddProjectDialogOpen(false);
+      } else {
+        console.error("Projekt erstellen fehlgeschlagen:", await res.text());
+      }
+    } catch (error) {
+      console.error("Fehler beim Erstellen des Projekts:", error);
+    }
   };
 
   const handleProjectAction = (action: string, projectPath: string) => {
@@ -313,16 +331,52 @@ export default function VaultPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <h2 className="text-md font-medium">Ausschreibungen</h2>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <Menu />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      {/* actions to come */}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <div className="flex items-center space-x-2">
+                    <Dialog
+                      open={isAddProjectDialogOpen}
+                      onOpenChange={setIsAddProjectDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="icon">
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Neues Projekt erstellen</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                          <Input
+                            type="text"
+                            placeholder="Projektname"
+                            value={newProjectName}
+                            onChange={(e) => setNewProjectName(e.target.value)}
+                          />
+                        </div>
+                        <DialogFooter>
+                          <DialogClose asChild>
+                            <Button variant="outline">Abbrechen</Button>
+                          </DialogClose>
+                          <Button
+                            onClick={handleCreateProject}
+                            disabled={
+                              !newProjectName.trim() || !webdavSettings
+                            }>
+                            Erstellen
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <Menu />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {/* actions to come */}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
