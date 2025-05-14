@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Loader2, MoreHorizontal, Folder } from "lucide-react";
+import { Loader2, MoreHorizontal, Folder, FileText, Image } from "lucide-react";
 import useSWR from "swr";
 import { abstractFileSystemView, FileEntry } from "@/lib/fs/abstractFilesystem";
 import { Button } from "@/components/ui/button";
@@ -52,6 +52,17 @@ export default function DoksModule({ projectPath, bieterPath, webdavSettings }: 
   const handleDelete = (path: string) => console.log("Delete", path);
   const handleRename = (path: string) => console.log("Rename", path);
 
+  // pick an icon based on file extension
+  const getFileIcon = (name: string) => {
+    const ext = name.split(".").pop()?.toLowerCase();
+    if (ext === "pdf") return <FileText className="mr-2 h-4 w-4 text-red-500" />;
+    if (["doc", "docx", "ppt", "pptx", "xls", "xlsx"].includes(ext))
+      return <FileText className="mr-2 h-4 w-4 text-blue-500" />;
+    if (["png", "jpg", "jpeg", "gif", "svg"].includes(ext))
+      return <Image className="mr-2 h-4 w-4 text-green-500" />;
+    return <FileText className="mr-2 h-4 w-4 text-gray-500" />;
+  };
+
   if (!projectPath) {
     return <p className="text-sm text-gray-500">Bitte zuerst ein Projekt auswählen.</p>;
   }
@@ -97,9 +108,9 @@ export default function DoksModule({ projectPath, bieterPath, webdavSettings }: 
                   }`}>
                   <td className="px-4 py-2 whitespace-nowrap">
                     <div className="flex items-center">
-                      {f.type === "directory" && (
-                        <Folder className="mr-2 h-4 w-4" />
-                      )}
+                      {f.type === "directory"
+                        ? <Folder className="mr-2 h-4 w-4" />
+                        : getFileIcon(f.name)}
                       {f.name}
                     </div>
                   </td>
