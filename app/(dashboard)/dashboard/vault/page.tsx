@@ -464,9 +464,11 @@ export default function VaultPage() {
                       </DialogContent>
                     </Dialog>
                     {/* Upload-Button für Projekt-Import */}
-                    <Button variant="outline" size="icon">
-                      <Upload className="h-4 w-4" />
-                    </Button>
+                    {currentProjectInVault && (
+                      <Button variant="outline" size="icon">
+                        <Upload className="h-4 w-4" />
+                      </Button>
+                    )}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon">
@@ -621,9 +623,11 @@ export default function VaultPage() {
                         </DialogContent>
                       </Dialog>
                       {/* Upload-Button für Bieter-Import */}
-                      <Button variant="outline" size="icon">
-                        <Upload className="h-4 w-4" />
-                      </Button>
+                      {currentBieterInVault && (
+                        <Button variant="outline" size="icon">
+                          <Upload className="h-4 w-4" />
+                        </Button>
+                      )}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon">
