@@ -186,6 +186,40 @@ export default function VaultPage() {
     }
   };
 
+  // Neuer Handler: Projekt archivieren via WebDAV-Rename
+  const handleArchiveProject = async (projectPath: string) => {
+    if (!webdavSettings) return;
+    const projectName = decodeURIComponent(
+      projectPath.replace(/^\/klark0\//, "").split("/")[0]
+    );
+    const params = new URLSearchParams({
+      type: fileSystemConfig.type,
+      path: projectPath,
+      destination: `${fileSystemConfig.basePath}/archive/${projectName}`,
+      host: webdavSettings.host || "",
+      username: webdavSettings.username || "",
+      password: webdavSettings.password || "",
+    });
+    const res = await fetch(`/api/fs/rename?${params.toString()}`, { method: "POST" });
+    if (res.ok) mutate();
+    else console.error("Archivieren fehlgeschlagen:", await res.text());
+  };
+
+  // Neuer Handler: Projekt löschen via WebDAV-Delete
+  const handleDeleteProject = async (projectPath: string) => {
+    if (!webdavSettings) return;
+    const params = new URLSearchParams({
+      type: fileSystemConfig.type,
+      path: projectPath,
+      host: webdavSettings.host || "",
+      username: webdavSettings.username || "",
+      password: webdavSettings.password || "",
+    });
+    const res = await fetch(`/api/fs/delete?${params.toString()}`, { method: "POST" });
+    if (res.ok) mutate();
+    else console.error("Löschen fehlgeschlagen:", await res.text());
+  };
+
   const handleProjectAction = (action: string, projectPath: string) => {
     console.log(`Project Action: ${action} on ${projectPath}`);
     // Implement actual logic for edit, archive, stats
@@ -444,10 +478,17 @@ export default function VaultPage() {
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onSelect={() =>
-                                handleProjectAction("archive", project.path)
+                                handleArchiveProject(project.path)
                               }>
                               Archivieren
                             </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onSelect={() =>
+                                handleDeleteProject(project.path)
+                              }>
+                              Löschen
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
                             <DropdownMenuItem
                               onSelect={() =>
                                 handleProjectAction("stats", project.path)
