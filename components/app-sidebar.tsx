@@ -86,22 +86,17 @@ export function AppSidebar({ versions, navMain, ...props }: AppSidebarProps) {
   return (
     <Sidebar {...props}>
       <SidebarHeader>
-        {state === "collapsed" ? (
-          <div className="flex items-center justify-center p-2">
-            <CircleIcon className="h-6 w-6 text-orange-500" />
-          </div>
-        ) : (
-          <div className="flex items-center p-4 bg-gray-200 text-gray-800 font-bold text-xl">
-            <CircleIcon className="h-6 w-6 mr-2 text-orange-500" />
-            Klark0
-          </div>
-        )}
+        {/* always show logo + name */}
+        <div className="flex items-center p-4 bg-gray-200 text-gray-800 font-bold text-xl">
+          <CircleIcon className="h-6 w-6 mr-2 text-orange-500" />
+          {state === "collapsed" ? "" : "Klark0"}
+        </div>
         {state !== "collapsed" && (
           <>
+              
             {!selectedProject && (
               <>
-                <SearchForm />
-                <VersionSwitcher versions={versions} defaultVersion={versions[0]} />
+                
               </>
             )}
           </>
