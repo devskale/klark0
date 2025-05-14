@@ -87,7 +87,7 @@ export function AppSidebar({ versions, navMain, ...props }: AppSidebarProps) {
     <Sidebar {...props}>
       <SidebarHeader>
         {/* always show logo + name */}
-        <div className="flex items-center p-4 bg-gray-200 text-gray-800 font-bold text-xl">
+        <div className="flex items-center p-4 text-gray-800 font-bold text-xl">
           <CircleIcon className="h-6 w-6 mr-2 text-orange-500" />
           {state === "collapsed" ? "" : "Klark0"}
         </div>

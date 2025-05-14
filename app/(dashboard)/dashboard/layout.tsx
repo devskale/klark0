@@ -191,10 +191,7 @@ export default function DashboardLayout({
               <nav className="text-sm text-gray-700">
                 Projekt / <span className="font-medium">{selectedProject}</span>
                 {selectedBieter && (
-                  <>
-                    {" "}
-                    / <span className="font-medium">{selectedBieter}</span>
-                  </>
+                  <> / <span className="font-medium">{selectedBieter}</span></>
                 )}
               </nav>
             )}

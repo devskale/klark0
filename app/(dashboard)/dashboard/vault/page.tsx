@@ -3,7 +3,14 @@
 import { useState, useEffect } from "react";
 import useSWR from "swr";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronRight, Loader2, Menu, RefreshCw, MoreHorizontal } from "lucide-react"; // Added MoreHorizontal
+import {
+  ChevronDown,
+  ChevronRight,
+  Loader2,
+  Menu,
+  RefreshCw,
+  MoreHorizontal,
+} from "lucide-react"; // Added MoreHorizontal
 import { abstractFileSystemView, FileEntry } from "@/lib/fs/abstractFilesystem";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useSelectedProject } from "@/components/ui/sidebar"; // Assuming this is the correct path and hook
@@ -34,7 +41,10 @@ function normalizePath(path: string) {
 }
 
 // SWR hook for caching file tree:
-const fileTreeFetcher = async ([currentPath, settings]: [string, Record<string, string | undefined>]) => {
+const fileTreeFetcher = async ([currentPath, settings]: [
+  string,
+  Record<string, string | undefined>
+]) => {
   const fileSystemConfig = {
     type: "webdav",
     basePath: "/klark0",
@@ -50,29 +60,45 @@ const fileTreeFetcher = async ([currentPath, settings]: [string, Record<string, 
   const response = await fetch(`/api/fs?${queryParams.toString()}`);
   const data = await response.json();
   if (Array.isArray(data)) {
-    const rawEntries = abstractFileSystemView(data, { showHidden: false, noshowList: fileSystemConfig.noshowList });
-    return rawEntries.filter(entry => normalizePath(entry.path) !== normalizePath(currentPath));
+    const rawEntries = abstractFileSystemView(data, {
+      showHidden: false,
+      noshowList: fileSystemConfig.noshowList,
+    });
+    return rawEntries.filter(
+      (entry) => normalizePath(entry.path) !== normalizePath(currentPath)
+    );
   }
   throw new Error("Unexpected API response");
-}
+};
 
 // Define reserved directory names
 const reservedDirs = ["B", "archive", "md"];
 
 export default function VaultPage() {
-  const [webdavSettings, setWebdavSettings] = useState<Record<string, string | undefined> | null>(null);
+  const [webdavSettings, setWebdavSettings] = useState<Record<
+    string,
+    string | undefined
+  > | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showRefreshMessage, setShowRefreshMessage] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedView, setSelectedView] = useState("Op-Browser");
 
   // Local state for selections within VaultPage UI
-  const [currentProjectInVault, setCurrentProjectInVault] = useState<string | null>(null);
-  const [currentBieterInVault, setCurrentBieterInVault] = useState<string | null>(null);
+  const [currentProjectInVault, setCurrentProjectInVault] = useState<
+    string | null
+  >(null);
+  const [currentBieterInVault, setCurrentBieterInVault] = useState<
+    string | null
+  >(null);
 
   // Global context setters
-  const { setSelectedProject: setGlobalSelectedProject, setSelectedBieter: setGlobalSelectedBieter } = useSelectedProject();
-  const [showSelectionConfirmation, setShowSelectionConfirmation] = useState(false);
+  const {
+    setSelectedProject: setGlobalSelectedProject,
+    setSelectedBieter: setGlobalSelectedBieter,
+  } = useSelectedProject();
+  const [showSelectionConfirmation, setShowSelectionConfirmation] =
+    useState(false);
 
   // State for Add Project Dialog
   const [isAddProjectDialogOpen, setIsAddProjectDialogOpen] = useState(false);
@@ -101,9 +127,16 @@ export default function VaultPage() {
     }
   };
 
-  useEffect(() => { fetchWebdavSettings(); }, []);
+  useEffect(() => {
+    fetchWebdavSettings();
+  }, []);
 
-  const { data: fileTree, error, mutate, isValidating } = useSWR(
+  const {
+    data: fileTree,
+    error,
+    mutate,
+    isValidating,
+  } = useSWR(
     webdavSettings ? [fileSystemConfig.basePath, webdavSettings] : null,
     fileTreeFetcher,
     { revalidateOnFocus: false }
@@ -111,42 +144,71 @@ export default function VaultPage() {
 
   // SWR hook for fetching Bieter data for the selected project
   const { data: bieterFolderChildrenRaw, error: bieterError } = useSWR(
-    webdavSettings && currentProjectInVault ? [`${currentProjectInVault}/B`, webdavSettings] : null,
+    webdavSettings && currentProjectInVault
+      ? [`${currentProjectInVault}/B`, webdavSettings]
+      : null,
     fileTreeFetcher,
     { revalidateOnFocus: false }
   );
 
   const filteredBieterChildren = Array.isArray(bieterFolderChildrenRaw)
-    ? bieterFolderChildrenRaw.filter(child => child.type === "directory" && !reservedDirs.includes(child.name))
+    ? bieterFolderChildrenRaw.filter(
+        (child) =>
+          child.type === "directory" && !reservedDirs.includes(child.name)
+      )
     : [];
 
-  const renderFileTree = (nodes: FileTreeNode[], currentPath: string, applyFilter: boolean) => {
+  const renderFileTree = (
+    nodes: FileTreeNode[],
+    currentPath: string,
+    applyFilter: boolean
+  ) => {
     const itemsToRender = applyFilter
-      ? nodes.filter(node => !(node.type === "directory" && reservedDirs.includes(node.name)))
+      ? nodes.filter(
+          (node) =>
+            !(node.type === "directory" && reservedDirs.includes(node.name))
+        )
       : nodes;
 
     return (
       <ul className="pl-4 bg-sidebar rounded-lg p-2 text-sidebar-foreground">
-        {itemsToRender
-          .map((node) => (
-            <li key={node.path} className="mb-2">
-              {node.type === "directory" ? (
-                <FolderNode node={node} parentPath={currentPath} applyFilter={applyFilter} />
-              ) : (
-                <div className="px-2 py-1 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md transition-colors">
-                  {node.name}
-                  {node.size && <span className="ml-1 text-xs">({node.size} bytes)</span>}
-                </div>
-              )}
-            </li>
-          ))}
+        {itemsToRender.map((node) => (
+          <li key={node.path} className="mb-2">
+            {node.type === "directory" ? (
+              <FolderNode
+                node={node}
+                parentPath={currentPath}
+                applyFilter={applyFilter}
+              />
+            ) : (
+              <div className="px-2 py-1 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md transition-colors">
+                {node.name}
+                {node.size && (
+                  <span className="ml-1 text-xs">({node.size} bytes)</span>
+                )}
+              </div>
+            )}
+          </li>
+        ))}
       </ul>
     );
   };
 
-  const FolderNode = ({ node, parentPath, applyFilter }: { node: FileTreeNode; parentPath: string; applyFilter: boolean }) => {
+  const FolderNode = ({
+    node,
+    parentPath,
+    applyFilter,
+  }: {
+    node: FileTreeNode;
+    parentPath: string;
+    applyFilter: boolean;
+  }) => {
     const [isOpen, setIsOpen] = useState(false);
-    const { data: children, error: folderError, mutate: mutateFolder } = useSWR(
+    const {
+      data: children,
+      error: folderError,
+      mutate: mutateFolder,
+    } = useSWR(
       webdavSettings ? [node.path, webdavSettings] : null,
       fileTreeFetcher,
       { revalidateOnFocus: false }
@@ -161,11 +223,12 @@ export default function VaultPage() {
 
     return (
       <div>
-        <div 
+        <div
           className="flex items-center cursor-pointer px-2 py-1 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md transition-colors"
-          onClick={toggleFolder}
-        >
-          <span className="mr-1">{isOpen ? <ChevronDown /> : <ChevronRight />}</span>
+          onClick={toggleFolder}>
+          <span className="mr-1">
+            {isOpen ? <ChevronDown /> : <ChevronRight />}
+          </span>
           <span>{node.name}</span>
         </div>
         {isOpen && children && renderFileTree(children, node.path, applyFilter)}
@@ -174,13 +237,24 @@ export default function VaultPage() {
   };
 
   const handleSelectProjectAndBieter = () => {
-    if (currentProjectInVault) { // Only project is mandatory
-      setGlobalSelectedProject(currentProjectInVault);
-      setGlobalSelectedBieter(currentBieterInVault); // Pass bieter, which might be null
+    if (currentProjectInVault) {
+      // Projekt-Name ermitteln
+      const projectName = currentProjectInVault
+        .replace(/^\/klark0\//, "")
+        .split("/")[0];
+      setGlobalSelectedProject(projectName);
+
+      // Clear bieter if none selected, otherwise set both
+      if (!currentBieterInVault) {
+        setGlobalSelectedBieter("");
+      } else {
+        const trimmed = currentBieterInVault.replace(/\/$/, "");
+        const bieterName = decodeURIComponent(trimmed.split("/").pop() || "");
+        setGlobalSelectedBieter(bieterName);
+      }
+
       setShowSelectionConfirmation(true);
-      setTimeout(() => {
-        setShowSelectionConfirmation(false);
-      }, 2000); // Hide message after 2 seconds
+      setTimeout(() => setShowSelectionConfirmation(false), 2000);
     }
   };
 
@@ -210,21 +284,24 @@ export default function VaultPage() {
         {/* MenuBar for view selection */}
         <div className="flex space-x-4">
           <button
-            className={`px-3 py-1 border rounded ${selectedView === 'Dateibrowser' ? 'bg-gray-200' : ''}`}
-            onClick={() => setSelectedView("Dateibrowser")}
-          >
+            className={`px-3 py-1 border rounded ${
+              selectedView === "Dateibrowser" ? "bg-gray-200" : ""
+            }`}
+            onClick={() => setSelectedView("Dateibrowser")}>
             Dateibrowser
           </button>
           <button
-            className={`px-3 py-1 border rounded ${selectedView === 'Op-Browser' ? 'bg-gray-200' : ''}`}
-            onClick={() => setSelectedView("Op-Browser")}
-          >
+            className={`px-3 py-1 border rounded ${
+              selectedView === "Op-Browser" ? "bg-gray-200" : ""
+            }`}
+            onClick={() => setSelectedView("Op-Browser")}>
             Op-Browser
           </button>
           <button
-            className={`px-3 py-1 border rounded ${selectedView === 'Docs' ? 'bg-gray-200' : ''}`}
-            onClick={() => setSelectedView("Docs")}
-          >
+            className={`px-3 py-1 border rounded ${
+              selectedView === "Docs" ? "bg-gray-200" : ""
+            }`}
+            onClick={() => setSelectedView("Docs")}>
             Docs
           </button>
         </div>
@@ -240,8 +317,7 @@ export default function VaultPage() {
                 setTimeout(() => setShowRefreshMessage(false), 1500);
               });
             }}
-            title="Refresh File Tree"
-          >
+            title="Refresh File Tree">
             {refreshing ? (
               <RefreshCw className="h-4 w-4 animate-spin" />
             ) : (
@@ -255,7 +331,10 @@ export default function VaultPage() {
           )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="p-2 focus:outline-none hover:bg-gray-200 rounded-md">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="p-2 focus:outline-none hover:bg-gray-200 rounded-md">
                 <Menu className="h-6 w-6" />
                 <span className="sr-only">Menü öffnen</span>
               </Button>
@@ -263,12 +342,15 @@ export default function VaultPage() {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Optionen</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => setShowSettings(prev => !prev)}>
+              <DropdownMenuItem
+                onSelect={() => setShowSettings((prev) => !prev)}>
                 Server Info {showSettings ? "ausblenden" : "anzeigen"}
               </DropdownMenuItem>
-              <Dialog open={isAddProjectDialogOpen} onOpenChange={setIsAddProjectDialogOpen}>
+              <Dialog
+                open={isAddProjectDialogOpen}
+                onOpenChange={setIsAddProjectDialogOpen}>
                 <DialogTrigger asChild>
-                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}> 
+                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                     {/* Prevent default to control dialog manually */}
                     Projekt hinzufügen
                   </DropdownMenuItem>
@@ -289,16 +371,17 @@ export default function VaultPage() {
                     <DialogClose asChild>
                       <Button variant="outline">Abbrechen</Button>
                     </DialogClose>
-                    <Button onClick={handleCreateProject} disabled={!newProjectName.trim()}>
+                    <Button
+                      onClick={handleCreateProject}
+                      disabled={!newProjectName.trim()}>
                       Erstellen
                     </Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onSelect={() => console.log("Add Bieter clicked")}
-                disabled={!currentProjectInVault}
-              >
+                disabled={!currentProjectInVault}>
                 Bieter hinzufügen
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -333,14 +416,25 @@ export default function VaultPage() {
               <CardContent>
                 <ul>
                   {fileTree
-                    .filter(node => node.type === "directory" && !reservedDirs.includes(node.name))
-                    .map(project => (
+                    .filter(
+                      (node) =>
+                        node.type === "directory" &&
+                        !reservedDirs.includes(node.name)
+                    )
+                    .map((project) => (
                       <li
                         key={project.path}
-                        className={`py-2 px-3 border-b hover:bg-gray-50 flex justify-between items-center ${currentProjectInVault === project.path ? "bg-gray-100" : ""}`}
-                      >
-                        <span 
-                          className={`cursor-pointer flex-grow ${currentProjectInVault === project.path ? "font-bold" : ""}`}
+                        className={`py-2 px-3 border-b hover:bg-gray-50 flex justify-between items-center ${
+                          currentProjectInVault === project.path
+                            ? "bg-gray-100"
+                            : ""
+                        }`}>
+                        <span
+                          className={`cursor-pointer flex-grow ${
+                            currentProjectInVault === project.path
+                              ? "font-bold"
+                              : ""
+                          }`}
                           onClick={() => {
                             if (currentProjectInVault === project.path) {
                               setCurrentProjectInVault(null);
@@ -349,25 +443,39 @@ export default function VaultPage() {
                               setCurrentProjectInVault(project.path);
                               setCurrentBieterInVault(null);
                             }
-                          }}
-                        >
+                          }}>
                           {project.name}
                         </span>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="ml-2 h-8 w-8 p-0" onClick={(e) => e.stopPropagation()}>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="ml-2 h-8 w-8 p-0"
+                              onClick={(e) => e.stopPropagation()}>
                               <MoreHorizontal className="h-4 w-4" />
                               <span className="sr-only">Projektoptionen</span>
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                            <DropdownMenuItem onSelect={() => handleProjectAction("edit", project.path)}>
+                          <DropdownMenuContent
+                            align="end"
+                            onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenuItem
+                              onSelect={() =>
+                                handleProjectAction("edit", project.path)
+                              }>
                               Bearbeiten
                             </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => handleProjectAction("archive", project.path)}>
+                            <DropdownMenuItem
+                              onSelect={() =>
+                                handleProjectAction("archive", project.path)
+                              }>
                               Archivieren
                             </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => handleProjectAction("stats", project.path)}>
+                            <DropdownMenuItem
+                              onSelect={() =>
+                                handleProjectAction("stats", project.path)
+                              }>
                               Statistiken
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -383,12 +491,17 @@ export default function VaultPage() {
               <Card className="rounded-lg shadow-lg w-1/2">
                 <CardHeader>
                   <h2 className="text-md font-medium">
-                    Bieter für: {fileTree.find(p => p.path === currentProjectInVault)?.name || 'Ausgewähltes Projekt'}
+                    Bieter für:{" "}
+                    {currentProjectInVault
+                      ?.replace(/^\/klark0\//, "")
+                      .split("/")[0] || "Ausgewähltes Projekt"}
                   </h2>
                 </CardHeader>
                 <CardContent>
                   {bieterError ? (
-                    <div className="text-red-500">Error fetching bieter list.</div>
+                    <div className="text-red-500">
+                      Error fetching bieter list.
+                    </div>
                   ) : !bieterFolderChildrenRaw && currentProjectInVault ? (
                     <div className="flex items-center">
                       <Loader2 className="h-5 w-5 animate-spin" />
@@ -396,38 +509,59 @@ export default function VaultPage() {
                     </div>
                   ) : filteredBieterChildren.length > 0 ? (
                     <ul>
-                      {filteredBieterChildren.map(bieter => (
+                      {filteredBieterChildren.map((bieter) => (
                         <li
                           key={bieter.path}
-                          className={`py-2 px-3 border-b hover:bg-gray-50 flex justify-between items-center ${currentBieterInVault === bieter.path ? "bg-gray-100" : ""}`}
-                        >
+                          className={`py-2 px-3 border-b hover:bg-gray-50 flex justify-between items-center ${
+                            currentBieterInVault === bieter.path
+                              ? "bg-gray-100"
+                              : ""
+                          }`}>
                           <span
-                            className={`cursor-pointer flex-grow ${currentBieterInVault === bieter.path ? "font-bold" : ""}`}
+                            className={`cursor-pointer flex-grow ${
+                              currentBieterInVault === bieter.path
+                                ? "font-bold"
+                                : ""
+                            }`}
                             onClick={() => {
                               if (currentBieterInVault === bieter.path) {
                                 setCurrentBieterInVault(null);
                               } else {
                                 setCurrentBieterInVault(bieter.path);
                               }
-                            }}
-                          >
+                            }}>
                             {bieter.name}
                           </span>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="ml-2 h-8 w-8 p-0" onClick={(e) => e.stopPropagation()}>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="ml-2 h-8 w-8 p-0"
+                                onClick={(e) => e.stopPropagation()}>
                                 <MoreHorizontal className="h-4 w-4" />
                                 <span className="sr-only">Bieteroptionen</span>
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                              <DropdownMenuItem onSelect={() => handleBieterAction("edit", bieter.path)}>
+                            <DropdownMenuContent
+                              align="end"
+                              onClick={(e) => e.stopPropagation()}>
+                              <DropdownMenuItem
+                                onSelect={() =>
+                                  handleBieterAction("edit", bieter.path)
+                                }>
                                 Bearbeiten
                               </DropdownMenuItem>
-                              <DropdownMenuItem onSelect={() => handleBieterAction("archive", bieter.path)}>
+                              <DropdownMenuItem
+                                onSelect={() =>
+                                  handleBieterAction("archive", bieter.path)
+                                }>
                                 Archivieren
                               </DropdownMenuItem>
-                              <DropdownMenuItem onSelect={() => handleBieterAction("stats", bieter.path)}>
+                              <DropdownMenuItem
+                                onSelect={() =>
+                                  handleBieterAction("stats", bieter.path)
+                                }>
                                 Statistiken
                               </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -436,7 +570,10 @@ export default function VaultPage() {
                       ))}
                     </ul>
                   ) : (
-                    <p className="text-sm text-gray-500">Keine Bieter gefunden oder Projekt enthält keine "B"-Mappe.</p>
+                    <p className="text-sm text-gray-500">
+                      Keine Bieter gefunden oder Projekt enthält keine
+                      "B"-Mappe.
+                    </p>
                   )}
                 </CardContent>
               </Card>
@@ -447,13 +584,16 @@ export default function VaultPage() {
               <Button
                 onClick={handleSelectProjectAndBieter}
                 size="lg"
-                className="bg-orange-500 hover:bg-orange-600 text-white rounded-full text-lg px-6 py-3"
-              >
-                {currentBieterInVault ? "Bieter übernehmen" : "Projekt übernehmen"}
+                className="bg-orange-500 hover:bg-orange-600 text-white rounded-full text-lg px-6 py-3">
+                {currentBieterInVault
+                  ? "Bieter übernehmen"
+                  : "Projekt übernehmen"}
               </Button>
               {showSelectionConfirmation && (
                 <p className="text-green-600 mt-2 text-sm">
-                  {currentBieterInVault ? "Bieter wurde übernommen!" : "Projekt wurde übernommen!"}
+                  {currentBieterInVault
+                    ? "Bieter wurde übernommen!"
+                    : "Projekt wurde übernommen!"}
                 </p>
               )}
             </div>
@@ -465,7 +605,8 @@ export default function VaultPage() {
             <h2 className="text-md font-medium">{selectedView}</h2>
           </CardHeader>
           <CardContent>
-            {renderFileTree(fileTree, fileSystemConfig.basePath, false)} {/* Pass false to disable reservedDirs filter for Dateibrowser */}
+            {renderFileTree(fileTree, fileSystemConfig.basePath, false)}{" "}
+            {/* Pass false to disable reservedDirs filter for Dateibrowser */}
           </CardContent>
         </Card>
       )}
