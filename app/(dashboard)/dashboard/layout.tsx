@@ -9,9 +9,6 @@ import {
   Settings,
   Activity,
   Shield,
-  CircleIcon,
-  Home,
-  LogOut,
   Hexagon,
   Folder,
   Bolt,
@@ -19,6 +16,8 @@ import {
   Check,
   List,
   Brain,
+  Home,
+  LogOut,
 } from "lucide-react";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Separator } from "@/components/ui/separator";
@@ -39,6 +38,7 @@ import { signOut } from "@/app/(login)/actions";
 import { useRouter } from "next/navigation";
 import { User as DbUser } from "@/lib/db/schema";
 import useSWR from "swr";
+import { useSelectedProject } from "@/components/ui/sidebar";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -171,6 +171,8 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const { selectedProject } = useSelectedProject();
+
   return (
     <SidebarProvider defaultOpen={true}>
       <AppSidebar
@@ -179,16 +181,17 @@ export default function DashboardLayout({
         collapsible="icon"
       />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center justify-between border-b px-4">
+        <header className="flex h-16 shrink-0 items-center border-b px-4">
           <div className="flex items-center gap-2">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4 lg:hidden" />
-            <Link href="/" className="flex items-center">
-              <CircleIcon className="h-6 w-6 text-orange-500" />
-              <span className="ml-2 text-xl font-semibold text-gray-900">
-                Klark0
-              </span>
-            </Link>
+          </div>
+          <div className="flex-1 flex items-center justify-center">
+            {selectedProject && (
+              <nav className="text-sm text-gray-700">
+                Projekt / <span className="font-medium">{selectedProject}</span>
+              </nav>
+            )}
           </div>
           <div className="flex items-center space-x-4">
             <Suspense fallback={<div className="h-9 w-9" />}>

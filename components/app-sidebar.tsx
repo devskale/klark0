@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useSidebar } from "@/components/ui/sidebar"; // Import useSidebar to access the sidebar state
 import { useSelectedProject } from "@/components/ui/sidebar"; // Import useSelectedProject to access the selected project
+import { CircleIcon } from "lucide-react";
 
 // Placeholder for SearchForm component
 /**
@@ -79,29 +80,24 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
  * @returns JSX.Element
  */
 export function AppSidebar({ versions, navMain, ...props }: AppSidebarProps) {
-  const { state } = useSidebar(); // "expanded" or "collapsed"
+  const { state } = useSidebar();
   const { selectedProject } = useSelectedProject();
-  // Placeholder values – these may be driven by routing in the future.
-  const selectedSection = "Projekt"; 
-  const selectedElement = selectedProject || "Kein Projekt ausgewählt";
 
   return (
     <Sidebar {...props}>
       <SidebarHeader>
         {state === "collapsed" ? (
-          // In collapsed mode, show abbreviated brand name only.
-          <div className="p-4 bg-gray-200 text-gray-800 font-bold text-xl">
-            K0
+          <div className="flex items-center justify-center p-2">
+            <CircleIcon className="h-6 w-6 text-orange-500" />
           </div>
         ) : (
-          // When expanded, show full brand name and selection.
+          <div className="flex items-center p-4 bg-gray-200 text-gray-800 font-bold text-xl">
+            <CircleIcon className="h-6 w-6 mr-2 text-orange-500" />
+            Klark0
+          </div>
+        )}
+        {state !== "collapsed" && (
           <>
-            <div className="p-4 bg-gray-200 text-gray-800 font-bold text-xl">
-              klark0
-            </div>
-            <div className="p-2 text-sm bg-gray-100 text-gray-900">
-              Aktuelle Auswahl: {selectedSection} - {selectedElement}
-            </div>
             {!selectedProject && (
               <>
                 <SearchForm />
