@@ -179,7 +179,7 @@ export default function aauswahl() {
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">Vergabeprojekt Auswahl</h1>
+      {/* <h1 className="text-2xl font-bold">Vergabeprojekt Auswahl</h1> */}
       {selectedFilesystem === "proto" ? (
         <>
           <section className="space-y-4">

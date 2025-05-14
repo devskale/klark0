@@ -53,28 +53,32 @@ function useSidebar() {
   return context
 }
 
-type SelectedProjectContextType = {
-	selectedProject: string | null;
-	setSelectedProject: (s: string | null) => void;
+type SelectedContextType = {
+  selectedProject: string | null;
+  setSelectedProject: (s: string | null) => void;
+  selectedBieter: string | null;
+  setSelectedBieter: (s: string | null) => void;
 };
 
-const SelectedProjectContext = React.createContext<SelectedProjectContextType | undefined>(undefined);
+const SelectedProjectContext = React.createContext<SelectedContextType | undefined>(undefined);
 
 export function SelectedProjectProvider({ children }: { children: React.ReactNode }) {
-	const [selectedProject, setSelectedProject] = React.useState<string | null>(null);
-	return (
-		<SelectedProjectContext.Provider value={{ selectedProject, setSelectedProject }}>
-			{children}
-		</SelectedProjectContext.Provider>
-	);
+  const [selectedProject, setSelectedProject] = React.useState<string | null>(null);
+  const [selectedBieter, setSelectedBieter] = React.useState<string | null>(null);
+
+  return (
+    <SelectedProjectContext.Provider value={{ selectedProject, setSelectedProject, selectedBieter, setSelectedBieter }}>
+      {children}
+    </SelectedProjectContext.Provider>
+  );
 }
 
 export function useSelectedProject() {
-	const context = React.useContext(SelectedProjectContext);
-	if (!context) {
-		throw new Error("useSelectedProject must be used within a SelectedProjectProvider");
-	}
-	return context;
+  const context = React.useContext(SelectedProjectContext);
+  if (!context) {
+    throw new Error("useSelectedProject must be used within a SelectedProjectProvider");
+  }
+  return context;
 }
 
 function SidebarProvider({

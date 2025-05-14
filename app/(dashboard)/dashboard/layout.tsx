@@ -113,7 +113,7 @@ const sidebarData = {
       url: "#",
       items: [
         {
-          title: "Projektauswahl",
+          title: "Auswahl",
           url: "/dashboard/aauswahl",
           icon: Hexagon,
         },
@@ -171,7 +171,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { selectedProject } = useSelectedProject();
+  const { selectedProject, selectedBieter } = useSelectedProject();
 
   return (
     <SidebarProvider defaultOpen={true}>
@@ -190,6 +190,12 @@ export default function DashboardLayout({
             {selectedProject && (
               <nav className="text-sm text-gray-700">
                 Projekt / <span className="font-medium">{selectedProject}</span>
+                {selectedBieter && (
+                  <>
+                    {" "}
+                    / <span className="font-medium">{selectedBieter}</span>
+                  </>
+                )}
               </nav>
             )}
           </div>
