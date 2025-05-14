@@ -119,8 +119,8 @@ export default function aauswahl() {
       // reset & reload
       setNewProjectName(newProjectName);
       mutate([fileSystemConfig.basePath, settings]);
-      // scaffold the new directory (stubbed, implement later)
-      await initdir(newProjectName);
+      // scaffold the new directory
+      await initdir(newProjectName, fileSystemConfig.basePath, settings);
       setOpenCreateProject(false); // Close modal after creation
     } else {
       console.error("Fehler beim Erstellen des Projekts:", await res.text());
