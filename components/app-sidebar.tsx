@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useSidebar } from "@/components/ui/sidebar"; // Import useSidebar to access the sidebar state
 import { useSelectedProject } from "@/components/ui/sidebar"; // Import useSelectedProject to access the selected project
+import { useSelectedDoks } from "@/app/(dashboard)/dashboard/layout"; // Import useSelectedDoks to access the current Dok
 import { CircleIcon } from "lucide-react";
 
 // Placeholder for SearchForm component
@@ -82,6 +83,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 export function AppSidebar({ versions, navMain, ...props }: AppSidebarProps) {
   const { state } = useSidebar();
   const { selectedProject } = useSelectedProject();
+  const { currentDok } = useSelectedDoks();
 
   return (
     <Sidebar {...props}>
@@ -107,25 +109,27 @@ export function AppSidebar({ versions, navMain, ...props }: AppSidebarProps) {
         )}
       </SidebarHeader>
       <SidebarContent>
-        {navMain.map((item) => (
-          <SidebarGroup key={item.title}>
-            <SidebarGroupLabel>{item.title}</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {item.items.map((subItem) => (
-                  <SidebarMenuItem key={subItem.title}>
-                    <SidebarMenuButton asChild isActive={subItem.isActive}>
-                      <a href={subItem.url}>
-                        {subItem.icon && (<subItem.icon className="mr-2 h-4 w-4" />)}
-                        {subItem.title}
-                      </a>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ))}
+        {navMain.map((item) =>
+          (item.title !== "Doks" || !!currentDok) && (
+            <SidebarGroup key={item.title}>
+              <SidebarGroupLabel>{item.title}</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {item.items.map((subItem) => (
+                    <SidebarMenuItem key={subItem.title}>
+                      <SidebarMenuButton asChild isActive={subItem.isActive}>
+                        <a href={subItem.url}>
+                          {subItem.icon && (<subItem.icon className="mr-2 h-4 w-4" />)}
+                          {subItem.title}
+                        </a>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          )
+        )}
       </SidebarContent>
       <SidebarRail />
     </Sidebar>

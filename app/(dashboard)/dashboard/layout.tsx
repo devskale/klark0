@@ -191,9 +191,10 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const [currentDokInVault, setCurrentDokInVault] = useState<string | null>(null);
 
+  // only show “Bieter” if a Bieter is selected, “Doks” only if a Dok is selected
   const filteredNavMain = sidebarData.navMain.filter((section) => {
     if (section.title === "Bieter") return !!selectedBieter;
-    if (section.title === "Doks") return pathname.startsWith("/dashboard/d");
+    if (section.title === "Doks") return !!currentDokInVault;
     return true;
   });
 
