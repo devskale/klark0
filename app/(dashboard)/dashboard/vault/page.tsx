@@ -10,7 +10,8 @@ import {
   Menu,
   RefreshCw,
   MoreHorizontal,
-  Plus, // Added Plus-Icon
+  Plus,
+  Upload, // neu
 } from "lucide-react";
 import { abstractFileSystemView, FileEntry } from "@/lib/fs/abstractFilesystem";
 import { initdir } from "@/lib/fs/initdir"; // Added initdir for Directory-Scaffolding
@@ -462,6 +463,10 @@ export default function VaultPage() {
                         </DialogFooter>
                       </DialogContent>
                     </Dialog>
+                    {/* Upload-Button für Projekt-Import */}
+                    <Button variant="outline" size="icon">
+                      <Upload className="h-4 w-4" />
+                    </Button>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon">
@@ -615,6 +620,10 @@ export default function VaultPage() {
                           </DialogFooter>
                         </DialogContent>
                       </Dialog>
+                      {/* Upload-Button für Bieter-Import */}
+                      <Button variant="outline" size="icon">
+                        <Upload className="h-4 w-4" />
+                      </Button>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon">
