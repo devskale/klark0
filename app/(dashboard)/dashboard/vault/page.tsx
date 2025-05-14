@@ -11,7 +11,7 @@ import {
   RefreshCw,
   MoreHorizontal,
   Plus,
-  Upload, // neu
+  Upload,
 } from "lucide-react";
 import { abstractFileSystemView, FileEntry } from "@/lib/fs/abstractFilesystem";
 import { initdir } from "@/lib/fs/initdir"; // Added initdir for Directory-Scaffolding
@@ -111,8 +111,17 @@ export default function VaultPage() {
   const [isAddBieterDialogOpen, setIsAddBieterDialogOpen] = useState(false);
   const [newBieterName, setNewBieterName] = useState("");
 
+  // Upload-Dialog States
+  const [isProjectUploadDialogOpen, setIsProjectUploadDialogOpen] =
+    useState(false);
+  const [projectUploadFiles, setProjectUploadFiles] = useState<File[]>([]);
+  const [isBieterUploadDialogOpen, setIsBieterUploadDialogOpen] =
+    useState(false);
+  const [bieterUploadFiles, setBieterUploadFiles] = useState<File[]>([]);
+
   const handleCreateBieter = async () => {
-    if (!newBieterName.trim() || !webdavSettings || !currentProjectInVault) return;
+    if (!newBieterName.trim() || !webdavSettings || !currentProjectInVault)
+      return;
     try {
       const params = new URLSearchParams({
         type: fileSystemConfig.type,
@@ -121,7 +130,9 @@ export default function VaultPage() {
         username: webdavSettings.username || "",
         password: webdavSettings.password || "",
       });
-      const res = await fetch(`/api/fs/mkdir?${params.toString()}`, { method: "POST" });
+      const res = await fetch(`/api/fs/mkdir?${params.toString()}`, {
+        method: "POST",
+      });
       if (res.ok) {
         // Bieter-Liste neu laden:
         await mutateBieter();
@@ -149,9 +160,15 @@ export default function VaultPage() {
       username: webdavSettings.username || "",
       password: webdavSettings.password || "",
     });
-    const res = await fetch(`/api/fs/rename?${params.toString()}`, { method: "POST" });
+    const res = await fetch(`/api/fs/rename?${params.toString()}`, {
+      method: "POST",
+    });
     if (res.ok) await mutateBieter();
-    else console.error("Archivieren des Bieters fehlgeschlagen:", await res.text());
+    else
+      console.error(
+        "Archivieren des Bieters fehlgeschlagen:",
+        await res.text()
+      );
   };
 
   // Neuer Handler: Bieter löschen via WebDAV-Delete
@@ -164,9 +181,12 @@ export default function VaultPage() {
       username: webdavSettings.username || "",
       password: webdavSettings.password || "",
     });
-    const res = await fetch(`/api/fs/delete?${params.toString()}`, { method: "POST" });
+    const res = await fetch(`/api/fs/delete?${params.toString()}`, {
+      method: "POST",
+    });
     if (res.ok) await mutateBieter();
-    else console.error("Löschen des Bieters fehlgeschlagen:", await res.text());
+    else
+      console.error("Löschen des Bieters fehlgeschlagen:", await res.text());
   };
 
   const fileSystemConfig = {
@@ -268,7 +288,9 @@ export default function VaultPage() {
       username: webdavSettings.username || "",
       password: webdavSettings.password || "",
     });
-    const res = await fetch(`/api/fs/rename?${params.toString()}`, { method: "POST" });
+    const res = await fetch(`/api/fs/rename?${params.toString()}`, {
+      method: "POST",
+    });
     if (res.ok) mutate();
     else console.error("Archivieren fehlgeschlagen:", await res.text());
   };
@@ -283,7 +305,9 @@ export default function VaultPage() {
       username: webdavSettings.username || "",
       password: webdavSettings.password || "",
     });
-    const res = await fetch(`/api/fs/delete?${params.toString()}`, { method: "POST" });
+    const res = await fetch(`/api/fs/delete?${params.toString()}`, {
+      method: "POST",
+    });
     if (res.ok) mutate();
     else console.error("Löschen fehlgeschlagen:", await res.text());
   };
@@ -463,11 +487,70 @@ export default function VaultPage() {
                         </DialogFooter>
                       </DialogContent>
                     </Dialog>
-                    {/* Upload-Button für Projekt-Import */}
+                    {/* Upload-Dialog für Projekt */}
                     {currentProjectInVault && (
-                      <Button variant="outline" size="icon">
-                        <Upload className="h-4 w-4" />
-                      </Button>
+                      <Dialog
+                        open={isProjectUploadDialogOpen}
+                        onOpenChange={setIsProjectUploadDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="icon">
+                            <Upload className="h-4 w-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>
+                              Dateien zu Projekt hinzufügen
+                            </DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-4 py-4">
+                            <div className="border border-dashed p-4 rounded text-center">
+                              <p className="mb-2 text-sm text-gray-600">
+                                Dateien hier ablegen oder klicken
+                              </p>
+                              <input
+                                type="file"
+                                multiple
+                                className="w-full h-20 opacity-0 absolute inset-0 cursor-pointer"
+                                onChange={(e) =>
+                                  setProjectUploadFiles(
+                                    Array.from(e.currentTarget.files || [])
+                                  )
+                                }
+                              />
+                            </div>
+                            {projectUploadFiles.length > 0 && (
+                              <ul className="text-sm">
+                                {projectUploadFiles.map((f) => (
+                                  <li key={f.name}>{f.name}</li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                          <DialogFooter>
+                            <DialogClose asChild>
+                              <Button variant="outline">Abbrechen</Button>
+                            </DialogClose>
+                            <Button
+                              onClick={() => {
+                                console.log(
+                                  "Upload to project:",
+                                  projectUploadFiles
+                                );
+                                setProjectUploadFiles([]);
+                                setIsProjectUploadDialogOpen(false);
+                              }}>
+                              Zu Projekt{" "}
+                              {decodeURIComponent(
+                                currentProjectInVault
+                                  .replace(/^\/klark0\//, "")
+                                  .split("/")[0]
+                              )}{" "}
+                              hinzufügen
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
                     )}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -533,7 +616,9 @@ export default function VaultPage() {
                               className="ml-2 h-8 w-8 p-0"
                               onClick={(e) => e.stopPropagation()}>
                               <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">Projektoptionen</span>
+                              <span className="sr-only">
+                                Projektoptionen
+                              </span>
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent
@@ -587,13 +672,14 @@ export default function VaultPage() {
                     </h2>
                     <div className="flex items-center space-x-2">
                       {/* Dialog um den '+'-Button */}
-                      <Dialog open={isAddBieterDialogOpen} onOpenChange={setIsAddBieterDialogOpen}>
+                      <Dialog
+                        open={isAddBieterDialogOpen}
+                        onOpenChange={setIsAddBieterDialogOpen}>
                         <DialogTrigger asChild>
                           <Button
                             variant="outline"
                             size="icon"
-                            disabled={!currentProjectInVault}
-                          >
+                            disabled={!currentProjectInVault}>
                             <Plus className="h-4 w-4" />
                           </Button>
                         </DialogTrigger>
@@ -606,7 +692,9 @@ export default function VaultPage() {
                               type="text"
                               placeholder="Bietername"
                               value={newBieterName}
-                              onChange={(e) => setNewBieterName(e.target.value)}
+                              onChange={(e) =>
+                                setNewBieterName(e.target.value)
+                              }
                             />
                           </div>
                           <DialogFooter>
@@ -615,18 +703,77 @@ export default function VaultPage() {
                             </DialogClose>
                             <Button
                               onClick={handleCreateBieter}
-                              disabled={!newBieterName.trim()}
-                            >
+                              disabled={!newBieterName.trim()}>
                               Erstellen
                             </Button>
                           </DialogFooter>
                         </DialogContent>
                       </Dialog>
-                      {/* Upload-Button für Bieter-Import */}
+                      {/* Upload-Dialog für Bieter */}
                       {currentBieterInVault && (
-                        <Button variant="outline" size="icon">
-                          <Upload className="h-4 w-4" />
-                        </Button>
+                        <Dialog
+                          open={isBieterUploadDialogOpen}
+                          onOpenChange={setIsBieterUploadDialogOpen}>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="icon">
+                              <Upload className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>
+                                Dateien zu Bieter hinzufügen
+                              </DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4 py-4">
+                              <div className="border border-dashed p-4 rounded text-center">
+                                <p className="mb-2 text-sm text-gray-600">
+                                  Dateien hier ablegen oder klicken
+                                </p>
+                                <input
+                                  type="file"
+                                  multiple
+                                  className="w-full h-20 opacity-0 absolute inset-0 cursor-pointer"
+                                  onChange={(e) =>
+                                    setBieterUploadFiles(
+                                      Array.from(e.currentTarget.files || [])
+                                    )
+                                  }
+                                />
+                              </div>
+                              {bieterUploadFiles.length > 0 && (
+                                <ul className="text-sm">
+                                  {bieterUploadFiles.map((f) => (
+                                    <li key={f.name}>{f.name}</li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                            <DialogFooter>
+                              <DialogClose asChild>
+                                <Button variant="outline">Abbrechen</Button>
+                              </DialogClose>
+                              <Button
+                                onClick={() => {
+                                  console.log(
+                                    "Upload to bieter:",
+                                    bieterUploadFiles
+                                  );
+                                  setBieterUploadFiles([]);
+                                  setIsBieterUploadDialogOpen(false);
+                                }}>
+                                Zu Bieter{" "}
+                                {decodeURIComponent(
+                                  currentBieterInVault
+                                    .replace(/\/$/, "")
+                                    .split("/")
+                                    .pop()!
+                                )}{" "}
+                                hinzufügen
+                              </Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
                       )}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -694,7 +841,9 @@ export default function VaultPage() {
                                 className="ml-2 h-8 w-8 p-0"
                                 onClick={(e) => e.stopPropagation()}>
                                 <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">Bieteroptionen</span>
+                                <span className="sr-only">
+                                  Bieteroptionen
+                                </span>
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent
