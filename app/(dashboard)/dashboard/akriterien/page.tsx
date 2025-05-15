@@ -76,12 +76,12 @@ export default function AKriterienPage() {
                     <TableCell>{criterion.weight}%</TableCell>
                     <TableCell>
                       {criterion.status === "completed" ? (
-                        <Badge variant="success" className="gap-1">
+                        <Badge variant="default" className="gap-1">
                           <CheckCircle2 className="h-4 w-4" />
                           Abgeschlossen
                         </Badge>
                       ) : (
-                        <Badge variant="warning" className="gap-1">
+                        <Badge variant="outline" className="gap-1">
                           <Clock className="h-4 w-4" />
                           Ausstehend
                         </Badge>
