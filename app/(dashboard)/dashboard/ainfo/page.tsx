@@ -11,8 +11,6 @@ export default function AInfoPage() {
 
   return (
     <section className="p-4">
-      <Card>
-        <CardContent>
           <Tabs defaultValue="info" className="w-full">
             <TabsList>
               <TabsTrigger value="info">Info</TabsTrigger>
@@ -25,8 +23,6 @@ export default function AInfoPage() {
               <AKriterienPage />
             </TabsContent>
           </Tabs>
-        </CardContent>
-      </Card>
     </section>
   );
 }

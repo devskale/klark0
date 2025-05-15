@@ -30,13 +30,20 @@ const toolsList = [
   },
   {
     id: 2,
-    name: "Kriterien Extraktion",
+    name: "Benennung",
     description: "Extrahiert Bewertungskriterien aus Dokumenten",
     status: "pending",
     owner: "",
   },
   {
     id: 3,
+    name: "Kriterien Extraktion",
+    description: "Extrahiert Bewertungskriterien aus Dokumenten",
+    status: "pending",
+    owner: "",
+  },
+  {
+    id: 4,
     name: "Kriterien Review",
     description: "Überprüfung und Bewertung der extrahierten Kriterien",
     status: "pending",
@@ -50,15 +57,8 @@ export default function AtoolsPage() {
   return (
     <section className="flex-1 p-4 lg:p-8">
       <h1 className="text-lg lg:text-2xl font-medium bold text-gray-900 mb-6">
-        Tools
+        Tools für {selectedProject || "Kein Projekt ausgewählt"}
       </h1>
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>
-            Tools für Projekt: {selectedProject || "Kein Projekt ausgewählt"}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
           <p className="text-sm text-gray-500 mb-4">
             Hier können Sie verschiedene Tools für das Projekt nutzen.
             {selectedBieter && <p>Ausgewählter Bieter: {selectedBieter}</p>}
@@ -118,8 +118,6 @@ export default function AtoolsPage() {
               </TableBody>
             </Table>
           </div>
-        </CardContent>
-      </Card>
     </section>
   );
 }
