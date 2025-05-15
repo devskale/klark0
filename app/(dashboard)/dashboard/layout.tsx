@@ -111,12 +111,12 @@ const sidebarData = {
       url: "#",
       items: [
         { title: "Auswahl", url: "/dashboard/auswahl", icon: Folder },
-        { title: "Kriterien", url: "/dashboard/akriterien", icon: List },
         {
           title: "Konfig",
           url: "/dashboard/akonfig",
           icon: Bolt,
         },
+        { title: "Kriterien", url: "/dashboard/akriterien", icon: List },
         { title: "Tools", url: "/dashboard/atools", icon: Hammer },
         { title: "Freigabe", url: "/dashboard/afreigabe", icon: Check },
       ],

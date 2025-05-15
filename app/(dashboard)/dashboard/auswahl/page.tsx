@@ -84,7 +84,9 @@ export default function VaultPage() {
     selectedProject, 
     setSelectedProject, 
     selectedBieter, 
-    setSelectedBieter 
+    setSelectedBieter,
+    selectedDok, // Assuming selectedDok is part of the context
+    setSelectedDok  // Assuming setSelectedDok is part of the context
   } = useProject();
 
   const [webdavSettings, setWebdavSettings] = useState<Record<
@@ -147,14 +149,14 @@ export default function VaultPage() {
 
   // Neuer Handler: Bieter archivieren via WebDAV-Rename
   const handleArchiveBieter = async (bieterPath: string) => {
-    if (!webdavSettings) return;
+    if (!webdavSettings || !selectedProject) return; // Added !selectedProject check
     const bieterName = decodeURIComponent(
       bieterPath.replace(/\/$/, "").split("/").pop() || ""
     );
     const params = new URLSearchParams({
       type: fileSystemConfig.type,
       path: bieterPath,
-      destination: `${selectedProject}/B/archive/${bieterName}`,
+      destination: `${selectedProject}/B/archive/${bieterName}`, // Ensure selectedProject is used
       host: webdavSettings.host || "",
       username: webdavSettings.username || "",
       password: webdavSettings.password || "",
@@ -162,12 +164,20 @@ export default function VaultPage() {
     const res = await fetch(`/api/fs/rename?${params.toString()}`, {
       method: "POST",
     });
-    if (res.ok) await mutateBieter();
-    else
+    if (res.ok) {
+      await mutateBieter();
+      if (selectedDok && selectedDok.startsWith(bieterPath)) {
+        setSelectedDok(null);
+      }
+      if (selectedBieter === bieterPath) {
+        setSelectedBieter(null);
+      }
+    } else {
       console.error(
         "Archivieren des Bieters fehlgeschlagen:",
         await res.text()
       );
+    }
   };
 
   // Neuer Handler: Bieter löschen via WebDAV-Delete
@@ -183,9 +193,17 @@ export default function VaultPage() {
     const res = await fetch(`/api/fs/delete?${params.toString()}`, {
       method: "POST",
     });
-    if (res.ok) await mutateBieter();
-    else
+    if (res.ok) {
+      await mutateBieter();
+      if (selectedDok && selectedDok.startsWith(bieterPath)) {
+        setSelectedDok(null);
+      }
+      if (selectedBieter === bieterPath) {
+        setSelectedBieter(null);
+      }
+    } else {
       console.error("Löschen des Bieters fehlgeschlagen:", await res.text());
+    }
   };
 
   const fileSystemConfig = {
@@ -295,6 +313,9 @@ export default function VaultPage() {
       if (selectedBieter && selectedBieter.startsWith(projectPath)) {
         setSelectedBieter(null);
       }
+      if (selectedDok && selectedDok.startsWith(projectPath)) {
+        setSelectedDok(null);
+      }
       if (selectedProject === projectPath) {
         setSelectedProject(null);
       }
@@ -320,6 +341,9 @@ export default function VaultPage() {
       mutate();
       if (selectedBieter && selectedBieter.startsWith(projectPath)) {
         setSelectedBieter(null);
+      }
+      if (selectedDok && selectedDok.startsWith(projectPath)) {
+        setSelectedDok(null);
       }
       if (selectedProject === projectPath) {
         setSelectedProject(null);
@@ -494,21 +518,30 @@ export default function VaultPage() {
             className={`px-3 py-1 border rounded ${
               selectedView === "Dateibrowser" ? "bg-gray-200" : ""
             }`}
-            onClick={() => setSelectedView("Dateibrowser")}>
+            onClick={() => {
+              setSelectedView("Dateibrowser");
+              setSelectedDok(null);
+            }}>
             Dateibrowser
           </button>
           <button
             className={`px-3 py-1 border rounded ${
               selectedView === "Op-Browser" ? "bg-gray-200" : ""
             }`}
-            onClick={() => setSelectedView("Op-Browser")}>
+            onClick={() => {
+              setSelectedView("Op-Browser");
+              setSelectedDok(null);
+            }}>
             Op-Browser
           </button>
           <button
             className={`px-3 py-1 border rounded ${
               selectedView === "Docs" ? "bg-gray-200" : ""
             }`}
-            onClick={() => setSelectedView("Docs")}>
+            onClick={() => {
+              setSelectedView("Docs");
+              setSelectedDok(null);
+            }}>
             Docs
           </button>
         </div>
@@ -823,9 +856,11 @@ export default function VaultPage() {
                             if (isSame) {
                               setSelectedProject(null);
                               setSelectedBieter(null);
+                              setSelectedDok(null); // Clear selectedDok
                             } else {
                               setSelectedProject(project.path);
                               setSelectedBieter(null);
+                              setSelectedDok(null); // Clear selectedDok
                             }
                           }}>
                           {project.name}
@@ -1092,8 +1127,10 @@ export default function VaultPage() {
                                 selectedBieter === bieter.path;
                               if (isSame) {
                                 setSelectedBieter(null);
+                                setSelectedDok(null); // Clear selectedDok
                               } else {
                                 setSelectedBieter(bieter.path);
+                                setSelectedDok(null); // Clear selectedDok
                               }
                             }}>
                             {bieter.name}

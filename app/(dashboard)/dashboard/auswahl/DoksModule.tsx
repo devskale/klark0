@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Loader2, MoreHorizontal, Folder, FileText, Image } from "lucide-react";
 import useSWR from "swr";
 import { abstractFileSystemView, FileEntry } from "@/lib/fs/abstractFilesystem";
@@ -37,6 +37,13 @@ export default function DoksModule({
   );
 
   const [selectedDocs, setSelectedDocs] = useState<string[]>([]);
+
+  // clear selection on project/bieter change
+  useEffect(() => {
+    setSelectedDocs([]);
+    setSelectedDok(null);
+  }, [projectPath, bieterPath, setSelectedDok]);
+
   const toggleSelect = (path: string) => {
     setSelectedDocs(prev =>
       prev.includes(path) ? prev.filter(p => p !== path) : [...prev, path]
