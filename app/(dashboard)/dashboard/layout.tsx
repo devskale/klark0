@@ -125,8 +125,8 @@ const sidebarData = {
       url: "#",
       items: [
         {
-          title: "Konfig",
-          url: "/dashboard/bkonfig",
+          title: "Info",
+          url: "/dashboard/binfo",
           icon: Bolt,
         },
         { title: "Tools", url: "/dashboard/btools", icon: Hammer },
@@ -138,8 +138,8 @@ const sidebarData = {
       url: "#",
       items: [
         {
-          title: "Konfig",
-          url: "/dashboard/dkonfig",
+          title: "Info",
+          url: "/dashboard/dinfo",
           icon: Bolt,
         },
         { title: "Tools", url: "/dashboard/dtools", icon: Hammer },
@@ -157,7 +157,6 @@ const sidebarData = {
           url: "/dashboard/einstellungen",
           icon: Settings,
         },
-        { title: "Models", url: "/dashboard/models", icon: Brain },
         { title: "Aktivität", url: "/dashboard/activity", icon: Activity },
         { title: "Sicherheit", url: "/dashboard/security", icon: Shield },
       ],
