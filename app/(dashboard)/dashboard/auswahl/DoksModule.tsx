@@ -1,3 +1,4 @@
+"use client";
 import { useState } from "react";
 import { Loader2, MoreHorizontal, Folder, FileText, Image } from "lucide-react";
 import useSWR from "swr";
@@ -9,30 +10,20 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { useSelectedDoks } from "../layout";
+import { useProject } from "@/context/ProjectContext";
 
-type Props = {
-  projectPath: string | null;
-  bieterPath: string | null;
+export default function DoksModule({
+  webdavSettings,
+}: {
   webdavSettings: Record<string, string | undefined> | null;
-};
+}) {
+  const {
+    selectedProject: projectPath,
+    selectedBieter: bieterPath,
+    selectedDok,
+    setSelectedDok,
+  } = useProject();
 
-const fileTreeFetcher = async ([path, settings]: [string, Record<string, string | undefined>]) => {
-  const query = new URLSearchParams({
-    type: "webdav",
-    path,
-    host: settings?.host || "",
-    username: settings?.username || "",
-    password: settings?.password || "",
-  });
-  const res = await fetch(`/api/fs?${query.toString()}`);
-  const data = await res.json();
-  if (!Array.isArray(data)) throw new Error("Invalid response");
-  return abstractFileSystemView(data, { showHidden: false, noshowList: ["archive", ".archive"] });
-};
-
-export default function DoksModule({ projectPath, bieterPath, webdavSettings }: Props) {
-  const { setCurrentDok } = useSelectedDoks();
   const docsPath = bieterPath
     ? bieterPath
     : projectPath
@@ -50,6 +41,8 @@ export default function DoksModule({ projectPath, bieterPath, webdavSettings }: 
     setSelectedDocs(prev =>
       prev.includes(path) ? prev.filter(p => p !== path) : [...prev, path]
     );
+    const wasSelected = selectedDocs.includes(path);
+    setSelectedDok(wasSelected ? null : path);
   };
   const handleDelete = (path: string) => console.log("Delete", path);
   const handleRename = (path: string) => console.log("Rename", path);
@@ -107,12 +100,7 @@ export default function DoksModule({ projectPath, bieterPath, webdavSettings }: 
                   className={`cursor-pointer ${
                     selectedDocs.includes(f.path) ? "bg-gray-100" : ""
                   }`}
-                  onClick={() => {
-                    const wasSelected = selectedDocs.includes(f.path);
-                    toggleSelect(f.path);
-                    // if unselecting, clear global Dok state
-                    setCurrentDok(wasSelected ? null : f.name);
-                  }}
+                  onClick={() => toggleSelect(f.path)}
                 >
                   <td className="px-4 py-2 whitespace-nowrap">
                     <div className="flex items-center">
@@ -154,4 +142,20 @@ export default function DoksModule({ projectPath, bieterPath, webdavSettings }: 
       )}
     </div>
   );
+}
+
+async function fileTreeFetcher(
+  [path, settings]: [string, Record<string, string | undefined>]
+) {
+  const query = new URLSearchParams({
+    type: "webdav",
+    path,
+    host: settings?.host || "",
+    username: settings?.username || "",
+    password: settings?.password || "",
+  });
+  const res = await fetch(`/api/fs?${query.toString()}`);
+  const data = await res.json();
+  if (!Array.isArray(data)) throw new Error("Invalid response");
+  return abstractFileSystemView(data, { showHidden: false, noshowList: ["archive", ".archive"] });
 }

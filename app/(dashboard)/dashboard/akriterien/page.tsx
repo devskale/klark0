@@ -1,5 +1,7 @@
 "use client";
 
+import { useProject } from "@/context/ProjectContext";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -46,45 +48,52 @@ const sampleCriteria = [
   },
 ];
 
-export default function AKriterien() {
-  return (
-    <div className="p-6 space-y-4">
-      <h1 className="text-2xl font-bold">Ausschreibungskriterien</h1>
+export default function AKriterienPage() {
+  const { selectedProject, selectedBieter } = useProject();
 
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Kriterium</TableHead>
-              <TableHead>Beschreibung</TableHead>
-              <TableHead>Gewichtung</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sampleCriteria.map((criterion) => (
-              <TableRow key={criterion.id}>
-                <TableCell className="font-medium">{criterion.name}</TableCell>
-                <TableCell>{criterion.description}</TableCell>
-                <TableCell>{criterion.weight}%</TableCell>
-                <TableCell>
-                  {criterion.status === "completed" ? (
-                    <Badge variant="success" className="gap-1">
-                      <CheckCircle2 className="h-4 w-4" />
-                      Abgeschlossen
-                    </Badge>
-                  ) : (
-                    <Badge variant="warning" className="gap-1">
-                      <Clock className="h-4 w-4" />
-                      Ausstehend
-                    </Badge>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
+  return (
+    <section className="p-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Kriterien für {selectedProject ?? "kein Projekt"}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Kriterium</TableHead>
+                  <TableHead>Beschreibung</TableHead>
+                  <TableHead>Gewichtung</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sampleCriteria.map((criterion) => (
+                  <TableRow key={criterion.id}>
+                    <TableCell className="font-medium">{criterion.name}</TableCell>
+                    <TableCell>{criterion.description}</TableCell>
+                    <TableCell>{criterion.weight}%</TableCell>
+                    <TableCell>
+                      {criterion.status === "completed" ? (
+                        <Badge variant="success" className="gap-1">
+                          <CheckCircle2 className="h-4 w-4" />
+                          Abgeschlossen
+                        </Badge>
+                      ) : (
+                        <Badge variant="warning" className="gap-1">
+                          <Clock className="h-4 w-4" />
+                          Ausstehend
+                        </Badge>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+    </section>
   );
 }

@@ -2,20 +2,19 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Suspense, useState } from "react";
+import { Suspense } from "react";
 import {
   Users,
   User,
   Settings,
   Activity,
   Shield,
-  Hexagon,
-  Folder,
   Bolt,
+  List,
+  Folder,
+  Brain,
   Hammer,
   Check,
-  List,
-  Brain,
   Home,
   LogOut,
 } from "lucide-react";
@@ -36,23 +35,13 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { signOut } from "@/app/(login)/actions";
 import { useRouter, usePathname } from "next/navigation";
-import { User as DbUser } from "@/lib/db/schema";
 import useSWR from "swr";
-import { useSelectedProject } from "@/components/ui/sidebar";
+import { useProject } from "@/context/ProjectContext";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-const DoksContext = React.createContext<{
-  currentDok: string | null;
-  setCurrentDok: (dok: string | null) => void;
-}>({
-  currentDok: null,
-  setCurrentDok: () => {},
-});
-export const useSelectedDoks = () => React.useContext(DoksContext);
-
 function UserMenu() {
-  const { data: user } = useSWR<DbUser>("/api/user", fetcher);
+  const { data: user } = useSWR("/api/user", fetcher);
   const router = useRouter();
 
   async function handleSignOut() {
@@ -177,65 +166,58 @@ const sidebarData = {
   ],
 };
 
+function InnerLayout({ children }: { children: React.ReactNode }) {
+  const { selectedProject, selectedBieter, selectedDok } = useProject();
+  const pathname = usePathname();
+
+  const filteredNavMain = sidebarData.navMain.filter((section) => {
+    if (section.title === "Bieter") return !!selectedBieter;
+    if (section.title === "Doks") return !!selectedDok;
+    return true;
+  });
+
+  return (
+    <SidebarProvider defaultOpen={true}>
+      <AppSidebar
+        versions={sidebarData.versions}
+        navMain={filteredNavMain}
+        collapsible="icon"
+      />
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center border-b px-4">
+          <div className="flex items-center gap-2">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="mr-2 h-4 lg:hidden" />
+          </div>
+          <div className="flex-1 flex items-center justify-center">
+            {selectedProject && (
+              <nav className="text-sm text-gray-700">
+                <span className="font-semibold">{selectedProject}</span>
+                {selectedBieter && (
+                  <> > <span className="font-medium">{selectedBieter}</span></>
+                )}
+                {selectedDok && (
+                  <> > <span className="font-medium">{selectedDok}</span></>
+                )}
+              </nav>
+            )}
+          </div>
+          <div className="flex items-center space-x-4">
+            <UserMenu />
+          </div>
+        </header>
+        <div className="flex flex-1 flex-col gap-4 p-4">
+          {children}
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
+  );
+}
+
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { selectedProject, selectedBieter } = useSelectedProject();
-  const [currentDokInVault, setCurrentDokInVault] = useState<string | null>(
-    null
-  );
-  const pathname = usePathname();
-
-  // only show “Bieter” if a Bieter is selected, “Doks” only if a Dok is selected
-  const filteredNavMain = sidebarData.navMain.filter((section) => {
-    if (section.title === "Bieter") return !!selectedBieter;
-    if (section.title === "Doks") return !!currentDokInVault;
-    return true;
-  });
-
-  return (
-    <DoksContext.Provider
-      value={{
-        currentDok: currentDokInVault,
-        setCurrentDok: setCurrentDokInVault,
-      }}
-    >
-      <SidebarProvider defaultOpen={true}>
-        <AppSidebar
-          versions={sidebarData.versions}
-          navMain={filteredNavMain}
-          collapsible="icon"
-        />
-        <SidebarInset>
-          <header className="flex h-16 shrink-0 items-center border-b px-4">
-            <div className="flex items-center gap-2">
-              <SidebarTrigger className="-ml-1" />
-              <Separator orientation="vertical" className="mr-2 h-4 lg:hidden" />
-            </div>
-            <div className="flex-1 flex items-center justify-center">
-              {selectedProject && (
-                <nav className="text-sm text-gray-700">
-                  <span className="font-semibold">{selectedProject}</span>
-                  {selectedBieter && (
-                    <> > <span className="font-medium">{selectedBieter}</span></>
-                  )}
-                  {currentDokInVault && (
-                    <> > <span className="font-medium">{currentDokInVault}</span></>
-                  )}
-                </nav>
-              )}
-            </div>
-            <div className="flex items-center space-x-4">
-              <UserMenu />
-            </div>
-          </header>
-          <div className="flex flex-1 flex-col gap-4 p-4">
-            {children}
-          </div>
-        </SidebarInset>
-      </SidebarProvider>
-    </DoksContext.Provider>
-  );
+  return <InnerLayout>{children}</InnerLayout>;
 }

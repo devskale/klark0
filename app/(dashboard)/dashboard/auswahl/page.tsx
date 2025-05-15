@@ -16,7 +16,7 @@ import {
 import { abstractFileSystemView, FileEntry } from "@/lib/fs/abstractFilesystem";
 import { initdir } from "@/lib/fs/initdir"; // Added initdir for Directory-Scaffolding
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { useSelectedProject } from "@/components/ui/sidebar"; // Assuming this is the correct path and hook
+import { useProject } from "@/context/ProjectContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -80,6 +80,13 @@ const fileTreeFetcher = async ([currentPath, settings]: [
 const reservedDirs = ["B", "archive", "md"];
 
 export default function VaultPage() {
+  const { 
+    selectedProject, 
+    setSelectedProject, 
+    selectedBieter, 
+    setSelectedBieter 
+  } = useProject();
+
   const [webdavSettings, setWebdavSettings] = useState<Record<
     string,
     string | undefined
@@ -88,20 +95,6 @@ export default function VaultPage() {
   const [showRefreshMessage, setShowRefreshMessage] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedView, setSelectedView] = useState("Op-Browser");
-
-  // Local state for selections within VaultPage UI
-  const [currentProjectInVault, setCurrentProjectInVault] = useState<
-    string | null
-  >(null);
-  const [currentBieterInVault, setCurrentBieterInVault] = useState<
-    string | null
-  >(null);
-
-  // Global context setters
-  const {
-    setSelectedProject: setGlobalSelectedProject,
-    setSelectedBieter: setGlobalSelectedBieter,
-  } = useSelectedProject();
 
   // State for Add Project Dialog
   const [isAddProjectDialogOpen, setIsAddProjectDialogOpen] = useState(false);
@@ -126,12 +119,12 @@ export default function VaultPage() {
   const [isDraggingBieter, setIsDraggingBieter] = useState(false);
 
   const handleCreateBieter = async () => {
-    if (!newBieterName.trim() || !webdavSettings || !currentProjectInVault)
+    if (!newBieterName.trim() || !webdavSettings || !selectedProject)
       return;
     try {
       const params = new URLSearchParams({
         type: fileSystemConfig.type,
-        path: `${currentProjectInVault}/B/${newBieterName}`,
+        path: `${selectedProject}/B/${newBieterName}`,
         host: webdavSettings.host || "",
         username: webdavSettings.username || "",
         password: webdavSettings.password || "",
@@ -161,7 +154,7 @@ export default function VaultPage() {
     const params = new URLSearchParams({
       type: fileSystemConfig.type,
       path: bieterPath,
-      destination: `${currentProjectInVault}/B/archive/${bieterName}`,
+      destination: `${selectedProject}/B/archive/${bieterName}`,
       host: webdavSettings.host || "",
       username: webdavSettings.username || "",
       password: webdavSettings.password || "",
@@ -240,8 +233,8 @@ export default function VaultPage() {
     error: bieterError,
     mutate: mutateBieter,
   } = useSWR(
-    webdavSettings && currentProjectInVault
-      ? [`${currentProjectInVault}/B`, webdavSettings]
+    webdavSettings && selectedProject
+      ? [`${selectedProject}/B`, webdavSettings]
       : null,
     fileTreeFetcher,
     { revalidateOnFocus: false }
@@ -362,7 +355,7 @@ export default function VaultPage() {
   };
 
   const handleProjectUpload = async () => {
-    if (!projectUploadFiles.length || !webdavSettings || !currentProjectInVault)
+    if (!projectUploadFiles.length || !webdavSettings || !selectedProject)
       return;
 
     setUploadingProject(true);
@@ -375,7 +368,7 @@ export default function VaultPage() {
       });
 
       // Modifiziert, um in den A-Unterordner hochzuladen (für Projekt/Ausschreibungsdaten)
-      const uploadPath = `${currentProjectInVault}/A`;
+      const uploadPath = `${selectedProject}/A`;
 
       const queryParams = new URLSearchParams({
         type: fileSystemConfig.type,
@@ -415,7 +408,7 @@ export default function VaultPage() {
   };
 
   const handleBieterUpload = async () => {
-    if (!bieterUploadFiles.length || !webdavSettings || !currentBieterInVault)
+    if (!bieterUploadFiles.length || !webdavSettings || !selectedBieter)
       return;
 
     setUploadingBieter(true);
@@ -429,7 +422,7 @@ export default function VaultPage() {
 
       const queryParams = new URLSearchParams({
         type: fileSystemConfig.type,
-        path: currentBieterInVault,
+        path: selectedBieter,
         host: webdavSettings.host || "",
         username: webdavSettings.username || "",
         password: webdavSettings.password || "",
@@ -652,7 +645,7 @@ export default function VaultPage() {
                       </DialogContent>
                     </Dialog>
                     {/* Upload-Dialog für Projekt */}
-                    {currentProjectInVault && (
+                    {selectedProject && (
                       <Dialog
                         open={isProjectUploadDialogOpen}
                         onOpenChange={setIsProjectUploadDialogOpen}>
@@ -755,7 +748,7 @@ export default function VaultPage() {
                                 <>
                                   Zu Projekt{" "}
                                   {decodeURIComponent(
-                                    currentProjectInVault
+                                    selectedProject
                                       .replace(/^\/klark0\//, "")
                                       .split("/")[0]
                                   )}{" "}
@@ -792,33 +785,29 @@ export default function VaultPage() {
                       <li
                         key={project.path}
                         className={`py-2 px-3 border-b hover:bg-gray-50 flex justify-between items-center ${
-                          currentProjectInVault === project.path
+                          selectedProject === project.path
                             ? "bg-gray-100"
                             : ""
                         }`}>
                         <span
                           className={`cursor-pointer flex-grow ${
-                            currentProjectInVault === project.path
+                            selectedProject === project.path
                               ? "font-bold"
                               : ""
                           }`}
                           onClick={() => {
                             const isSame =
-                              currentProjectInVault === project.path;
+                              selectedProject === project.path;
                             const raw = project.path
                               .replace(/^\/klark0\//, "")
                               .split("/")[0];
                             const projName = decodeURIComponent(raw);
                             if (isSame) {
-                              setCurrentProjectInVault(null);
-                              setCurrentBieterInVault(null);
-                              setGlobalSelectedProject("");
-                              setGlobalSelectedBieter("");
+                              setSelectedProject(null);
+                              setSelectedBieter(null);
                             } else {
-                              setCurrentProjectInVault(project.path);
-                              setCurrentBieterInVault(null);
-                              setGlobalSelectedProject(projName);
-                              setGlobalSelectedBieter("");
+                              setSelectedProject(project.path);
+                              setSelectedBieter(null);
                             }
                           }}>
                           {project.name}
@@ -873,14 +862,14 @@ export default function VaultPage() {
             </Card>
 
             {/* Right Card: Bieter */}
-            {currentProjectInVault && (
+            {selectedProject && (
               <Card className="rounded-lg shadow-lg w-1/2">
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <h2 className="text-md font-medium">
                       Bieter für:{" "}
                       {decodeURIComponent(
-                        currentProjectInVault
+                        selectedProject
                           ?.replace(/^\/klark0\//, "")
                           .split("/")[0] || "Ausgewähltes Projekt"
                       )}
@@ -894,7 +883,7 @@ export default function VaultPage() {
                           <Button
                             variant="outline"
                             size="icon"
-                            disabled={!currentProjectInVault}>
+                            disabled={!selectedProject}>
                             <Plus className="h-4 w-4" />
                           </Button>
                         </DialogTrigger>
@@ -925,7 +914,7 @@ export default function VaultPage() {
                         </DialogContent>
                       </Dialog>
                       {/* Upload-Dialog für Bieter */}
-                      {currentBieterInVault && (
+                      {selectedBieter && (
                         <Dialog
                           open={isBieterUploadDialogOpen}
                           onOpenChange={setIsBieterUploadDialogOpen}>
@@ -1028,7 +1017,7 @@ export default function VaultPage() {
                                   <>
                                     Zu Bieter{" "}
                                     {decodeURIComponent(
-                                      currentBieterInVault
+                                      selectedBieter
                                         .replace(/\/$/, "")
                                         .split("/")
                                         .pop()!
@@ -1059,7 +1048,7 @@ export default function VaultPage() {
                     <div className="text-red-500">
                       Error fetching bieter list.
                     </div>
-                  ) : !bieterFolderChildrenRaw && currentProjectInVault ? (
+                  ) : !bieterFolderChildrenRaw && selectedProject ? (
                     <div className="flex items-center">
                       <Loader2 className="h-5 w-5 animate-spin" />
                       <span className="ml-2 text-sm">Lade Bieter...</span>
@@ -1070,31 +1059,23 @@ export default function VaultPage() {
                         <li
                           key={bieter.path}
                           className={`py-2 px-3 border-b hover:bg-gray-50 flex justify-between items-center ${
-                            currentBieterInVault === bieter.path
+                            selectedBieter === bieter.path
                               ? "bg-gray-100"
                               : ""
                           }`}>
                           <span
                             className={`cursor-pointer flex-grow ${
-                              currentBieterInVault === bieter.path
+                              selectedBieter === bieter.path
                                 ? "font-bold"
                                 : ""
                             }`}
                             onClick={() => {
                               const isSame =
-                                currentBieterInVault === bieter.path;
+                                selectedBieter === bieter.path;
                               if (isSame) {
-                                setCurrentBieterInVault(null);
-                                setGlobalSelectedBieter("");
+                                setSelectedBieter(null);
                               } else {
-                                setCurrentBieterInVault(bieter.path);
-                                const name = decodeURIComponent(
-                                  bieter.path
-                                    .replace(/\/$/, "")
-                                    .split("/")
-                                    .pop() || ""
-                                );
-                                setGlobalSelectedBieter(name);
+                                setSelectedBieter(bieter.path);
                               }
                             }}>
                             {bieter.name}
@@ -1154,12 +1135,7 @@ export default function VaultPage() {
           </div>
         </>
       ) : selectedView === "Docs" ? (
-        // when Docs-tab is active, render the new module
-        <DoksModule
-          projectPath={currentProjectInVault}
-          bieterPath={currentBieterInVault}
-          webdavSettings={webdavSettings}
-        />
+        <DoksModule webdavSettings={webdavSettings} />
       ) : (
         <DateibrowserModule
           fileTree={fileTree}

@@ -1,6 +1,8 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link"; // Import Link
+import { usePathname } from "next/navigation"; // Import usePathname
 import {
   Sidebar,
   SidebarContent,
@@ -12,10 +14,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar";
-import { useSidebar } from "@/components/ui/sidebar"; // Import useSidebar to access the sidebar state
-import { useSelectedProject } from "@/components/ui/sidebar"; // Import useSelectedProject to access the selected project
-import { useSelectedDoks } from "@/app/(dashboard)/dashboard/layout"; // Import useSelectedDoks to access the current Dok
+import { useProject } from "@/context/ProjectContext";
 import { CircleIcon } from "lucide-react";
 
 // Placeholder for SearchForm component
@@ -82,14 +83,14 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
  */
 export function AppSidebar({ versions, navMain, ...props }: AppSidebarProps) {
   const { state } = useSidebar();
-  const { selectedProject } = useSelectedProject();
-  const { currentDok } = useSelectedDoks();
+  const { selectedProject, selectedBieter, selectedDok } = useProject();
+  const pathname = usePathname(); // Get current pathname
 
   return (
     <Sidebar {...props}>
       <SidebarHeader>
         {state === "collapsed" ? (
-          <div className="flex justify-center items-center p-2"> {/* Reduced padding and centered for collapsed state */}
+          <div className="flex justify-center items-center p-2">
             <CircleIcon className="h-6 w-6 text-orange-500" />
           </div>
         ) : (
@@ -110,18 +111,25 @@ export function AppSidebar({ versions, navMain, ...props }: AppSidebarProps) {
       </SidebarHeader>
       <SidebarContent>
         {navMain.map((item) =>
-          (item.title !== "Doks" || !!currentDok) && (
+          (item.title !== "Doks" || !!selectedDok) && 
+          (item.title !== "Bieter" || !!selectedBieter) && // Also hide Bieter section if no bieter selected
+          (
             <SidebarGroup key={item.title}>
               <SidebarGroupLabel>{item.title}</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {item.items.map((subItem) => (
                     <SidebarMenuItem key={subItem.title}>
-                      <SidebarMenuButton asChild isActive={subItem.isActive}>
-                        <a href={subItem.url}>
-                          {subItem.icon && (<subItem.icon className="mr-2 h-4 w-4" />)}
+                      <SidebarMenuButton
+                        asChild
+                        isActive={pathname === subItem.url} // Use pathname for isActive
+                      >
+                        <Link href={subItem.url}>
+                          {subItem.icon && (
+                            <subItem.icon className="mr-2 h-4 w-4" />
+                          )}
                           {subItem.title}
-                        </a>
+                        </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   ))}

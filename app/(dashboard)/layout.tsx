@@ -15,7 +15,7 @@ import { signOut } from "@/app/(login)/actions";
 import { useRouter } from "next/navigation";
 import { User } from "@/lib/db/schema";
 import useSWR from "swr";
-import { SelectedProjectProvider } from "@/components/ui/sidebar";
+import { ProjectProvider } from "@/context/ProjectContext";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -78,13 +78,10 @@ function UserMenu() {
   );
 }
 
-export default function Layout({ children }: { children: React.ReactNode }) {
-  return (
-    <SelectedProjectProvider>
-      <section className="flex flex-col min-h-screen">
-        {/* Header component has been removed as it's now part of dashboard/layout.tsx */}
-        {children}
-      </section>
-    </SelectedProjectProvider>
-  );
+export default function DashboardGroupLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return <ProjectProvider>{children}</ProjectProvider>;
 }
