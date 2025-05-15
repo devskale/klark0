@@ -51,9 +51,9 @@ export default function DoksModule({
   const getFileIcon = (name: string) => {
     const ext = name.split(".").pop()?.toLowerCase();
     if (ext === "pdf") return <FileText className="mr-2 h-4 w-4 text-red-500" />;
-    if (["doc", "docx", "ppt", "pptx", "xls", "xlsx"].includes(ext))
+    if (ext && ["doc", "docx", "ppt", "pptx", "xls", "xlsx"].includes(ext))
       return <FileText className="mr-2 h-4 w-4 text-blue-500" />;
-    if (["png", "jpg", "jpeg", "gif", "svg"].includes(ext))
+    if (ext && ["png", "jpg", "jpeg", "gif", "svg"].includes(ext))
       return <Image className="mr-2 h-4 w-4 text-green-500" />;
     return <FileText className="mr-2 h-4 w-4 text-gray-500" />;
   };
