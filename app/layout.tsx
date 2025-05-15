@@ -6,7 +6,7 @@ import { getUser, getTeamForUser, getAppSetting } from "@/lib/db/queries";
 import { SWRConfig } from "swr";
 
 export const metadata: Metadata = {
-  title: "Klark0",
+  title: "Soller0",
   description: "Digitales Vergabeaudit",
 };
 

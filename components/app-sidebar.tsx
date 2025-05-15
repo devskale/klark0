@@ -96,7 +96,7 @@ export function AppSidebar({ versions, navMain, ...props }: AppSidebarProps) {
         ) : (
           <div className="flex items-center p-4 text-gray-800 font-bold text-xl">
             <CircleIcon className="h-6 w-6 mr-2 text-orange-500" />
-            Klark0
+            Soller0
           </div>
         )}
         {state !== "collapsed" && (
