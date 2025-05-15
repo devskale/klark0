@@ -77,7 +77,7 @@ const fileTreeFetcher = async ([currentPath, settings]: [
 };
 
 // Define reserved directory names
-const reservedDirs = ["B", "archive", "md"];
+const reservedDirs = ["B", "archive", "md", "A"];
 
 export default function VaultPage() {
   const { 
@@ -290,8 +290,17 @@ export default function VaultPage() {
     const res = await fetch(`/api/fs/rename?${params.toString()}`, {
       method: "POST",
     });
-    if (res.ok) mutate();
-    else console.error("Archivieren fehlgeschlagen:", await res.text());
+    if (res.ok) {
+      mutate();
+      if (selectedBieter && selectedBieter.startsWith(projectPath)) {
+        setSelectedBieter(null);
+      }
+      if (selectedProject === projectPath) {
+        setSelectedProject(null);
+      }
+    } else {
+      console.error("Archivieren fehlgeschlagen:", await res.text());
+    }
   };
 
   // Neuer Handler: Projekt löschen via WebDAV-Delete
@@ -307,8 +316,17 @@ export default function VaultPage() {
     const res = await fetch(`/api/fs/delete?${params.toString()}`, {
       method: "POST",
     });
-    if (res.ok) mutate();
-    else console.error("Löschen fehlgeschlagen:", await res.text());
+    if (res.ok) {
+      mutate();
+      if (selectedBieter && selectedBieter.startsWith(projectPath)) {
+        setSelectedBieter(null);
+      }
+      if (selectedProject === projectPath) {
+        setSelectedProject(null);
+      }
+    } else {
+      console.error("Löschen fehlgeschlagen:", await res.text());
+    }
   };
 
   // Verbesserte Handler für Drag & Drop
