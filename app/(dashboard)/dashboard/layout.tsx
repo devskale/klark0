@@ -107,7 +107,7 @@ const sidebarData = {
   versions: ["1.0.1", "1.1.0-alpha", "2.0.0-beta1"],
   navMain: [
     {
-      title: "Porjekt",
+      title: "Projekt",
       url: "#",
       items: [
         { title: "Auswahl", url: "/dashboard/auswahl", icon: Folder },
@@ -166,6 +166,14 @@ const sidebarData = {
   ],
 };
 
+// Utility to trim trailing slashes and return only the last segment, decoded
+function trimName(name?: string): string {
+  if (!name) return '';
+  const withoutTrailing = name.replace(/\/+$/, '');
+  const segment = withoutTrailing.split('/').pop() || withoutTrailing;
+  return decodeURIComponent(segment);
+}
+
 function InnerLayout({ children }: { children: React.ReactNode }) {
   const { selectedProject, selectedBieter, selectedDok } = useProject();
   const pathname = usePathname();
@@ -189,15 +197,15 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4 lg:hidden" />
           </div>
-          <div className="flex-1 flex items-center justify-center">
+            <div className="flex-1 flex items-center justify-left pl-4">
             {selectedProject && (
               <nav className="text-sm text-gray-700">
-                <span className="font-semibold">{selectedProject}</span>
+                <span className="font-semibold">{trimName(selectedProject)}</span>
                 {selectedBieter && (
-                  <> {'>'} <span className="font-medium">{selectedBieter}</span></>
+                  <> {'>'} <span className="font-medium">{trimName(selectedBieter)}</span></>
                 )}
                 {selectedDok && (
-                  <> {'>'} <span className="font-medium">{selectedDok}</span></>
+                  <> {'>'} <span className="font-medium">{trimName(selectedDok)}</span></>
                 )}
               </nav>
             )}
