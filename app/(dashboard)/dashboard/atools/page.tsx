@@ -1,10 +1,51 @@
-"use client"; // Make it a client component
+"use client";
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { useProject } from "@/context/ProjectContext"; // Example: import useProject
+import { useProject } from "@/context/ProjectContext";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle2, Clock, Play } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+
+const toolsList = [
+  {
+    id: 1,
+    name: "Markdown Konvertierung",
+    description: "Konvertiert Markdown zu JSON im Projektverzeichnis",
+    status: "pending",
+    owner: "",
+  },
+  {
+    id: 2,
+    name: "Kriterien Extraktion",
+    description: "Extrahiert Bewertungskriterien aus Dokumenten",
+    status: "pending",
+    owner: "",
+  },
+  {
+    id: 3,
+    name: "Kriterien Review",
+    description: "Überprüfung und Bewertung der extrahierten Kriterien",
+    status: "pending",
+    owner: "",
+  },
+];
 
 export default function AtoolsPage() {
-  const { selectedProject, selectedBieter, selectedDok } = useProject(); // Example: consume context
+  const { selectedProject, selectedBieter, selectedDok } = useProject();
 
   return (
     <section className="flex-1 p-4 lg:p-8">
@@ -18,11 +59,65 @@ export default function AtoolsPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-gray-500">
-            Hier können Sie Nachrichten für ATools verwalten.
+          <p className="text-sm text-gray-500 mb-4">
+            Hier können Sie verschiedene Tools für das Projekt nutzen.
             {selectedBieter && <p>Ausgewählter Bieter: {selectedBieter}</p>}
             {selectedDok && <p>Ausgewähltes Dokument: {selectedDok}</p>}
           </p>
+
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Tool</TableHead>
+                  <TableHead>Owner</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Aktionen</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {toolsList.map((tool) => (
+                  <TableRow key={tool.id}>
+                    <TableCell className="font-medium">
+                      <span
+                        className="hover:underline"
+                        title={tool.description}>
+                        {tool.name}
+                      </span>
+                    </TableCell>
+                    <TableCell>{tool.owner || "-"}</TableCell>
+                    <TableCell>
+                      {tool.status === "completed" ? (
+                        <Badge variant="default" className="gap-1">
+                          <CheckCircle2 className="h-4 w-4" />
+                          Abgeschlossen
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="gap-1">
+                          <Clock className="h-4 w-4" />
+                          Ausstehend
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <Play className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>Starten</DropdownMenuItem>
+                          <DropdownMenuItem>Zuweisen</DropdownMenuItem>
+                          <DropdownMenuItem>Bearbeiten</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </section>

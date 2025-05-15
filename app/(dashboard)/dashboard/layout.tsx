@@ -112,11 +112,10 @@ const sidebarData = {
       items: [
         { title: "Auswahl", url: "/dashboard/auswahl", icon: Folder },
         {
-          title: "Konfig",
-          url: "/dashboard/akonfig",
+          title: "Info",
+          url: "/dashboard/ainfo",
           icon: Bolt,
         },
-        { title: "Kriterien", url: "/dashboard/akriterien", icon: List },
         { title: "Tools", url: "/dashboard/atools", icon: Hammer },
         { title: "Freigabe", url: "/dashboard/afreigabe", icon: Check },
       ],
@@ -168,9 +167,9 @@ const sidebarData = {
 
 // Utility to trim trailing slashes and return only the last segment, decoded
 function trimName(name?: string): string {
-  if (!name) return '';
-  const withoutTrailing = name.replace(/\/+$/, '');
-  const segment = withoutTrailing.split('/').pop() || withoutTrailing;
+  if (!name) return "";
+  const withoutTrailing = name.replace(/\/+$/, "");
+  const segment = withoutTrailing.split("/").pop() || withoutTrailing;
   return decodeURIComponent(segment);
 }
 
@@ -197,15 +196,27 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4 lg:hidden" />
           </div>
-            <div className="flex-1 flex items-center justify-left pl-4">
+          <div className="flex-1 flex items-center justify-left pl-4">
             {selectedProject && (
               <nav className="text-sm text-gray-700">
-                <span className="font-semibold">{trimName(selectedProject)}</span>
+                <span className="font-semibold">
+                  {trimName(selectedProject)}
+                </span>
                 {selectedBieter && (
-                  <> {'>'} <span className="font-medium">{trimName(selectedBieter)}</span></>
+                  <>
+                    {" "}
+                    {">"}{" "}
+                    <span className="font-medium">
+                      {trimName(selectedBieter)}
+                    </span>
+                  </>
                 )}
                 {selectedDok && (
-                  <> {'>'} <span className="font-medium">{trimName(selectedDok)}</span></>
+                  <>
+                    {" "}
+                    {">"}{" "}
+                    <span className="font-medium">{trimName(selectedDok)}</span>
+                  </>
                 )}
               </nav>
             )}
@@ -214,9 +225,7 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
             <UserMenu />
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4">
-          {children}
-        </div>
+        <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );
