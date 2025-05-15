@@ -12,14 +12,22 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Loader2, ChevronDown } from "lucide-react";
+import { Loader2, ChevronDown, X } from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import useSWR from "swr";
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
+import { Badge } from "@/components/ui/badge";
+import {
+  Command,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Command as CommandPrimitive } from "cmdk";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -258,6 +266,19 @@ const infoConfig = {
   ],
 };
 
+// Configuration for Markdown Conversion
+const markdownConversionConfig = {
+  displayName: "Markdown Konversion",
+  options: [
+    { id: "ocr", label: "OCR", defaultValue: true },
+    { id: "marker", label: "marker", defaultValue: false },
+    { id: "llamaparse", label: "llamaparse", defaultValue: false },
+    { id: "docling", label: "docling", defaultValue: false },
+    { id: "pdfplumber", label: "pdfplumber", defaultValue: false },
+  ],
+  forceOcr: { id: "ocrforced", label: "OCR Erzwingen", defaultValue: false },
+};
+
 export default function GeneralPage() {
   const [state, formAction, isPending] = useActionState<ActionState, FormData>(
     async (prevState, formData) => {
@@ -305,12 +326,83 @@ export default function GeneralPage() {
     fetcher
   );
 
+  const { data: mdConvSettings, mutate: mutateMdConvSettings } =
+    useSWR<Record<string, boolean>>(
+      "/api/settings?key=markdownKonversion",
+      fetcher
+    );
+
   const [isInfoCardOpen, setIsInfoCardOpen] = useState(true);
   const [isWebsitesCardOpen, setIsWebsitesCardOpen] = useState(false);
   const [isFileSystemCardOpen, setIsFileSystemCardOpen] = useState(false);
+  const [isMdConvCardOpen, setIsMdConvCardOpen] = useState(false);
 
   const currentFields =
     fileSystemConfigurations[dbSettings?.type || "local"]?.fields || [];
+
+  // Multi-select state for Markdown Konversion
+  type MdOption = { value: string; label: string };
+  const mdOptions: MdOption[] = markdownConversionConfig.options.map((opt) => ({
+    value: opt.id,
+    label: opt.label,
+  }));
+  const [mdSelected, setMdSelected] = useState<MdOption[]>(() =>
+    mdOptions.filter((opt) =>
+      mdConvSettings
+        ? mdConvSettings[opt.value]
+        : markdownConversionConfig.options.find((o) => o.id === opt.value)!
+            .defaultValue
+    )
+  );
+  const [mdInputValue, setMdInputValue] = useState("");
+  const [mdOpen, setMdOpen] = useState(false);
+  const mdFiltered = useMemo(
+    () => mdOptions.filter((opt) => !mdSelected.includes(opt)),
+    [mdSelected]
+  );
+  const handleMdUnselect = useCallback((opt: MdOption) => {
+    setMdSelected((prev) => prev.filter((s) => s.value !== opt.value));
+  }, []);
+  const handleMdKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Backspace" && mdSelected.length > 0) {
+        setMdSelected((prev) => prev.slice(0, -1));
+      }
+    },
+    [mdSelected]
+  );
+
+  // Multi-select state for External Websites
+  type WebOption = { value: string; label: string };
+  const webOptions: WebOption[] = externalWebsitesConfig.options.map((opt) => ({
+    value: opt.id,
+    label: opt.label,
+  }));
+  const [webSelected, setWebSelected] = useState<WebOption[]>(() =>
+    webOptions.filter(
+      (opt) =>
+        externalWebsites?.[opt.value] ??
+        externalWebsitesConfig.options.find((o) => o.id === opt.value)!
+          .defaultValue
+    )
+  );
+  const [webInputValue, setWebInputValue] = useState("");
+  const [webOpen, setWebOpen] = useState(false);
+  const webFiltered = useMemo(
+    () => webOptions.filter((opt) => !webSelected.includes(opt)),
+    [webSelected]
+  );
+  const handleWebUnselect = useCallback((opt: WebOption) => {
+    setWebSelected((prev) => prev.filter((s) => s.value !== opt.value));
+  }, []);
+  const handleWebKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Backspace" && webSelected.length > 0) {
+        setWebSelected((prev) => prev.slice(0, -1));
+      }
+    },
+    [webSelected]
+  );
 
   if (!dbSettings) {
     return (
@@ -324,7 +416,7 @@ export default function GeneralPage() {
   return (
     <section className="flex-1 p-4 lg:p-8">
       <h1 className="text-lg lg:text-2xl font-medium text-gray-900 mb-6">
-        Allgemeine Einstellungen
+        System Einstellungen
       </h1>
 
       {/* Info Section */}
@@ -415,39 +507,207 @@ export default function GeneralPage() {
                 onSubmit={async (e) => {
                   e.preventDefault();
                   const formData = new FormData(e.currentTarget);
-                  const newWebsites = Object.fromEntries(
-                    Array.from(formData.entries()).map(([key, value]) => [
-                      key,
-                      value === "on",
-                    ])
+                  const newSettings = Object.fromEntries(
+                    Array.from(formData.entries()).map(([k, v]) => [k, v === "on"])
                   );
                   await fetch("/api/settings", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                       settingKey: "externalWebsites",
-                      value: newWebsites,
+                      value: newSettings,
                     }),
                   });
                   mutateExternalWebsites({
                     ...externalWebsites,
-                    ...newWebsites,
-                  }); // Ensure state updates without re-fetching
+                    ...newSettings,
+                  });
                 }}>
-                {externalWebsitesConfig.options.map((option) => (
-                  <div
-                    key={option.id}
-                    className="flex items-center space-x-2 mb-4">
-                    <input
-                      type="checkbox"
-                      id={option.id}
-                      name={option.id}
-                      defaultChecked={externalWebsites?.[option.id] || false}
-                      className="h-4 w-4"
-                    />
-                    <Label htmlFor={option.id}>{option.label}</Label>
-                  </div>
+                {/* Hidden inputs for selected websites */}
+                {webSelected.map((opt) => (
+                  <input key={opt.value} type="hidden" name={opt.value} value="on" />
                 ))}
+
+                {/* Multi-select UI for external websites */}
+                <Command className="overflow-visible">
+                  <div className="rounded-md border border-input px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+                    <div className="flex flex-wrap gap-1">
+                      {webSelected.map((opt) => (
+                        <Badge
+                          key={opt.value}
+                          variant="secondary"
+                          className="select-none">
+                          {opt.label}
+                          <X
+                            className="size-3 text-muted-foreground hover:text-foreground ml-2 cursor-pointer"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => handleWebUnselect(opt)}
+                          />
+                        </Badge>
+                      ))}
+                      <CommandPrimitive.Input
+                        onKeyDown={handleWebKeyDown}
+                        onValueChange={setWebInputValue}
+                        value={webInputValue}
+                        onBlur={() => setWebOpen(false)}
+                        onFocus={() => setWebOpen(true)}
+                        placeholder="Select websites..."
+                        className="ml-2 flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
+                      />
+                    </div>
+                  </div>
+                  <div className="relative mt-2">
+                    <CommandList>
+                      {webOpen && !!webFiltered.length && (
+                        <div className="absolute top-0 z-10 w-full rounded-md border bg-popover text-popover-foreground shadow-md outline-none">
+                          <CommandGroup className="h-full overflow-auto">
+                            {webFiltered.map((opt) => (
+                              <CommandItem
+                                key={opt.value}
+                                onMouseDown={(e) => e.preventDefault()}
+                                onSelect={() => {
+                                  setWebInputValue("");
+                                  setWebSelected((prev) => [...prev, opt]);
+                                }}
+                                className="cursor-pointer">
+                                {opt.label}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </div>
+                      )}
+                    </CommandList>
+                  </div>
+                </Command>
+
+                <Button type="submit" className="bg-orange-500 text-white">
+                  Speichern
+                </Button>
+              </form>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
+      {/* Markdown Konversion Section */}
+      <Collapsible
+        open={isMdConvCardOpen}
+        onOpenChange={setIsMdConvCardOpen}
+        className="mb-8">
+        <Card>
+          <CardHeader className="flex items-center justify-between cursor-pointer">
+            <CollapsibleTrigger asChild>
+              <div className="flex items-center justify-between w-full">
+                <CardTitle>{markdownConversionConfig.displayName}</CardTitle>
+                <ChevronDown
+                  className={`h-5 w-5 transition-transform ${
+                    isMdConvCardOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </div>
+            </CollapsibleTrigger>
+          </CardHeader>
+          <CollapsibleContent>
+            <CardContent className="space-y-4 pt-0">
+              <form
+                className="space-y-4"
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+                  const newSettings = Object.fromEntries(
+                    Array.from(formData.entries()).map(([k, v]) => [k, v === "on"])
+                  );
+                  await fetch("/api/settings", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      settingKey: "markdownKonversion",
+                      value: newSettings,
+                    }),
+                  });
+                  mutateMdConvSettings({
+                    ...mdConvSettings,
+                    ...newSettings,
+                  });
+                }}>
+                {/* Hidden inputs für gewählte Tags */}
+                {mdSelected.map((opt) => (
+                  <input
+                    key={opt.value}
+                    type="hidden"
+                    name={opt.value}
+                    value="on"
+                  />
+                ))}
+                {/* Multi-Select UI */}
+                <Command className="overflow-visible">
+                  <div className="rounded-md border border-input px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+                    <div className="flex flex-wrap gap-1">
+                      {mdSelected.map((opt) => (
+                        <Badge
+                          key={opt.value}
+                          variant="secondary"
+                          className="select-none">
+                          {opt.label}
+                          <X
+                            className="size-3 text-muted-foreground hover:text-foreground ml-2 cursor-pointer"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => handleMdUnselect(opt)}
+                          />
+                        </Badge>
+                      ))}
+                      <CommandPrimitive.Input
+                        onKeyDown={handleMdKeyDown}
+                        onValueChange={setMdInputValue}
+                        value={mdInputValue}
+                        onBlur={() => setMdOpen(false)}
+                        onFocus={() => setMdOpen(true)}
+                        placeholder="Select tags..."
+                        className="ml-2 flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
+                      />
+                    </div>
+                  </div>
+                  <div className="relative mt-2">
+                    <CommandList>
+                      {mdOpen && !!mdFiltered.length && (
+                        <div className="absolute top-0 z-10 w-full rounded-md border bg-popover text-popover-foreground shadow-md outline-none">
+                          <CommandGroup className="h-full overflow-auto">
+                            {mdFiltered.map((opt) => (
+                              <CommandItem
+                                key={opt.value}
+                                onMouseDown={(e) => e.preventDefault()}
+                                onSelect={() => {
+                                  setMdInputValue("");
+                                  setMdSelected((prev) => [...prev, opt]);
+                                }}
+                                className="cursor-pointer">
+                                {opt.label}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </div>
+                      )}
+                    </CommandList>
+                  </div>
+                </Command>
+
+                {/* OCR Erzwingen Checkbox */}
+                <div className="flex items-center space-x-2 mb-4">
+                  <input
+                    type="checkbox"
+                    id={markdownConversionConfig.forceOcr.id}
+                    name={markdownConversionConfig.forceOcr.id}
+                    defaultChecked={
+                      mdConvSettings?.[markdownConversionConfig.forceOcr.id] ??
+                      markdownConversionConfig.forceOcr.defaultValue
+                    }
+                    className="h-4 w-4"
+                  />
+                  <Label htmlFor={markdownConversionConfig.forceOcr.id}>
+                    {markdownConversionConfig.forceOcr.label}
+                  </Label>
+                </div>
+
                 <Button type="submit" className="bg-orange-500 text-white">
                   Speichern
                 </Button>
