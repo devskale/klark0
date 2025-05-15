@@ -118,15 +118,10 @@ const sidebarData = {
   versions: ["1.0.1", "1.1.0-alpha", "2.0.0-beta1"],
   navMain: [
     {
-      title: "Projekt",
+      title: "Porjekt",
       url: "#",
       items: [
-        {
-          title: "Auswahl",
-          url: "/dashboard/aauswahl",
-          icon: Hexagon,
-        },
-        { title: "Vault", url: "/dashboard/vault", icon: Folder },
+        { title: "Auswahl", url: "/dashboard/auswahl", icon: Folder },
         { title: "Kriterien", url: "/dashboard/akriterien", icon: List },
         {
           title: "Konfig",
