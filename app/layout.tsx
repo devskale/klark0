@@ -1,9 +1,9 @@
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import { Manrope } from "next/font/google";
-// Add getSettings import at the top with other imports
 import { getUser, getTeamForUser, getAppSetting } from "@/lib/db/queries";
 import { SWRConfig } from "swr";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: "Soller0",
@@ -31,11 +31,12 @@ export default function RootLayout({
             fallback: {
               "/api/user": getUser(),
               "/api/team": getTeamForUser(),
-              "/api/settings": getAppSetting(), // Add this line
+              "/api/settings": getAppSetting(),
             },
           }}>
           {children}
         </SWRConfig>
+        <Toaster richColors position="top-center" />
       </body>
     </html>
   );

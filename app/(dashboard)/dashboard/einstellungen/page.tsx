@@ -19,7 +19,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import useSWR from "swr";
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import {
   Command,
@@ -28,6 +28,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Command as CommandPrimitive } from "cmdk";
+import { toast } from "sonner";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -279,6 +280,18 @@ const markdownConversionConfig = {
   forceOcr: { id: "ocrforced", label: "OCR Erzwingen", defaultValue: false },
 };
 
+// Konfiguration für Personendaten Anonymisierung
+const personDataConfig = {
+  displayName: "Personendaten",
+  options: [
+    { id: "glna", label: "glna" },
+    { id: "glnb", label: "glnb" },
+    { id: "glnc", label: "glnc" },
+    { id: "gemma3_4b", label: "gemma3:4b" },
+    { id: "llama3_7b", label: "llama3:7b" },
+  ],
+};
+
 export default function GeneralPage() {
   const [state, formAction, isPending] = useActionState<ActionState, FormData>(
     async (prevState, formData) => {
@@ -332,10 +345,22 @@ export default function GeneralPage() {
       fetcher
     );
 
+  const { data: personSettings, mutate: mutatePersonSettings } =
+    useSWR<Record<string, boolean>>(
+      "/api/settings?key=personendaten",
+      fetcher
+    );
+
   const [isInfoCardOpen, setIsInfoCardOpen] = useState(true);
   const [isWebsitesCardOpen, setIsWebsitesCardOpen] = useState(false);
   const [isFileSystemCardOpen, setIsFileSystemCardOpen] = useState(false);
   const [isMdConvCardOpen, setIsMdConvCardOpen] = useState(false);
+  const [isPersonCardOpen, setIsPersonCardOpen] = useState(false);
+
+  const [infoSaving, setInfoSaving] = useState(false);
+  const [websitesSaving, setWebsitesSaving] = useState(false);
+  const [mdSaving, setMdSaving] = useState(false);
+  const [personSaving, setPersonSaving] = useState(false);
 
   const currentFields =
     fileSystemConfigurations[dbSettings?.type || "local"]?.fields || [];
@@ -357,7 +382,7 @@ export default function GeneralPage() {
   const [mdInputValue, setMdInputValue] = useState("");
   const [mdOpen, setMdOpen] = useState(false);
   const mdFiltered = useMemo(
-    () => mdOptions.filter((opt) => !mdSelected.includes(opt)),
+    () => mdOptions.filter((opt) => !mdSelected.some((s) => s.value === opt.value)),
     [mdSelected]
   );
   const handleMdUnselect = useCallback((opt: MdOption) => {
@@ -371,6 +396,13 @@ export default function GeneralPage() {
     },
     [mdSelected]
   );
+
+  // reset Markdown Konversion selection when settings load
+  useEffect(() => {
+    if (mdConvSettings) {
+      setMdSelected(mdOptions.filter(opt => mdConvSettings[opt.value]));
+    }
+  }, [mdConvSettings]);
 
   // Multi-select state for External Websites
   type WebOption = { value: string; label: string };
@@ -389,7 +421,7 @@ export default function GeneralPage() {
   const [webInputValue, setWebInputValue] = useState("");
   const [webOpen, setWebOpen] = useState(false);
   const webFiltered = useMemo(
-    () => webOptions.filter((opt) => !webSelected.includes(opt)),
+    () => webOptions.filter((opt) => !webSelected.some((s) => s.value === opt.value)),
     [webSelected]
   );
   const handleWebUnselect = useCallback((opt: WebOption) => {
@@ -403,6 +435,49 @@ export default function GeneralPage() {
     },
     [webSelected]
   );
+
+  // reset External Websites selection when settings load
+  useEffect(() => {
+    if (externalWebsites) {
+      setWebSelected(webOptions.filter(opt => externalWebsites[opt.value]));
+    }
+  }, [externalWebsites]);
+
+  // Multi-select state für Personendaten
+  type PersonOption = { value: string; label: string };
+  const personOptions: PersonOption[] = personDataConfig.options.map((o) => ({
+    value: o.id,
+    label: o.label,
+  }));
+  const [personSelected, setPersonSelected] = useState<PersonOption[]>(() =>
+    personOptions.filter((opt) =>
+      personSettings ? personSettings[opt.value] : false
+    )
+  );
+  const [personInput, setPersonInput] = useState("");
+  const [personOpen, setPersonOpen] = useState(false);
+  const personFiltered = useMemo(
+    () => personOptions.filter((opt) => !personSelected.some((s) => s.value === opt.value)),
+    [personSelected]
+  );
+  const handlePersonUnselect = useCallback((opt: PersonOption) => {
+    setPersonSelected((ps) => ps.filter((s) => s.value !== opt.value));
+  }, []);
+  const handlePersonKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Backspace" && personSelected.length > 0) {
+        setPersonSelected((ps) => ps.slice(0, -1));
+      }
+    },
+    [personSelected]
+  );
+
+  // reset Personendaten selection when settings load
+  useEffect(() => {
+    if (personSettings) {
+      setPersonSelected(personOptions.filter(opt => personSettings[opt.value]));
+    }
+  }, [personSettings]);
 
   if (!dbSettings) {
     return (
@@ -443,17 +518,32 @@ export default function GeneralPage() {
                 className="space-y-4"
                 onSubmit={async (e) => {
                   e.preventDefault();
+                  setInfoSaving(true);
                   const formData = new FormData(e.currentTarget);
                   const newInfo = Object.fromEntries(formData.entries());
-                  await fetch("/api/settings", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      settingKey: "info",
-                      value: newInfo,
-                    }),
-                  });
-                  mutate();
+                  try {
+                    await fetch("/api/settings", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        settingKey: "info",
+                        value: newInfo,
+                      }),
+                    });
+                    mutate();
+                    toast.success("Einstellungen gespeichert", {
+                      description: "Die Info-Einstellungen wurden erfolgreich gespeichert.",
+                      position: "top-center",
+                      duration: 3000,
+                    });
+                  } catch (error) {
+                    toast.error("Fehler beim Speichern", {
+                      description: "Die Änderungen konnten nicht gespeichert werden.",
+                      position: "top-center",
+                    });
+                  } finally {
+                    setInfoSaving(false);
+                  }
                 }}>
                 {infoConfig.fields.map((field) => (
                   <div key={field.id} className="mb-6">
@@ -473,8 +563,15 @@ export default function GeneralPage() {
                     />
                   </div>
                 ))}
-                <Button type="submit" className="bg-orange-500 text-white">
-                  Speichern
+                <Button type="submit" className="bg-orange-500 text-white" disabled={infoSaving}>
+                  {infoSaving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Wird gespeichert...
+                    </>
+                  ) : (
+                    'Speichern'
+                  )}
                 </Button>
               </form>
             </CardContent>
@@ -506,22 +603,37 @@ export default function GeneralPage() {
                 className="space-y-4"
                 onSubmit={async (e) => {
                   e.preventDefault();
+                  setWebsitesSaving(true);
                   const formData = new FormData(e.currentTarget);
                   const newSettings = Object.fromEntries(
                     Array.from(formData.entries()).map(([k, v]) => [k, v === "on"])
                   );
-                  await fetch("/api/settings", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      settingKey: "externalWebsites",
-                      value: newSettings,
-                    }),
-                  });
-                  mutateExternalWebsites({
-                    ...externalWebsites,
-                    ...newSettings,
-                  });
+                  try {
+                    await fetch("/api/settings", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        settingKey: "externalWebsites",
+                        value: newSettings,
+                      }),
+                    });
+                    mutateExternalWebsites({
+                      ...externalWebsites,
+                      ...newSettings,
+                    });
+                    toast.success("Einstellungen gespeichert", {
+                      description: "Die Webseiten-Einstellungen wurden erfolgreich gespeichert.",
+                      position: "top-center",
+                      duration: 3000,
+                    });
+                  } catch (error) {
+                    toast.error("Fehler beim Speichern", {
+                      description: "Die Änderungen konnten nicht gespeichert werden.",
+                      position: "top-center",
+                    });
+                  } finally {
+                    setWebsitesSaving(false);
+                  }
                 }}>
                 {/* Hidden inputs for selected websites */}
                 {webSelected.map((opt) => (
@@ -538,11 +650,15 @@ export default function GeneralPage() {
                           variant="secondary"
                           className="select-none">
                           {opt.label}
-                          <X
-                            className="size-3 text-muted-foreground hover:text-foreground ml-2 cursor-pointer"
-                            onMouseDown={(e) => e.preventDefault()}
-                            onClick={() => handleWebUnselect(opt)}
-                          />
+                          <span
+                            className="ml-2 cursor-pointer inline-flex"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleWebUnselect(opt);
+                            }}>
+                            <X className="size-3 text-muted-foreground hover:text-foreground" />
+                          </span>
                         </Badge>
                       ))}
                       <CommandPrimitive.Input
@@ -567,7 +683,11 @@ export default function GeneralPage() {
                                 onMouseDown={(e) => e.preventDefault()}
                                 onSelect={() => {
                                   setWebInputValue("");
-                                  setWebSelected((prev) => [...prev, opt]);
+                                  setWebSelected((prev) =>
+                                    prev.some((s) => s.value === opt.value)
+                                      ? prev
+                                      : [...prev, opt]
+                                  );
                                 }}
                                 className="cursor-pointer">
                                 {opt.label}
@@ -580,8 +700,15 @@ export default function GeneralPage() {
                   </div>
                 </Command>
 
-                <Button type="submit" className="bg-orange-500 text-white">
-                  Speichern
+                <Button type="submit" className="bg-orange-500 text-white" disabled={websitesSaving}>
+                  {websitesSaving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Wird gespeichert...
+                    </>
+                  ) : (
+                    'Speichern'
+                  )}
                 </Button>
               </form>
             </CardContent>
@@ -613,22 +740,37 @@ export default function GeneralPage() {
                 className="space-y-4"
                 onSubmit={async (e) => {
                   e.preventDefault();
+                  setMdSaving(true);
                   const formData = new FormData(e.currentTarget);
                   const newSettings = Object.fromEntries(
                     Array.from(formData.entries()).map(([k, v]) => [k, v === "on"])
                   );
-                  await fetch("/api/settings", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      settingKey: "markdownKonversion",
-                      value: newSettings,
-                    }),
-                  });
-                  mutateMdConvSettings({
-                    ...mdConvSettings,
-                    ...newSettings,
-                  });
+                  try {
+                    await fetch("/api/settings", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        settingKey: "markdownKonversion",
+                        value: newSettings,
+                      }),
+                    });
+                    mutateMdConvSettings({
+                      ...mdConvSettings,
+                      ...newSettings,
+                    });
+                    toast.success("Einstellungen gespeichert", {
+                      description: "Die Konversionsoptionen wurden erfolgreich gespeichert.",
+                      position: "top-center",
+                      duration: 3000,
+                    });
+                  } catch (error) {
+                    toast.error("Fehler beim Speichern", {
+                      description: "Die Änderungen konnten nicht gespeichert werden.",
+                      position: "top-center",
+                    });
+                  } finally {
+                    setMdSaving(false);
+                  }
                 }}>
                 {/* Hidden inputs für gewählte Tags */}
                 {mdSelected.map((opt) => (
@@ -649,11 +791,15 @@ export default function GeneralPage() {
                           variant="secondary"
                           className="select-none">
                           {opt.label}
-                          <X
-                            className="size-3 text-muted-foreground hover:text-foreground ml-2 cursor-pointer"
-                            onMouseDown={(e) => e.preventDefault()}
-                            onClick={() => handleMdUnselect(opt)}
-                          />
+                          <span
+                            className="ml-2 cursor-pointer inline-flex"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleMdUnselect(opt);
+                            }}>
+                            <X className="size-3 text-muted-foreground hover:text-foreground" />
+                          </span>
                         </Badge>
                       ))}
                       <CommandPrimitive.Input
@@ -678,7 +824,11 @@ export default function GeneralPage() {
                                 onMouseDown={(e) => e.preventDefault()}
                                 onSelect={() => {
                                   setMdInputValue("");
-                                  setMdSelected((prev) => [...prev, opt]);
+                                  setMdSelected((prev) =>
+                                    prev.some((s) => s.value === opt.value)
+                                      ? prev
+                                      : [...prev, opt]
+                                  );
                                 }}
                                 className="cursor-pointer">
                                 {opt.label}
@@ -708,9 +858,147 @@ export default function GeneralPage() {
                   </Label>
                 </div>
 
-                <Button type="submit" className="bg-orange-500 text-white">
-                  Speichern
+                <Button type="submit" className="bg-orange-500 text-white" disabled={mdSaving}>
+                  {mdSaving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Wird gespeichert...
+                    </>
+                  ) : (
+                    'Speichern'
+                  )}
                 </Button>
+              </form>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
+      {/* Personendaten Section */}
+      <Collapsible
+        open={isPersonCardOpen}
+        onOpenChange={setIsPersonCardOpen}
+        className="mb-8">
+        <Card>
+          <CardHeader className="flex items-center justify-between cursor-pointer">
+            <CollapsibleTrigger asChild>
+              <div className="flex items-center justify-between w-full">
+                <CardTitle>{personDataConfig.displayName}</CardTitle>
+                <ChevronDown
+                  className={`h-5 w-5 transition-transform ${
+                    isPersonCardOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </div>
+            </CollapsibleTrigger>
+          </CardHeader>
+          <CollapsibleContent>
+            <CardContent className="space-y-4 pt-0">
+              <form
+                className="space-y-4"
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  setPersonSaving(true);
+                  const fd = new FormData(e.currentTarget);
+                  const newSettings = Object.fromEntries(
+                    Array.from(fd.entries()).map(([k, v]) => [k, v === "on"])
+                  );
+                  try {
+                    await fetch("/api/settings", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        settingKey: "personendaten",
+                        value: newSettings,
+                      }),
+                    });
+                    mutatePersonSettings({ ...personSettings, ...newSettings });
+                    toast.success("Einstellungen gespeichert", {
+                      description: "Die Personendaten-Einstellungen wurden erfolgreich gespeichert.",
+                      position: "top-center",
+                      duration: 3000,
+                    });
+                  } catch (error) {
+                    toast.error("Fehler beim Speichern", {
+                      description: "Die Änderungen konnten nicht gespeichert werden.",
+                      position: "top-center",
+                    });
+                  } finally {
+                    setPersonSaving(false);
+                  }
+                }}>
+                {/* Hidden inputs für Auswahl */}
+                {personSelected.map((opt) => (
+                  <input key={opt.value} type="hidden" name={opt.value} value="on" />
+                ))}
+
+                {/* Multi-select UI */}
+                <Command className="overflow-visible">
+                  <div className="rounded-md border border-input px-3 py-2 text-sm focus-within:ring-2 focus-within:ring-ring">
+                    <div className="flex flex-wrap gap-1">
+                      {personSelected.map((opt) => (
+                        <Badge key={opt.value} variant="secondary" className="select-none">
+                          {opt.label}
+                          <span
+                            className="ml-2 cursor-pointer inline-flex"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handlePersonUnselect(opt);
+                            }}>
+                            <X className="size-3" />
+                          </span>
+                        </Badge>
+                      ))}
+                      <CommandPrimitive.Input
+                        onKeyDown={handlePersonKeyDown}
+                        onValueChange={setPersonInput}
+                        value={personInput}
+                        onBlur={() => setPersonOpen(false)}
+                        onFocus={() => setPersonOpen(true)}
+                        placeholder="Methoden wählen..."
+                        className="ml-2 flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
+                      />
+                    </div>
+                  </div>
+                  <div className="relative mt-2">
+                    <CommandList>
+                      {personOpen && !!personFiltered.length && (
+                        <div className="absolute top-0 z-10 w-full rounded-md border bg-popover shadow-md">
+                          <CommandGroup className="h-full overflow-auto">
+                            {personFiltered.map((opt) => (
+                              <CommandItem
+                                key={opt.value}
+                                onMouseDown={(e) => e.preventDefault()}
+                                onSelect={() => {
+                                  setPersonInput("");
+                                  setPersonSelected((ps) =>
+                                    ps.some((s) => s.value === opt.value)
+                                      ? ps
+                                      : [...ps, opt]
+                                  );
+                                }}
+                                className="cursor-pointer px-2 py-1">
+                                {opt.label}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </div>
+                      )}
+                    </CommandList>
+                  </div>
+                </Command>
+
+                  <Button type="submit" className="bg-orange-500 text-white" disabled={personSaving}>
+                    {personSaving ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Wird gespeichert...
+                      </>
+                    ) : (
+                      'Speichern'
+                    )}
+                  </Button>
               </form>
             </CardContent>
           </CollapsibleContent>
@@ -736,7 +1024,21 @@ export default function GeneralPage() {
           </CardHeader>
           <CollapsibleContent>
             <CardContent>
-              <form className="space-y-4" action={formAction}>
+              <form className="space-y-4" action={async (formData) => {
+                const result = await formAction(formData);
+                if (result?.success) {
+                  toast.success("Einstellungen gespeichert", {
+                    description: result.success,
+                    position: "top-center",
+                    duration: 3000,
+                  });
+                } else if (result?.error) {
+                  toast.error("Fehler beim Speichern", {
+                    description: result.error,
+                    position: "top-center",
+                  });
+                }
+              }}>
                 <div className="space-y-2 mb-4">
                   <Label htmlFor="fileSystemSetting" className="block mb-2">
                     Dateisystem Typ
@@ -796,7 +1098,7 @@ export default function GeneralPage() {
                   {isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Speichern...
+                      Wird gespeichert...
                     </>
                   ) : (
                     "Änderungen speichern"

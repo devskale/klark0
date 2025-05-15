@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { User } from "@/lib/db/schema";
 import useSWR from "swr";
 import { ProjectProvider } from "@/context/ProjectContext";
+import { Toaster } from "sonner";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -78,10 +79,15 @@ function UserMenu() {
   );
 }
 
-export default function DashboardGroupLayout({
+export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <ProjectProvider>{children}</ProjectProvider>;
+  return (
+    <>
+      <ProjectProvider>{children}</ProjectProvider>
+      <Toaster richColors position="top-center" />
+    </>
+  );
 }
