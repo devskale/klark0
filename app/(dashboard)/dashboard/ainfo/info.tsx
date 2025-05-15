@@ -2,7 +2,7 @@ import React from "react";
 import { useProject } from "@/context/ProjectContext";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
+import { trimName } from "@/lib/trim";
 
 export default function Info() {
   const { selectedProject } = useProject();
@@ -10,7 +10,7 @@ export default function Info() {
 
   return (
     <div className="space-y-4 p-4 bg-white rounded-md shadow">
-      <h2 className="text-2xl font-bold">{projektName}</h2>
+      <h2 className="text-2xl font-bold">{trimName(projektName)}</h2>
       <div className="space-y-1">
         <p><strong>Vergabestelle:</strong> Muster Vergabestelle</p>
         <p><strong>Adresse:</strong> Muster Straße 1, 12345 Musterstadt</p>

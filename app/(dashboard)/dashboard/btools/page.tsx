@@ -57,7 +57,7 @@ export default function AtoolsPage() {
   return (
     <section className="flex-1 p-4 lg:p-8">
       <h1 className="text-lg lg:text-2xl font-medium bold text-gray-900 mb-6">
-        Tools für {selectedProject || "Kein Projekt ausgewählt"}
+        Tools für Bieter
       </h1>
           <p className="text-sm text-gray-500 mb-4">
             Hier können Sie verschiedene Tools für das Projekt nutzen.

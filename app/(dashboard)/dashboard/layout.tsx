@@ -37,6 +37,7 @@ import { signOut } from "@/app/(login)/actions";
 import { useRouter, usePathname } from "next/navigation";
 import useSWR from "swr";
 import { useProject } from "@/context/ProjectContext";
+import { trimName } from "@/lib/trim";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -163,14 +164,6 @@ const sidebarData = {
     },
   ],
 };
-
-// Utility to trim trailing slashes and return only the last segment, decoded
-function trimName(name?: string): string {
-  if (!name) return "";
-  const withoutTrailing = name.replace(/\/+$/, "");
-  const segment = withoutTrailing.split("/").pop() || withoutTrailing;
-  return decodeURIComponent(segment);
-}
 
 function InnerLayout({ children }: { children: React.ReactNode }) {
   const { selectedProject, selectedBieter, selectedDok } = useProject();
