@@ -73,7 +73,7 @@ function UserMenu() {
           <AvatarFallback>
             {user.email
               ?.split(" ")
-              .map((n) => n[0])
+              .map((n: string) => n[0])
               .join("")}
           </AvatarFallback>
         </Avatar>
@@ -194,10 +194,10 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
               <nav className="text-sm text-gray-700">
                 <span className="font-semibold">{selectedProject}</span>
                 {selectedBieter && (
-                  <> > <span className="font-medium">{selectedBieter}</span></>
+                  <> {'>'} <span className="font-medium">{selectedBieter}</span></>
                 )}
                 {selectedDok && (
-                  <> > <span className="font-medium">{selectedDok}</span></>
+                  <> {'>'} <span className="font-medium">{selectedDok}</span></>
                 )}
               </nav>
             )}
