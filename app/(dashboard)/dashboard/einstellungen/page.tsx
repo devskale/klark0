@@ -479,6 +479,51 @@ export default function GeneralPage() {
     }
   }, [personSettings]);
 
+  // Multi-select state for Datenklassen
+  type DataClassOption = { value: string; label: string };
+  const dataClassOptions: DataClassOption[] = [
+    { value: "person", label: "Person" },
+    { value: "firma", label: "Firma" },
+    { value: "adresse", label: "Adresse" },
+    { value: "telefonnummer", label: "Telefonnummer" },
+    { value: "email", label: "E-Mail" },
+  ];
+  const [dataClassSelected, setDataClassSelected] = useState<DataClassOption[]>([]);
+  const [dataClassInput, setDataClassInput] = useState("");
+  const [dataClassOpen, setDataClassOpen] = useState(false);
+  const dataClassFiltered = useMemo(
+    () =>
+      dataClassOptions.filter(
+        (opt) => !dataClassSelected.some((s) => s.value === opt.value)
+      ),
+    [dataClassSelected]
+  );
+  const handleDataClassUnselect = useCallback((opt: DataClassOption) => {
+    setDataClassSelected((prev) => prev.filter((s) => s.value !== opt.value));
+  }, []);
+  const handleDataClassKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Backspace" && dataClassInput === "" && dataClassSelected.length > 0) {
+        e.preventDefault();
+        setDataClassSelected((prev) => prev.slice(0, -1));
+      } else if (e.key === "Enter" && dataClassInput.trim() !== "") {
+        e.preventDefault();
+        const newLabel = dataClassInput.trim();
+        // Create a simple value, e.g., "My Custom Tag" -> "my_custom_tag"
+        const newValue = newLabel.toLowerCase().replace(/\s+/g, "_");
+
+        // Check if this custom tag (by value) is already selected
+        if (!dataClassSelected.some((opt) => opt.value === newValue)) {
+          const newOption: DataClassOption = { value: newValue, label: newLabel };
+          setDataClassSelected((prev) => [...prev, newOption]);
+        }
+        setDataClassInput(""); // Clear input after adding
+        setDataClassOpen(false); // Close dropdown
+      }
+    },
+    [dataClassInput, dataClassSelected]
+  );
+
   if (!dbSettings) {
     return (
       <section className="flex-1 p-4 lg:p-8 flex justify-center items-center">
@@ -599,6 +644,7 @@ export default function GeneralPage() {
           </CardHeader>
           <CollapsibleContent>
             <CardContent className="space-y-4 pt-0">
+              <p className="text-sm text-muted-foreground">Websiten für das Beziehen von externen Daten</p>
               <form
                 className="space-y-4"
                 onSubmit={async (e) => {
@@ -736,6 +782,9 @@ export default function GeneralPage() {
           </CardHeader>
           <CollapsibleContent>
             <CardContent className="space-y-4 pt-0">
+              <p className="text-sm text-muted-foreground">
+                Modelle für das Konvertieren von Originaldateien in Markdown-Format
+              </p>
               <form
                 className="space-y-4"
                 onSubmit={async (e) => {
@@ -894,6 +943,8 @@ export default function GeneralPage() {
           </CardHeader>
           <CollapsibleContent>
             <CardContent className="space-y-4 pt-0">
+              <p className="text-sm text-muted-foreground">Modelle für das Entfernen von Personenbezogenen </p>
+
               <form
                 className="space-y-4"
                 onSubmit={async (e) => {
@@ -988,6 +1039,70 @@ export default function GeneralPage() {
                     </CommandList>
                   </div>
                 </Command>
+
+                {/* New Datenklassen Multi-select UI */}
+                <div className="mt-4">
+                  <Label className="block mb-2">Datenklassen</Label>
+                  {/* Hidden inputs for selected data classes */}
+                  {dataClassSelected.map((opt) => (
+                    <input key={opt.value} type="hidden" name={opt.value} value="on" />
+                  ))}
+                  <Command className="overflow-visible">
+                    <div className="rounded-md border border-input px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring">
+                      <div className="flex flex-wrap gap-1">
+                        {dataClassSelected.map((opt) => (
+                          <Badge key={opt.value} variant="secondary" className="select-none">
+                            {opt.label}
+                            <span
+                              className="ml-2 cursor-pointer inline-flex"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleDataClassUnselect(opt);
+                              }}>
+                              <X className="size-3 text-muted-foreground hover:text-foreground" />
+                            </span>
+                          </Badge>
+                        ))}
+                        <CommandPrimitive.Input
+                          onKeyDown={handleDataClassKeyDown}
+                          onValueChange={setDataClassInput}
+                          value={dataClassInput}
+                          onBlur={() => setDataClassOpen(false)}
+                          onFocus={() => setDataClassOpen(true)}
+                          placeholder="Select or type..."
+                          className="ml-2 flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
+                        />
+                      </div>
+                    </div>
+                    <div className="relative mt-2">
+                      <CommandList>
+                        {dataClassOpen && !!dataClassFiltered.length && (
+                          <div className="absolute top-0 z-10 w-full rounded-md border bg-popover text-popover-foreground shadow-md outline-none">
+                            <CommandGroup className="h-full overflow-auto">
+                              {dataClassFiltered.map((opt) => (
+                                <CommandItem
+                                  key={opt.value}
+                                  onMouseDown={(e) => e.preventDefault()}
+                                  onSelect={() => {
+                                    setDataClassInput("");
+                                    setDataClassSelected((prev) =>
+                                      prev.some((s) => s.value === opt.value)
+                                        ? prev
+                                        : [...prev, opt]
+                                    );
+                                  }}
+                                  className="cursor-pointer">
+                                  {opt.label}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </div>
+                        )}
+                      </CommandList>
+                    </div>
+                  </Command>
+                </div>
 
                   <Button type="submit" className="bg-orange-500 text-white" disabled={personSaving}>
                     {personSaving ? (
