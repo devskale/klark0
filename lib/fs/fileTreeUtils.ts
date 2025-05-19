@@ -8,6 +8,7 @@ export type FileTreeEntry = FileEntry & {
   hasParser?: boolean;
   parserStatus?: string;
   parserDet?: string[];
+  parserDefault?: string;
 };
 
 export interface FileTreeFetcherOptions {
@@ -45,7 +46,7 @@ export const fileTreeFetcher = async ([path, settings, options]: [
 
   let parserInfoMap: Record<
     string,
-    { status: string; hasActualParser: boolean; det: string[] }
+    { status: string; hasActualParser: boolean; det: string[]; default: string }
   > = {};
   const indexFilePath = normalizePath(path) + PDF2MD_INDEX_FILE_NAME;
 
@@ -75,6 +76,7 @@ export const fileTreeFetcher = async ([path, settings, options]: [
               hasActualParser,
               status: fileInfo.parsers.status || "",
               det: detList,
+              default: fileInfo.parsers.default || "",
             };
           }
         }
@@ -103,6 +105,7 @@ export const fileTreeFetcher = async ([path, settings, options]: [
           hasParser: pInfo?.hasActualParser || false,
           parserStatus: pInfo?.status || "",
           parserDet: pInfo?.det || [],
+          parserDefault: pInfo?.default || "",
         };
       })
       .filter(
