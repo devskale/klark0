@@ -52,7 +52,7 @@ const toolsList = [
   },
 ];
 
-export default function AtoolsPage() {
+export default function BtoolsPage() {
   const { selectedProject, selectedBieter, selectedDok } = useProject();
 
   return (
