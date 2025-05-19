@@ -38,7 +38,9 @@ import { Input } from "@/components/ui/input";
 import DoksModule from "./DoksModule"; // <-- new import
 import DateibrowserModule from "./DateibrowserModule";
 
-type FileTreeNode = FileEntry;
+const PDF2MD_INDEX_FILE_NAME = ".pdf2md_index.json";
+
+type FileTreeNode = FileEntry & { hasParser?: boolean }; // Ensure FileEntry can accommodate hasParser
 
 // Utility to normalize paths (ensure trailing slash)
 function normalizePath(path: string) {
@@ -55,6 +57,8 @@ const fileTreeFetcher = async ([currentPath, settings]: [
     basePath: "/klark0",
     noshowList: ["archive", ".archive"],
   };
+
+  // Fetch directory listing
   const queryParams = new URLSearchParams({
     type: fileSystemConfig.type,
     path: currentPath,
@@ -63,15 +67,52 @@ const fileTreeFetcher = async ([currentPath, settings]: [
     password: settings.password || "",
   });
   const response = await fetch(`/api/fs?${queryParams.toString()}`);
-  const data = await response.json();
-  if (Array.isArray(data)) {
-    const rawEntries = abstractFileSystemView(data, {
+  const dirData = await response.json();
+
+  let parserIndex: Record<string, boolean> = {};
+  const indexFilePath = normalizePath(currentPath) + PDF2MD_INDEX_FILE_NAME;
+
+  const indexFileQuery = new URLSearchParams({
+    type: fileSystemConfig.type,
+    path: indexFilePath,
+    host: settings.host || "",
+    username: settings.username || "",
+    password: settings.password || "",
+  });
+
+  try {
+    const indexResponse = await fetch(`/api/fs?${indexFileQuery.toString()}`);
+    if (indexResponse.ok) {
+      const indexJson = await indexResponse.json();
+      if (indexJson && Array.isArray(indexJson.files)) {
+        for (const fileInfo of indexJson.files) {
+          if (fileInfo.name && fileInfo.parsers &&
+              ((Array.isArray(fileInfo.parsers.det) && fileInfo.parsers.det.length > 0) ||
+               (typeof fileInfo.parsers.default === 'string' && fileInfo.parsers.default !== ''))) {
+            parserIndex[fileInfo.name] = true;
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.warn(`Could not fetch or parse index file ${indexFilePath}:`, e);
+  }
+
+  if (Array.isArray(dirData)) {
+    const rawEntries = abstractFileSystemView(dirData, {
       showHidden: false,
       noshowList: fileSystemConfig.noshowList,
     });
-    return rawEntries.filter(
-      (entry) => normalizePath(entry.path) !== normalizePath(currentPath)
-    );
+
+    const entriesWithParsers = rawEntries
+      .map((entry) => ({
+        ...entry,
+        hasParser: entry.type === "file" && parserIndex[entry.name] === true,
+      }))
+      .filter(
+        (entry) => normalizePath(entry.path) !== normalizePath(currentPath)
+      );
+    return entriesWithParsers;
   }
   throw new Error("Unexpected API response");
 };

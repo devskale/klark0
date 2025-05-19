@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { parseStringPromise } from "xml2js"; // Use xml2js for XML parsing
 
+const PDF2MD_INDEX_FILE_NAME = ".pdf2md_index.json";
+
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const path = url.searchParams.get("path") || "/klark0"; // Default to /klark0 if empty
@@ -18,85 +20,125 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: "Incomplete WebDAV settings." }, { status: 400 });
       }
 
-      // Construct the WebDAV URL correctly
       const webdavUrl = new URL(path, host.endsWith("/") ? host : `${host}/`).toString();
       console.log("Constructed WebDAV URL:", webdavUrl);
 
-      console.log("Suggestion: Run 'curl -X PROPFIND -H \"Depth: 1\" -u " + username + ":" + password + " \"" + webdavUrl + "\"' from your terminal.");
-
-      const response = await fetch(webdavUrl, {
-        method: "PROPFIND",
-        headers: {
-          Authorization: `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`,
-          Depth: "1",
-        },
-      });
-
-      console.log("WebDAV response status:", response.status, response.statusText);
-
-      if (!response.ok) {
-        console.error("WebDAV fetch failed:", {
-          status: response.status,
-          statusText: response.statusText,
-          url: webdavUrl,
+      // Check if the request is for the specific index file content
+      if (path.endsWith(PDF2MD_INDEX_FILE_NAME)) {
+        console.log(`Fetching content for index file: ${webdavUrl}`);
+        const response = await fetch(webdavUrl, {
+          method: "GET",
+          headers: {
+            Authorization: `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`,
+          },
         });
-        return NextResponse.json({ error: `Failed to fetch WebDAV data. Status: ${response.status} ${response.statusText}` },
-          { status: response.status });
-      }
 
-      const text = await response.text();
-      console.log("Raw WebDAV response text:", text);
+        console.log("WebDAV GET response status for index file:", response.status, response.statusText);
 
-      try {
-        const parsedXml = await parseStringPromise(text, { explicitArray: false, ignoreAttrs: true });
-        console.log("Parsed WebDAV XML (raw):", JSON.stringify(parsedXml, null, 2));
-
-        // Check uppercase "D:" namespace, lower-case "d:", or no prefix.
-        const multistatus = parsedXml["D:multistatus"] || parsedXml["d:multistatus"] || parsedXml["multistatus"];
-        if (!multistatus) {
-          console.error("Missing multistatus element in WebDAV XML:", parsedXml);
-          return NextResponse.json({ error: "Invalid WebDAV XML structure." }, { status: 500 });
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("WebDAV GET for index file failed:", {
+            status: response.status,
+            statusText: response.statusText,
+            errorText,
+            url: webdavUrl,
+          });
+          return NextResponse.json({ error: `Failed to fetch index file content. Status: ${response.status} ${response.statusText}. ${errorText}` },
+            { status: response.status });
         }
 
-        const responses = Array.isArray(
-          multistatus["D:response"] || multistatus["d:response"] || multistatus["response"]
-        )
-          ? multistatus["D:response"] || multistatus["d:response"] || multistatus["response"]
-          : [multistatus["D:response"] || multistatus["d:response"] || multistatus["response"]];
+        try {
+          const jsonContent = await response.json();
+          console.log("Successfully fetched and parsed index file content:", jsonContent);
+          return NextResponse.json(jsonContent);
+        } catch (jsonError) {
+          const textContent = await response.text(); // Re-read as text if json parsing fails
+          console.error("Error parsing index file content as JSON:", { error: jsonError, responseText: textContent });
+          return NextResponse.json({ error: "Failed to parse index file content as JSON." }, { status: 500 });
+        }
 
-        const result = responses.map((node: any) => {
-          const href = node["D:href"] || node["d:href"] || node["href"];
-          const isDirectory = node["D:propstat"]?.["D:prop"]?.["D:resourcetype"]?.["D:collection"] !== undefined ||
-                              node["d:propstat"]?.["d:prop"]?.["d:resourcetype"]?.["d:collection"] !== undefined ||
-                              node["propstat"]?.["prop"]?.["resourcetype"]?.["collection"] !== undefined;
-          let size;
-          if (!isDirectory) {
-            size = node["D:propstat"]?.["D:prop"]?.["D:getcontentlength"] ||
-                   node["d:propstat"]?.["d:prop"]?.["d:getcontentlength"] ||
-                   node["propstat"]?.["prop"]?.["getcontentlength"];
-          }
-          // Extract last modified date and creation date (if available)
-          const lastModified = node["D:propstat"]?.["D:prop"]?.["D:getlastmodified"] ||
-                               node["d:propstat"]?.["d:prop"]?.["d:getlastmodified"] ||
-                               node["propstat"]?.["prop"]?.["getlastmodified"];
-          const creationDate = node["D:propstat"]?.["D:prop"]?.["D:creationdate"] ||
-                               node["d:propstat"]?.["d:prop"]?.["d:creationdate"] ||
-                               node["propstat"]?.["prop"]?.["creationdate"];
-          return {
-            name: decodeURIComponent(href.split("/").filter(Boolean).pop() || ""),
-            type: isDirectory ? "directory" : "file",
-            path: href,
-            ...(size !== undefined && { size }),
-            ...(lastModified && { lastModified }),
-            ...(creationDate && { creationDate })
-          };
+      } else {
+        // Existing logic for directory listing (PROPFIND)
+        console.log("Performing PROPFIND for directory listing:", webdavUrl);
+        console.log("Suggestion: Run 'curl -X PROPFIND -H \"Depth: 1\" -u " + username + ":" + password + " \"" + webdavUrl + "\"' from your terminal.");
+
+        const response = await fetch(webdavUrl, {
+          method: "PROPFIND",
+          headers: {
+            Authorization: `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`,
+            Depth: "1",
+          },
         });
 
-        console.log("Final parsed result:", JSON.stringify(result, null, 2));
-        return NextResponse.json(result);
-      } catch (parseError) {
-        console.error("Error parsing WebDAV XML:", { error: parseError, responseText: text });
-        return NextResponse.json({ error: "Failed to parse WebDAV XML response." }, { status: 500 });
+        console.log("WebDAV PROPFIND response status:", response.status, response.statusText);
+
+        if (!response.ok) {
+          console.error("WebDAV PROPFIND failed:", {
+            status: response.status,
+            statusText: response.statusText,
+            url: webdavUrl,
+          });
+          return NextResponse.json({ error: `Failed to fetch WebDAV data (PROPFIND). Status: ${response.status} ${response.statusText}` },
+            { status: response.status });
+        }
+
+        const text = await response.text();
+        console.log("Raw WebDAV PROPFIND response text:", text);
+
+        try {
+          const parsedXml = await parseStringPromise(text, { explicitArray: false, ignoreAttrs: true });
+          console.log("Parsed WebDAV XML (raw for PROPFIND):", JSON.stringify(parsedXml, null, 2));
+
+          const multistatus = parsedXml["D:multistatus"] || parsedXml["d:multistatus"] || parsedXml["multistatus"];
+          if (!multistatus) {
+            console.error("Missing multistatus element in WebDAV XML (PROPFIND):", parsedXml);
+            return NextResponse.json({ error: "Invalid WebDAV XML structure (PROPFIND)." }, { status: 500 });
+          }
+
+          const responses = Array.isArray(
+            multistatus["D:response"] || multistatus["d:response"] || multistatus["response"]
+          )
+            ? multistatus["D:response"] || multistatus["d:response"] || multistatus["response"]
+            : [multistatus["D:response"] || multistatus["d:response"] || multistatus["response"]].filter(Boolean);
+
+
+          const result = responses.map((node: any) => {
+            const href = node["D:href"] || node["d:href"] || node["href"];
+            const propstatNode = node["D:propstat"] || node["d:propstat"] || node["propstat"];
+            const propNode = propstatNode?.["D:prop"] || propstatNode?.["d:prop"] || propstatNode?.["prop"];
+            const resourceTypeNode = propNode?.["D:resourcetype"] || propNode?.["d:resourcetype"] || propNode?.["resourcetype"];
+            
+            const isDirectory = resourceTypeNode?.["D:collection"] !== undefined ||
+                                resourceTypeNode?.["d:collection"] !== undefined ||
+                                resourceTypeNode?.["collection"] !== undefined;
+            let size;
+            if (!isDirectory) {
+              size = propNode?.["D:getcontentlength"] ||
+                     propNode?.["d:getcontentlength"] ||
+                     propNode?.["getcontentlength"];
+            }
+            const lastModified = propNode?.["D:getlastmodified"] ||
+                                 propNode?.["d:getlastmodified"] ||
+                                 propNode?.["getlastmodified"];
+            const creationDate = propNode?.["D:creationdate"] ||
+                                 propNode?.["d:creationdate"] ||
+                                 propNode?.["creationdate"];
+            return {
+              name: decodeURIComponent(href.split("/").filter(Boolean).pop() || ""),
+              type: isDirectory ? "directory" : "file",
+              path: href,
+              ...(size !== undefined && { size }),
+              ...(lastModified && { lastModified }),
+              ...(creationDate && { creationDate })
+            };
+          });
+
+          console.log("Final parsed result (PROPFIND):", JSON.stringify(result, null, 2));
+          return NextResponse.json(result);
+        } catch (parseError) {
+          console.error("Error parsing WebDAV XML (PROPFIND):", { error: parseError, responseText: text });
+          return NextResponse.json({ error: "Failed to parse WebDAV XML response (PROPFIND)." }, { status: 500 });
+        }
       }
     }
 

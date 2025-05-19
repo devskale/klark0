@@ -12,6 +12,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useProject } from "@/context/ProjectContext";
 
+const PDF2MD_INDEX_FILE_NAME = ".pdf2md_index.json";
+
+// Utility to normalize paths (ensure trailing slash)
+function normalizePath(path: string) {
+  return path.endsWith("/") ? path : path + "/";
+}
+
 export default function DoksModule({
   webdavSettings,
 }: {
@@ -101,7 +108,7 @@ export default function DoksModule({
           <tbody className="bg-white divide-y divide-gray-200">
             {docs
               .filter(f => f.path !== docsPath)
-              .map((f: FileEntry) => (
+              .map((f: FileEntry & { hasParser?: boolean }) => (
                 <tr
                   key={f.path}
                   className={`cursor-pointer ${
@@ -114,6 +121,9 @@ export default function DoksModule({
                       {f.type === "directory"
                         ? <Folder className="mr-2 h-4 w-4" />
                         : getFileIcon(f.name)}
+                      {f.type === 'file' && f.hasParser && (
+                        <span className="inline-block w-2 h-2 bg-blue-500 rounded-full mr-2" title="Parser vorhanden"></span>
+                      )}
                       {f.name}
                     </div>
                   </td>
@@ -153,16 +163,70 @@ export default function DoksModule({
 
 async function fileTreeFetcher(
   [path, settings]: [string, Record<string, string | undefined>]
-) {
-  const query = new URLSearchParams({
+): Promise<(FileEntry & { hasParser?: boolean })[]> {
+  const fileSystemConfig = {
     type: "webdav",
+    noshowList: ["archive", ".archive"],
+  };
+
+  // Fetch directory listing
+  const query = new URLSearchParams({
+    type: fileSystemConfig.type,
     path,
     host: settings?.host || "",
     username: settings?.username || "",
     password: settings?.password || "",
   });
   const res = await fetch(`/api/fs?${query.toString()}`);
-  const data = await res.json();
-  if (!Array.isArray(data)) throw new Error("Invalid response");
-  return abstractFileSystemView(data, { showHidden: false, noshowList: ["archive", ".archive"] });
+  const dirData = await res.json();
+
+  let parserIndex: Record<string, boolean> = {};
+  const indexFilePath = normalizePath(path) + PDF2MD_INDEX_FILE_NAME;
+
+  const indexFileQuery = new URLSearchParams({
+    type: fileSystemConfig.type,
+    path: indexFilePath,
+    host: settings?.host || "",
+    username: settings?.username || "",
+    password: settings?.password || "",
+  });
+
+  try {
+    const indexResponse = await fetch(`/api/fs?${indexFileQuery.toString()}`);
+    if (indexResponse.ok) {
+      const indexJson = await indexResponse.json();
+      if (indexJson && Array.isArray(indexJson.files)) {
+        for (const fileInfo of indexJson.files) {
+          if (typeof fileInfo.name === 'string' && fileInfo.name && fileInfo.parsers &&
+              ((Array.isArray(fileInfo.parsers.det) && fileInfo.parsers.det.length > 0) ||
+               (typeof fileInfo.parsers.default === 'string' && fileInfo.parsers.default !== ''))) {
+            parserIndex[fileInfo.name] = true;
+          }
+        }
+      } else {
+        console.warn(`Index file ${indexFilePath} content is not in expected format:`, indexJson);
+      }
+    } else {
+      console.warn(`Failed to fetch index file ${indexFilePath}: ${indexResponse.status} ${indexResponse.statusText}`);
+    }
+  } catch (e) {
+    console.warn(`Could not fetch or parse index file ${indexFilePath}:`, e);
+  }
+
+  if (!Array.isArray(dirData)) throw new Error("Invalid response for directory listing");
+  
+  const rawEntries = abstractFileSystemView(dirData, { 
+    showHidden: false, 
+    noshowList: fileSystemConfig.noshowList 
+  });
+
+  const entriesWithParsers = rawEntries.map(entry => {
+    const hasParserValue = entry.type === 'file' && parserIndex[entry.name] === true;
+    return {
+      ...entry,
+      hasParser: hasParserValue,
+    };
+  });
+  
+  return entriesWithParsers;
 }
