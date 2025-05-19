@@ -1,7 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useProject } from "@/context/ProjectContext";
 import { Card, CardContent } from "@/components/ui/card";
-import Markdown from "react-markdown";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import useSWR from "swr";
 import {
   fileTreeFetcher,
@@ -9,6 +12,10 @@ import {
   FileSystemSettings,
   PDF2MD_INDEX_FILE_NAME,
 } from "@/lib/fs/fileTreeUtils";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { AlertCircle, Loader2 } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function Strukt() {
   const { selectedProject, selectedDok } = useProject();
@@ -16,6 +23,8 @@ export default function Strukt() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<string[]>([]);
+  const [availableVariants, setAvailableVariants] = useState<Array<{key: string, label: string, path: string}>>([]);
+  const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
 
   // Fetch filesystem settings
   const { data: fsSettings } = useSWR<FileSystemSettings>(
@@ -81,11 +90,20 @@ export default function Strukt() {
         const baseName = fileBaseName.replace(/\.[^/.]+$/, "");
         debugLog.push(`Base name without extension: ${baseName}`);
         
+        // Track available parser variants
+        const variants: Array<{key: string, label: string, path: string}> = [];
+        
         // Determine markdown path based on parser type
         let markdownPath;
         if (parserType === 'marker') {
           markdownPath = `${parentDir}md/${baseName}/${baseName}.marker.md`;
           debugLog.push(`Looking for marker file at: ${markdownPath}`);
+          
+          variants.push({
+            key: `${baseName}.marker`,
+            label: "Marker",
+            path: markdownPath
+          });
         } else {
           // Check if basename already ends with _red to avoid duplication
           const baseNameForPath = baseName.endsWith('_red') 
@@ -94,72 +112,127 @@ export default function Strukt() {
           
           markdownPath = `${parentDir}md/${baseNameForPath}.${parserType}.md`;
           debugLog.push(`Looking for regular markdown file at: ${markdownPath}`);
+          
+          variants.push({
+            key: `${baseNameForPath}.${parserType}`,
+            label: parserType,
+            path: markdownPath
+          });
+          
+          // Add alternative path without _red suffix as another variant
+          if (baseName.endsWith('_red')) {
+            const altVariantPath = `${parentDir}md/${baseName}.${parserType}.md`;
+            variants.push({
+              key: `${baseName}.${parserType}`,
+              label: `${parserType} (alt)`,
+              path: altVariantPath
+            });
+          } else {
+            const altVariantPath = `${parentDir}md/${baseName}.${parserType}.md`;
+            variants.push({
+              key: `${baseName}.${parserType}`,
+              label: `${parserType} (ohne _red)`,
+              path: altVariantPath
+            });
+          }
         }
         
-        // Fetch the markdown content
-        debugLog.push(`Attempting to fetch markdown from: ${markdownPath}`);
-        const params = new URLSearchParams({
-          type: fsSettings.type || "webdav",
-          path: markdownPath,
-          host: fsSettings.host || "",
-          username: fsSettings.username || "",
-          password: fsSettings.password || "",
-        });
+        setAvailableVariants(variants);
         
-        const response = await fetch(`/api/fs?${params.toString()}`);
+        // If we have a current selection, keep it, otherwise use the first variant
+        if (!selectedVariant && variants.length > 0) {
+          setSelectedVariant(variants[0].label);
+        }
         
-        if (!response.ok) {
-          debugLog.push(`Fetch failed with status: ${response.status}`);
-          
-          // Try alternative paths systematically
-          const altPaths = [];
-          
-          // Alt path 1: Without _red suffix
-          if (baseName.endsWith('_red')) {
-            // If the file already has _red, try the original filename
-            const originalBaseName = baseName.replace(/_red$/, '');
-            altPaths.push(`${parentDir}md/${originalBaseName}.${parserType}.md`);
-          } else {
-            // Alternative without _red suffix
-            altPaths.push(`${parentDir}md/${baseName}.${parserType}.md`);
-          }
-          
-          // Alt path 2: With different case for extension
-          altPaths.push(`${parentDir}md/${baseName}.${parserType.toUpperCase()}.md`);
-          
-          // Try each alternative path
-          let content = null;
-          for (const altPath of altPaths) {
-            debugLog.push(`Trying alternative path: ${altPath}`);
-            
-            const altParams = new URLSearchParams({
+        // Find the selected variant path
+        const variantToLoad = selectedVariant 
+          ? variants.find(v => v.label === selectedVariant)
+          : variants[0];
+        
+        if (!variantToLoad) {
+          throw new Error("Keine gültigen Markdown-Varianten gefunden");
+        }
+        
+        // Fetch the markdown content using the proper API endpoint
+        debugLog.push(`Attempting to fetch markdown from: ${variantToLoad.path}`);
+        
+        try {
+          // Use the dedicated file read endpoint to fetch the actual content
+          const response = await fetch("/api/fs/read", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
               type: fsSettings.type || "webdav",
-              path: altPath,
+              path: variantToLoad.path,
               host: fsSettings.host || "",
               username: fsSettings.username || "",
               password: fsSettings.password || "",
-            });
+            }),
+          });
+          
+          if (!response.ok) {
+            debugLog.push(`Fetch failed with status: ${response.status}`);
+            throw new Error(`Fehler beim Laden der Markdown-Datei: ${response.statusText}`);
+          }
+          
+          const data = await response.json();
+          
+          if (data.content) {
+            setMarkdown(data.content);
+            debugLog.push(`Successfully loaded markdown content (${data.content.length} chars)`);
+          } else {
+            throw new Error("Markdown-Datei ist leer oder hat ein ungültiges Format");
+          }
+        } catch (fetchError) {
+          debugLog.push(`Error fetching content: ${fetchError instanceof Error ? fetchError.message : String(fetchError)}`);
+          
+          // Try alternative variants
+          let foundContent = false;
+          
+          for (const variant of variants) {
+            if (variant.path === variantToLoad.path) continue; // Skip the one we just tried
             
-            const altResponse = await fetch(`/api/fs?${altParams.toString()}`);
+            debugLog.push(`Trying alternative path: ${variant.path}`);
             
-            if (altResponse.ok) {
-              content = await altResponse.text();
-              debugLog.push(`Successfully loaded markdown from alternative path: ${altPath}`);
-              break;
-            } else {
-              debugLog.push(`Alternative fetch failed with status: ${altResponse.status}`);
+            try {
+              const altResponse = await fetch("/api/fs/read", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  type: fsSettings.type || "webdav",
+                  path: variant.path,
+                  host: fsSettings.host || "",
+                  username: fsSettings.username || "",
+                  password: fsSettings.password || "",
+                }),
+              });
+              
+              if (!altResponse.ok) {
+                debugLog.push(`Alternative fetch failed with status: ${altResponse.status}`);
+                continue;
+              }
+              
+              const altData = await altResponse.json();
+              
+              if (altData.content) {
+                setSelectedVariant(variant.label);
+                setMarkdown(altData.content);
+                debugLog.push(`Successfully loaded markdown from alternative path (${altData.content.length} chars)`);
+                foundContent = true;
+                break;
+              }
+            } catch (altError) {
+              debugLog.push(`Error with alternative: ${altError instanceof Error ? altError.message : String(altError)}`);
             }
           }
           
-          if (content) {
-            setMarkdown(content);
-          } else {
-            throw new Error(`Failed to fetch markdown from all tried paths`);
+          if (!foundContent) {
+            throw new Error(`Keine Markdown-Inhalte für ${baseName} gefunden`);
           }
-        } else {
-          const content = await response.text();
-          setMarkdown(content);
-          debugLog.push(`Successfully loaded markdown from primary path`);
         }
         
         setDebugInfo(debugLog);
@@ -168,52 +241,133 @@ export default function Strukt() {
         console.error('Failed to load markdown:', err);
         setError('Fehler beim Laden der Strukturdaten. Details siehe Debug-Informationen unten.');
         setDebugInfo(prev => [...prev, `Error: ${err instanceof Error ? err.message : String(err)}`]);
+        setMarkdown("");
       } finally {
         setLoading(false);
       }
     };
 
     loadMarkdown();
-  }, [selectedDok, fsSettings, indexData, parentDir]);
+  }, [selectedDok, fsSettings, indexData, parentDir, selectedVariant]);
+
+  // Handle variant change
+  const handleVariantChange = async (variantLabel: string) => {
+    if (variantLabel === selectedVariant) return;
+    setSelectedVariant(variantLabel);
+  };
+
+  const markdownComponents = {
+    code({ node, inline, className, children, ...props }: any) {
+      const match = /language-(\w+)/.exec(className || "");
+      return !inline && match ? (
+        <SyntaxHighlighter
+          style={vscDarkPlus}
+          language={match[1]}
+          PreTag="div"
+          {...props}
+        >
+          {String(children).replace(/\n$/, "")}
+        </SyntaxHighlighter>
+      ) : (
+        <code className={className} {...props}>
+          {children}
+        </code>
+      );
+    },
+    table({ node, ...props }: any) {
+      return (
+        <div className="my-4 overflow-x-auto border border-gray-200 rounded-md">
+          <table className="min-w-full divide-y divide-gray-200" {...props} />
+        </div>
+      );
+    },
+    th({ node, ...props }: any) {
+      return (
+        <th 
+          className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50" 
+          {...props} 
+        />
+      );
+    },
+    td({ node, ...props }: any) {
+      return <td className="px-3 py-2 text-sm whitespace-nowrap border-t border-gray-100" {...props} />;
+    }
+  };
 
   if (loading) {
-    return <div className="p-4">Lade Strukturdaten...</div>;
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+        <span className="ml-2 text-gray-500">Lade Strukturdaten...</span>
+      </div>
+    );
   }
 
   return (
-    <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4">Strukturübersicht</h2>
+    <div className="space-y-4 p-2">
+      <h2 className="text-2xl font-bold mb-2">Strukturübersicht</h2>
       
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-red-500">{error}</p>
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Fehler</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      
+      {availableVariants.length > 0 && (
+        <div className="mb-2">
+          <Tabs 
+            value={selectedVariant || availableVariants[0]?.label} 
+            onValueChange={handleVariantChange}
+            className="w-full"
+          >
+            <TabsList className="mb-2">
+              {availableVariants.map(variant => (
+                <TabsTrigger key={variant.key} value={variant.label}>
+                  {variant.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
         </div>
       )}
       
       {markdown ? (
-        <Card>
-          <CardContent className="p-4">
-            <div className="max-h-[70vh] overflow-y-auto bg-secondary/10 p-4 rounded-md">
-              <Markdown>{markdown}</Markdown>
-            </div>
+        <Card className="border border-gray-200">
+          <CardContent className="p-0 overflow-hidden">
+            <ScrollArea className="h-[70vh] rounded-md">
+              <div className="p-6 prose prose-sm max-w-none">
+                <ReactMarkdown 
+                  remarkPlugins={[remarkGfm]} 
+                  components={markdownComponents}
+                >
+                  {markdown}
+                </ReactMarkdown>
+              </div>
+            </ScrollArea>
           </CardContent>
         </Card>
       ) : (
-        <p>Keine Strukturdaten verfügbar.</p>
+        <div className="p-8 text-center text-gray-500">
+          <p>Keine Strukturdaten verfügbar.</p>
+        </div>
       )}
       
-      {/* Debug Information */}
+      {/* Debug Information (collapsible) */}
       {debugInfo.length > 0 && (
-        <div className="mt-8">
-          <h3 className="text-lg font-semibold mb-2">Debug Informationen:</h3>
-          <div className="bg-gray-100 p-4 rounded-md">
-            <ul className="list-disc pl-5">
+        <details className="mt-8 border border-gray-200 rounded-md overflow-hidden">
+          <summary className="bg-gray-50 px-4 py-2 cursor-pointer text-sm font-medium">
+            Debug Informationen
+          </summary>
+          <div className="p-4 bg-gray-50">
+            <ul className="list-disc pl-5 text-xs font-mono space-y-1">
               {debugInfo.map((info, index) => (
-                <li key={index} className="text-sm font-mono">{info}</li>
+                <li key={index}>{info}</li>
               ))}
             </ul>
           </div>
-        </div>
+        </details>
       )}
     </div>
   );
