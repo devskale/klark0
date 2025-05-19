@@ -1,5 +1,5 @@
 import React from "react";
-import { Sparkles } from "lucide-react";
+import { Sparkles, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -65,7 +65,7 @@ export default function Info() {
   // side-car metadata JSON
   const metadataFileName = `${fileBaseName}.meta.json`;
   const metadataPath = parentDir ? parentDir + metadataFileName : null;
-  const { data: docMeta } = useSWR(
+  const { data: docMeta, mutate: mutateMeta } = useSWR(
     fsSettings && metadataPath ? [metadataPath, fsSettings] : null,
     async ([path, settings]) => {
       const params = new URLSearchParams({
@@ -75,10 +75,11 @@ export default function Info() {
         username: settings.username || "",
         password: settings.password || "",
       });
-      const res = await fetch(`/api/fs?${params.toString()}`);
+      const res = await fetch(`/api/fs/metadata?${params.toString()}`);
       if (!res.ok) return null;
       return res.json();
-    }
+    },
+    { revalidateOnFocus: false }
   );
 
   // editable state
@@ -89,11 +90,18 @@ export default function Info() {
 
   // populate form when metadata loads
   React.useEffect(() => {
-    if (docMeta) {
-      setIssuer(docMeta.aussteller ?? "");
-      setTitle(docMeta.name ?? "");
-      setDescription(docMeta.beschreibung ?? "");
-      setMetadataList((docMeta.metadaten || []).join(", "));
+    if (!docMeta) return;
+    if (docMeta.aussteller != null) {
+      setIssuer(docMeta.aussteller);
+    }
+    if (docMeta.name != null) {
+      setTitle(docMeta.name);
+    }
+    if (docMeta.beschreibung != null) {
+      setDescription(docMeta.beschreibung);
+    }
+    if (Array.isArray(docMeta.metadaten)) {
+      setMetadataList(docMeta.metadaten.join(", "));
     }
   }, [docMeta]);
 
@@ -109,23 +117,24 @@ export default function Info() {
         .map((s) => s.trim())
         .filter(Boolean),
     };
-    const blob = new Blob([JSON.stringify(metaObj, null, 2)], {
-      type: "application/json",
-    });
-    const file = new File([blob], metadataFileName);
-    const formData = new FormData();
-    formData.append("files", file);
-    const params = new URLSearchParams({
-      type: fsSettings.type || "webdav",
-      path: metadataPath,
-      host: fsSettings.host || "",
-      username: fsSettings.username || "",
-      password: fsSettings.password || "",
-    });
-    await fetch(`/api/fs/upload?${params.toString()}`, {
+    // call our new metadata API
+    const res = await fetch("/api/fs/metadata", {
       method: "POST",
-      body: formData,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        path: metadataPath,
+        metadata: metaObj,
+        type: fsSettings.type,
+        host: fsSettings.host,
+        username: fsSettings.username,
+        password: fsSettings.password,
+      }),
     });
+    const json = await res.json();
+    if (json.success && json.metadata) {
+      // update SWR cache without revalidation
+      mutateMeta(() => json.metadata, false);
+    }
   };
 
   return (
@@ -177,6 +186,14 @@ export default function Info() {
       <div className="flex justify-end gap-4 p-4 border-t">
         <Button variant="outline" onClick={handleSaveMeta}>
           Speichern
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => mutateMeta()}
+          title="Metadaten neu laden"
+        >
+          <RefreshCw className="h-4 w-4" />
         </Button>
         <Button className="flex items-center gap-2">
           <Sparkles className="h-4 w-4" />
