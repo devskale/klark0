@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import { Loader2, MoreHorizontal, Folder, FileText, Image } from "lucide-react";
 import useSWR from "swr";
-import { abstractFileSystemView, FileEntry } from "@/lib/fs/abstractFilesystem";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,18 +10,16 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { useProject } from "@/context/ProjectContext";
-
-const PDF2MD_INDEX_FILE_NAME = ".pdf2md_index.json";
-
-// Utility to normalize paths (ensure trailing slash)
-function normalizePath(path: string) {
-  return path.endsWith("/") ? path : path + "/";
-}
+import {
+  fileTreeFetcher,
+  FileTreeEntry,
+  FileSystemSettings,
+} from "@/lib/fs/fileTreeUtils";
 
 export default function DoksModule({
   webdavSettings,
 }: {
-  webdavSettings: Record<string, string | undefined> | null;
+  webdavSettings: FileSystemSettings | null;
 }) {
   const {
     selectedProject: projectPath,
@@ -37,8 +34,14 @@ export default function DoksModule({
     ? `${projectPath}/A`
     : null;
 
-  const { data: docs, error } = useSWR(
-    docsPath && webdavSettings ? [docsPath, webdavSettings] : null,
+  const { data: docs, error } = useSWR<FileTreeEntry[]>(
+    docsPath && webdavSettings
+      ? [
+          docsPath,
+          webdavSettings,
+          { noshowList: ["archive", ".archive"], fileSystemType: "webdav" },
+        ]
+      : null,
     fileTreeFetcher,
     { revalidateOnFocus: false }
   );
@@ -108,7 +111,7 @@ export default function DoksModule({
           <tbody className="bg-white divide-y divide-gray-200">
             {docs
               .filter(f => f.path !== docsPath)
-              .map((f: FileEntry & { hasParser?: boolean; parserStatus?: string }) => (
+              .map((f: FileTreeEntry) => (
                 <tr
                   key={f.path}
                   className={`cursor-pointer ${
@@ -161,78 +164,4 @@ export default function DoksModule({
       )}
     </div>
   );
-}
-
-async function fileTreeFetcher(
-  [path, settings]: [string, Record<string, string | undefined>]
-): Promise<(FileEntry & { hasParser?: boolean; parserStatus?: string })[]> {
-  const fileSystemConfig = {
-    type: "webdav",
-    noshowList: ["archive", ".archive"],
-  };
-
-  // Fetch directory listing
-  const query = new URLSearchParams({
-    type: fileSystemConfig.type,
-    path,
-    host: settings?.host || "",
-    username: settings?.username || "",
-    password: settings?.password || "",
-  });
-  const res = await fetch(`/api/fs?${query.toString()}`);
-  const dirData = await res.json();
-
-  let parserInfoMap: Record<string, { status: string; hasActualParser: boolean }> = {};
-  const indexFilePath = normalizePath(path) + PDF2MD_INDEX_FILE_NAME;
-
-  const indexFileQuery = new URLSearchParams({
-    type: fileSystemConfig.type,
-    path: indexFilePath,
-    host: settings?.host || "",
-    username: settings?.username || "",
-    password: settings?.password || "",
-  });
-
-  try {
-    const indexResponse = await fetch(`/api/fs?${indexFileQuery.toString()}`);
-    if (indexResponse.ok) {
-      const indexJson = await indexResponse.json();
-      if (indexJson && Array.isArray(indexJson.files)) {
-        for (const fileInfo of indexJson.files) {
-          if (typeof fileInfo.name === 'string' && fileInfo.name && fileInfo.parsers) {
-              const hasActualParser = ((Array.isArray(fileInfo.parsers.det) && fileInfo.parsers.det.length > 0) ||
-                                     (typeof fileInfo.parsers.default === 'string' && fileInfo.parsers.default !== ''));
-              parserInfoMap[fileInfo.name] = {
-                  hasActualParser: hasActualParser,
-                  status: fileInfo.parsers.status || "" 
-              };
-          }
-        }
-      } else {
-        console.warn(`Index file ${indexFilePath} content is not in expected format:`, indexJson);
-      }
-    } else {
-      console.warn(`Failed to fetch index file ${indexFilePath}: ${indexResponse.status} ${indexResponse.statusText}`);
-    }
-  } catch (e) {
-    console.warn(`Could not fetch or parse index file ${indexFilePath}:`, e);
-  }
-
-  if (!Array.isArray(dirData)) throw new Error("Invalid response for directory listing");
-  
-  const rawEntries = abstractFileSystemView(dirData, { 
-    showHidden: false, 
-    noshowList: fileSystemConfig.noshowList 
-  });
-
-  const entriesWithData = rawEntries.map(entry => {
-    const pInfo = entry.type === 'file' ? parserInfoMap[entry.name] : undefined;
-    return {
-      ...entry,
-      hasParser: pInfo?.hasActualParser || false,
-      parserStatus: pInfo?.status || ""
-    };
-  });
-  
-  return entriesWithData;
 }

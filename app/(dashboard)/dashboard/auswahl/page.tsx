@@ -37,95 +37,45 @@ import {
 import { Input } from "@/components/ui/input";
 import DoksModule from "./DoksModule"; // <-- new import
 import DateibrowserModule from "./DateibrowserModule";
+import {
+  PDF2MD_INDEX_FILE_NAME,
+  normalizePath,
+  fileTreeFetcher,
+  FileTreeEntry,
+  FileSystemSettings,
+} from "@/lib/fs/fileTreeUtils";
 
-const PDF2MD_INDEX_FILE_NAME = ".pdf2md_index.json";
-
-type FileTreeNode = FileEntry & { hasParser?: boolean; parserStatus?: string };
-
-// Utility to normalize paths (ensure trailing slash)
-function normalizePath(path: string) {
-  return path.endsWith("/") ? path : path + "/";
-}
-
-// SWR hook for caching file tree:
-const fileTreeFetcher = async ([currentPath, settings]: [
-  string,
-  Record<string, string | undefined>
-]) => {
-  const fileSystemConfig = {
-    type: "webdav",
-    basePath: "/klark0",
-    noshowList: ["archive", ".archive"],
-  };
-
-  // Fetch directory listing
-  const queryParams = new URLSearchParams({
-    type: fileSystemConfig.type,
-    path: currentPath,
-    host: settings.host || "",
-    username: settings.username || "",
-    password: settings.password || "",
-  });
-  const response = await fetch(`/api/fs?${queryParams.toString()}`);
-  const dirData = await response.json();
-
-  let parserInfoMap: Record<string, { status: string; hasActualParser: boolean }> = {};
-  const indexFilePath = normalizePath(currentPath) + PDF2MD_INDEX_FILE_NAME;
-
-  const indexFileQuery = new URLSearchParams({
-    type: fileSystemConfig.type,
-    path: indexFilePath,
-    host: settings.host || "",
-    username: settings.username || "",
-    password: settings.password || "",
-  });
-
-  try {
-    const indexResponse = await fetch(`/api/fs?${indexFileQuery.toString()}`);
-    if (indexResponse.ok) {
-      const indexJson = await indexResponse.json();
-      if (indexJson && Array.isArray(indexJson.files)) {
-        for (const fileInfo of indexJson.files) {
-          if (fileInfo.name && fileInfo.parsers) {
-              const hasActualParser = ((Array.isArray(fileInfo.parsers.det) && fileInfo.parsers.det.length > 0) ||
-                                     (typeof fileInfo.parsers.default === 'string' && fileInfo.parsers.default !== ''));
-              parserInfoMap[fileInfo.name] = {
-                  hasActualParser: hasActualParser,
-                  status: fileInfo.parsers.status || ""
-              };
-          }
-        }
-      }
-    }
-  } catch (e) {
-    console.warn(`Could not fetch or parse index file ${indexFilePath}:`, e);
-  }
-
-  if (Array.isArray(dirData)) {
-    const rawEntries = abstractFileSystemView(dirData, {
-      showHidden: false,
-      noshowList: fileSystemConfig.noshowList,
-    });
-
-    const entriesWithData = rawEntries
-      .map((entry) => {
-        const pInfo = entry.type === "file" ? parserInfoMap[entry.name] : undefined;
-        return {
-          ...entry,
-          hasParser: pInfo?.hasActualParser || false,
-          parserStatus: pInfo?.status || "",
-        };
-      })
-      .filter(
-        (entry) => normalizePath(entry.path) !== normalizePath(currentPath)
-      );
-    return entriesWithData;
-  }
-  throw new Error("Unexpected API response");
-};
+type FileTreeNode = FileTreeEntry;
 
 // Define reserved directory names
 const reservedDirs = ["B", "archive", "md", "A"];
+
+// Helper function to reset selections if they are affected by a path action
+const resetSelectionsOnPathAction = (
+  itemPath: string,
+  currentSelectedProject: string | null,
+  setCurrentSelectedProject: (path: string | null) => void,
+  currentSelectedBieter: string | null,
+  setCurrentSelectedBieter: (path: string | null) => void,
+  currentSelectedDok: string | null,
+  setCurrentSelectedDok: (path: string | null) => void
+) => {
+  if (currentSelectedDok && currentSelectedDok.startsWith(itemPath)) {
+    setCurrentSelectedDok(null);
+  }
+  if (currentSelectedBieter && currentSelectedBieter.startsWith(itemPath)) {
+    setCurrentSelectedBieter(null);
+  }
+  if (currentSelectedProject && currentSelectedProject === itemPath) {
+    setCurrentSelectedProject(null);
+    // If the project itself is acted upon, bieter and dok under it are also implicitly deselected.
+    setCurrentSelectedBieter(null);
+    setCurrentSelectedDok(null);
+  } else if (currentSelectedProject && itemPath.startsWith(currentSelectedProject)) {
+    // This case handles actions on items within the selected project (e.g., a Bieter)
+    // No need to reset selectedProject here, only potentially bieter/dok
+  }
+};
 
 export default function VaultPage() {
   const { 
@@ -137,10 +87,7 @@ export default function VaultPage() {
     setSelectedDok  // Assuming setSelectedDok is part of the context
   } = useProject();
 
-  const [webdavSettings, setWebdavSettings] = useState<Record<
-    string,
-    string | undefined
-  > | null>(null);
+  const [webdavSettings, setWebdavSettings] = useState<FileSystemSettings | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showRefreshMessage, setShowRefreshMessage] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -214,12 +161,15 @@ export default function VaultPage() {
     });
     if (res.ok) {
       await mutateBieter();
-      if (selectedDok && selectedDok.startsWith(bieterPath)) {
-        setSelectedDok(null);
-      }
-      if (selectedBieter === bieterPath) {
-        setSelectedBieter(null);
-      }
+      resetSelectionsOnPathAction(
+        bieterPath,
+        selectedProject,
+        setSelectedProject,
+        selectedBieter,
+        setSelectedBieter,
+        selectedDok,
+        setSelectedDok
+      );
     } else {
       console.error(
         "Archivieren des Bieters fehlgeschlagen:",
@@ -243,12 +193,15 @@ export default function VaultPage() {
     });
     if (res.ok) {
       await mutateBieter();
-      if (selectedDok && selectedDok.startsWith(bieterPath)) {
-        setSelectedDok(null);
-      }
-      if (selectedBieter === bieterPath) {
-        setSelectedBieter(null);
-      }
+      resetSelectionsOnPathAction(
+        bieterPath,
+        selectedProject,
+        setSelectedProject,
+        selectedBieter,
+        setSelectedBieter,
+        selectedDok,
+        setSelectedDok
+      );
     } else {
       console.error("Löschen des Bieters fehlgeschlagen:", await res.text());
     }
@@ -286,8 +239,17 @@ export default function VaultPage() {
     error,
     mutate,
     isValidating,
-  } = useSWR(
-    webdavSettings ? [fileSystemConfig.basePath, webdavSettings] : null,
+  } = useSWR<FileTreeEntry[]>(
+    webdavSettings
+      ? [
+          fileSystemConfig.basePath,
+          webdavSettings,
+          {
+            noshowList: fileSystemConfig.noshowList,
+            fileSystemType: fileSystemConfig.type,
+          },
+        ]
+      : null,
     fileTreeFetcher,
     { revalidateOnFocus: false }
   );
@@ -298,9 +260,16 @@ export default function VaultPage() {
     data: bieterFolderChildrenRaw,
     error: bieterError,
     mutate: mutateBieter,
-  } = useSWR(
+  } = useSWR<FileTreeEntry[]>(
     webdavSettings && selectedProject
-      ? [`${selectedProject}/B`, webdavSettings]
+      ? [
+          `${selectedProject}/B`,
+          webdavSettings,
+          {
+            noshowList: fileSystemConfig.noshowList,
+            fileSystemType: fileSystemConfig.type,
+          },
+        ]
       : null,
     fileTreeFetcher,
     { revalidateOnFocus: false }
@@ -358,15 +327,15 @@ export default function VaultPage() {
     });
     if (res.ok) {
       mutate();
-      if (selectedBieter && selectedBieter.startsWith(projectPath)) {
-        setSelectedBieter(null);
-      }
-      if (selectedDok && selectedDok.startsWith(projectPath)) {
-        setSelectedDok(null);
-      }
-      if (selectedProject === projectPath) {
-        setSelectedProject(null);
-      }
+      resetSelectionsOnPathAction(
+        projectPath,
+        selectedProject,
+        setSelectedProject,
+        selectedBieter,
+        setSelectedBieter,
+        selectedDok,
+        setSelectedDok
+      );
     } else {
       console.error("Archivieren fehlgeschlagen:", await res.text());
     }
@@ -387,15 +356,15 @@ export default function VaultPage() {
     });
     if (res.ok) {
       mutate();
-      if (selectedBieter && selectedBieter.startsWith(projectPath)) {
-        setSelectedBieter(null);
-      }
-      if (selectedDok && selectedDok.startsWith(projectPath)) {
-        setSelectedDok(null);
-      }
-      if (selectedProject === projectPath) {
-        setSelectedProject(null);
-      }
+      resetSelectionsOnPathAction(
+        projectPath,
+        selectedProject,
+        setSelectedProject,
+        selectedBieter,
+        setSelectedBieter,
+        selectedDok,
+        setSelectedDok
+      );
     } else {
       console.error("Löschen fehlgeschlagen:", await res.text());
     }
