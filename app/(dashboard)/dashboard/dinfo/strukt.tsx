@@ -95,38 +95,105 @@ export default function Strukt() {
         // Track available parser variants
         const variants: Array<{key: string, label: string, path: string}> = [];
         
+        // Always check for marker files, regardless of parserDet
+        debugLog.push(`MARKER DEBUG: Checking for marker files regardless of parser list`);
+        try {
+          // Check if the md/basename directory exists
+          const mdBaseParams = new URLSearchParams({
+            type: fsSettings.type || "webdav",
+            path: `${parentDir}md/${baseName}/`,
+            host: fsSettings.host || "",
+            username: fsSettings.username || "",
+            password: fsSettings.password || "",
+          });
+          
+          const mdBaseResponse = await fetch(`/api/fs?${mdBaseParams.toString()}`);
+          if (mdBaseResponse.ok) {
+            const baseContents = await mdBaseResponse.json();
+            debugLog.push(`MARKER DEBUG: Found subdirectory md/${baseName}/ with ${baseContents.length} items`);
+            
+            // Look for marker file
+            const markerFile = baseContents.find((item: any) => 
+              item.type === 'file' && item.name.endsWith('.marker.md'));
+              
+            if (markerFile) {
+              debugLog.push(`MARKER DEBUG: Found marker file: ${markerFile.name}`);
+              
+              // Add marker as a variant
+              const markerPath = `${parentDir}md/${baseName}/${markerFile.name}`;
+              variants.push({
+                key: `${baseName}.marker.found`,
+                label: "Marker",
+                path: markerPath
+              });
+              
+              // If marker isn't in parserDet, add it
+              if (!parserDet.includes('marker')) {
+                debugLog.push(`MARKER DEBUG: Adding marker to parser list`);
+                parserDet.push('marker');
+              }
+            } else {
+              debugLog.push(`MARKER DEBUG: No marker file found in md/${baseName}/ directory`);
+            }
+          } else {
+            debugLog.push(`MARKER DEBUG: Subdirectory md/${baseName}/ does not exist`);
+          }
+        } catch (markerCheckError) {
+          debugLog.push(`MARKER DEBUG: Error checking for marker files: ${markerCheckError instanceof Error ? markerCheckError.message : String(markerCheckError)}`);
+        }
+        
         // Create variants for all parser types
         for (const parser of parserDet) {
+          // Skip marker here if we already added it above
+          if (parser === 'marker' && variants.some(v => v.label === "Marker")) {
+            continue;
+          }
+          
           if (parser === 'marker') {
             // Marker type has a special directory structure
             const markerPath = `${parentDir}md/${baseName}/${baseName}.marker.md`;
             debugLog.push(`Adding marker file at: ${markerPath}`);
+            debugLog.push(`VERBOSE: Looking for marker file:`);
+            debugLog.push(`VERBOSE: Parent dir: ${parentDir}`);
+            debugLog.push(`VERBOSE: Base name: ${baseName}`);
+            debugLog.push(`VERBOSE: Full path constructed: ${markerPath}`);
+            debugLog.push(`VERBOSE: Expected directory structure: parentDir/md/baseName/baseName.marker.md`);
+            
+            // Also try alternative paths to help find the issue
+            const altMarkerPaths = [
+              `${parentDir}${baseName}/md/${baseName}/${baseName}.marker.md`,
+              `${parentDir}${baseName}/md/${baseName}.marker.md`,
+              `${parentDir}md/${baseName}.marker.md`
+            ];
+            
+            debugLog.push(`VERBOSE: Will also try alternative paths:`);
+            altMarkerPaths.forEach((path, idx) => {
+              debugLog.push(`VERBOSE: Alt path ${idx+1}: ${path}`);
+            });
             
             variants.push({
               key: `${baseName}.marker`,
               label: "Marker",
               path: markerPath
             });
-          } else {
-            // Standard parsers - try both naming conventions
-            const paths = [
-              `${parentDir}md/${baseName}.${parser}.md`,
-              `${parentDir}md/${baseName}_red.${parser}.md`
-            ];
             
-            paths.forEach((path, index) => {
-              const isDefault = parser === parserDefault && index === 0;
-              const label = isDefault 
-                ? parser 
-                : `${parser}${index === 1 ? ' (Red)' : ''}`;
-                
+            // Also add alternative paths as hidden variants for fallback
+            altMarkerPaths.forEach((path, idx) => {
               variants.push({
-                key: `${parser}-${index}`,
-                label: label,
+                key: `${baseName}.marker.alt${idx+1}`,
+                label: `Marker (Alt ${idx+1})`,
                 path: path
               });
-              
-              debugLog.push(`Adding ${label} at: ${path}`);
+            });
+          } else {
+            // Standard parser - single path option
+            const path = `${parentDir}md/${baseName}.${parser}.md`;
+            debugLog.push(`Adding ${parser} at: ${path}`);
+            
+            variants.push({
+              key: `${parser}-0`,
+              label: parser,
+              path: path
             });
           }
         }
@@ -176,6 +243,12 @@ export default function Strukt() {
         
         setAvailableVariants(variants);
         
+        // Log all available variants for debugging
+        debugLog.push(`DEBUG: Available variants (${variants.length}):`);
+        variants.forEach((v, idx) => {
+          debugLog.push(`DEBUG: Variant ${idx+1}: ${v.label} - ${v.path}`);
+        });
+        
         // If we have a current selection, keep it, otherwise use the first variant
         if (!selectedVariant && variants.length > 0) {
           // Prefer the default parser if available
@@ -192,9 +265,16 @@ export default function Strukt() {
           throw new Error("Keine gültigen Markdown-Varianten gefunden");
         }
         
-        // Fetch the markdown content using the proper API endpoint
-        debugLog.push(`Attempting to fetch markdown from: ${variantToLoad.path}`);
+        // Log which variant we're going to load
+        debugLog.push(`DEBUG: Selected variant to load: ${variantToLoad.label} at ${variantToLoad.path}`);
         
+        // Check if info object has marker
+        if (fileEntry.parserDet && Array.isArray(fileEntry.parserDet)) {
+          debugLog.push(`DEBUG: Parser types in index: ${fileEntry.parserDet.join(', ')}`);
+          debugLog.push(`DEBUG: Marker in index: ${fileEntry.parserDet.includes('marker')}`);
+        }
+        
+        // Fetch the markdown content using the proper API endpoint
         try {
           // Use the dedicated file read endpoint to fetch the actual content
           const response = await fetch("/api/fs/read", {
@@ -213,6 +293,81 @@ export default function Strukt() {
           
           if (!response.ok) {
             debugLog.push(`Fetch failed with status: ${response.status}`);
+            debugLog.push(`VERBOSE: Failed to load path: ${variantToLoad.path}`);
+            
+            // If this is a marker file that failed, add special debugging
+            if (variantToLoad.label === "Marker" || variantToLoad.label.includes("Marker (Alt")) {
+              debugLog.push(`MARKER DEBUG: Failed to load marker file`);
+              debugLog.push(`MARKER DEBUG: Checking if marker is in parserDet array: ${parserDet.includes('marker')}`);
+              
+              // Let's check if directories exist
+              try {
+                // Check the base md directory
+                const mdDirParams = new URLSearchParams({
+                  type: fsSettings.type || "webdav",
+                  path: `${parentDir}md/`,
+                  host: fsSettings.host || "",
+                  username: fsSettings.username || "",
+                  password: fsSettings.password || "",
+                });
+                
+                const mdDirResponse = await fetch(`/api/fs?${mdDirParams.toString()}`);
+                if (mdDirResponse.ok) {
+                  const mdDirContents = await mdDirResponse.json();
+                  debugLog.push(`MARKER DEBUG: md/ directory exists and contains ${mdDirContents.length} items`);
+                  
+                  // Look for basename directory inside md/
+                  const baseNameDir = mdDirContents.find((item: any) => 
+                    item.type === 'directory' && item.name === baseName);
+                    
+                  if (baseNameDir) {
+                    debugLog.push(`MARKER DEBUG: Found directory ${baseName}/ inside md/`);
+                    
+                    // Now check inside that directory
+                    const baseNameDirParams = new URLSearchParams({
+                      type: fsSettings.type || "webdav",
+                      path: `${parentDir}md/${baseName}/`,
+                      host: fsSettings.host || "",
+                      username: fsSettings.username || "",
+                      password: fsSettings.password || "",
+                    });
+                    
+                    const baseNameDirResponse = await fetch(`/api/fs?${baseNameDirParams.toString()}`);
+                    if (baseNameDirResponse.ok) {
+                      const baseNameDirContents = await baseNameDirResponse.json();
+                      debugLog.push(`MARKER DEBUG: ${baseName}/ contains ${baseNameDirContents.length} items`);
+                      
+                      // Look for the marker file
+                      const markerFile = baseNameDirContents.find((item: any) => 
+                        item.name.endsWith('.marker.md'));
+                        
+                      if (markerFile) {
+                        debugLog.push(`MARKER DEBUG: Found marker file: ${markerFile.name} - adding correct path`);
+                        
+                        // Add the correct path as a new variant
+                        const correctPath = `${parentDir}md/${baseName}/${markerFile.name}`;
+                        variants.push({
+                          key: `${baseName}.marker.correct`,
+                          label: `Marker (Gefunden)`,
+                          path: correctPath
+                        });
+                      } else {
+                        debugLog.push(`MARKER DEBUG: No marker file found in ${baseName}/ directory`);
+                      }
+                    } else {
+                      debugLog.push(`MARKER DEBUG: Could not read ${baseName}/ directory`);
+                    }
+                  } else {
+                    debugLog.push(`MARKER DEBUG: No directory named ${baseName}/ found in md/ directory`);
+                  }
+                } else {
+                  debugLog.push(`MARKER DEBUG: Could not read md/ directory`);
+                }
+              } catch (dirCheckError) {
+                debugLog.push(`MARKER DEBUG: Error checking directories: ${dirCheckError instanceof Error ? dirCheckError.message : String(dirCheckError)}`);
+              }
+            }
+            
             throw new Error(`Fehler beim Laden der Markdown-Datei: ${response.statusText}`);
           }
           
