@@ -539,7 +539,7 @@ export default function VaultPage() {
               setSelectedView("Dateibrowser");
               setSelectedDok(null);
             }}>
-            Dateibrowser
+            Dateien
           </button>
           <button
             className={`px-3 py-1 border rounded ${
