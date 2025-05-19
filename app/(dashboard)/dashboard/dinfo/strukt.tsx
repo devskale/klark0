@@ -60,13 +60,19 @@ export default function Strukt() {
   const [parserOptions, setParserOptions] = useState<string[]>([]);
   const [defaultParser, setDefaultParser] = useState<string>("");
 
+  // derive baseName once here so the img renderer can use it
+  const fileBaseName = selectedDok
+    ? decodeURIComponent(selectedDok.split("/").pop()!)
+    : "";
+  const baseName = fileBaseName.replace(/\.[^/.]+$/, "");
+
   useEffect(() => {
     if (!indexData || !selectedDok) return;
     const fileBase = decodeURIComponent(selectedDok.split("/").pop()!);
     const entry = indexData.files?.find((f: any) => f.name === fileBase);
     if (entry) {
-      setParserOptions(entry.parserDet || [entry.parserDefault || ""]);
-      setDefaultParser(entry.parserDefault || "");
+      setParserOptions(entry.parsers?.det || []);
+      setDefaultParser(entry.parsers?.default || "");
     }
   }, [indexData, selectedDok]);
 
@@ -93,8 +99,8 @@ export default function Strukt() {
           throw new Error(`File entry not found in index for: ${fileBaseName}`);
         }
         
-        const parserDefault = fileEntry.parserDefault || "docling";
-        const parserDet = fileEntry.parserDet || [parserDefault];
+        const parserDefault = fileEntry.parsers?.default || "docling";
+        const parserDet = fileEntry.parsers?.det || [parserDefault];
         debugLog.push(`Default parser type: ${parserDefault}`);
         debugLog.push(`Available parsers: ${parserDet.join(', ')}`);
         
@@ -242,7 +248,7 @@ export default function Strukt() {
         });
         
         if (!selectedVariant && variants.length > 0) {
-          const defaultVariant = variants.find(v => v.label === parserDefault);
+          const defaultVariant = variants.find(v => v.label.toLowerCase() === parserDefault);
           setSelectedVariant(defaultVariant ? defaultVariant.label : variants[0].label);
         }
         
@@ -256,9 +262,9 @@ export default function Strukt() {
         
         debugLog.push(`DEBUG: Selected variant to load: ${variantToLoad.label} at ${variantToLoad.path}`);
         
-        if (fileEntry.parserDet && Array.isArray(fileEntry.parserDet)) {
-          debugLog.push(`DEBUG: Parser types in index: ${fileEntry.parserDet.join(', ')}`);
-          debugLog.push(`DEBUG: Marker in index: ${fileEntry.parserDet.includes('marker')}`);
+        if (fileEntry.parsers?.det && Array.isArray(fileEntry.parsers.det)) {
+          debugLog.push(`DEBUG: Parser types in index: ${fileEntry.parsers.det.join(', ')}`);
+          debugLog.push(`DEBUG: Marker in index: ${fileEntry.parsers.det.includes('marker')}`);
         }
         
         try {
@@ -485,7 +491,23 @@ export default function Strukt() {
     },
     td({ node, ...props }: any) {
       return <td className="px-3 py-2 text-sm whitespace-nowrap border-t border-gray-100" {...props} />;
-    }
+    },
+    img({ node, src, alt, ...props }: any) {
+      // leave absolute URLs alone
+      if (!src || src.match(/^https?:\/\//)) {
+        return <img src={src} alt={alt} {...props} />;
+      }
+      // build WebDAV path under md/<baseName>/
+      const imagePath = `${parentDir}md/${baseName}/${src}`;
+      const params = new URLSearchParams({
+        type: fsSettings?.type || "",
+        path: imagePath,
+        host: fsSettings?.host || "",
+        username: fsSettings?.username || "",
+        password: fsSettings?.password || "",
+      });
+      return <img src={`/api/fs?${params.toString()}`} alt={alt} {...props} />;
+    },
   };
 
   if (loading) {
@@ -510,29 +532,31 @@ export default function Strukt() {
       )}
       
       {availableVariants.length > 0 && (
-        <div className="mb-2">
+        <div className="mb-2 flex items-center justify-between">
           <Tabs 
             value={selectedVariant || availableVariants[0]?.label} 
             onValueChange={handleVariantChange}
-            className="w-full"
+            className="flex-1"
           >
-            <TabsList className="mb-2 flex flex-wrap">
+            <TabsList className="flex flex-wrap">
               {availableVariants.map(variant => (
                 <TabsTrigger key={variant.key} value={variant.label}>
-                  {variant.label}
+                  {variant.label.toLowerCase() === defaultParser
+                    ? <strong>{variant.label}</strong>
+                    : variant.label}
                 </TabsTrigger>
               ))}
             </TabsList>
           </Tabs>
+
+          {selectedVariant && (
+            <Button onClick={handleSaveDefaultParser} className="ml-4 whitespace-nowrap">
+              Als Standard speichern
+            </Button>
+          )}
         </div>
       )}
 
-      {selectedVariant && (
-        <div className="flex items-center gap-2">
-          <Button onClick={handleSaveDefaultParser}>Als Standard speichern</Button>
-        </div>
-      )}
-      
       {markdown ? (
         <Card className="border border-gray-200">
           <CardContent className="p-0 overflow-hidden">
