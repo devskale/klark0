@@ -3,7 +3,9 @@ import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { FileEntry } from "@/lib/fs/abstractFilesystem";
 
-type FileTreeNode = FileEntry;
+type FileTreeNode = FileEntry & {
+  children?: FileTreeNode[];
+};
 
 // Renders nested file tree; applyFilter=false to show all entries
 function renderFileTree(
