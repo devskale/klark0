@@ -543,13 +543,13 @@ export default function VaultPage() {
           </button>
           <button
             className={`px-3 py-1 border rounded ${
-              selectedView === "Op-Browser" ? "bg-gray-200" : ""
+              selectedView === "Pb-Browser" ? "bg-gray-200" : ""
             }`}
             onClick={() => {
-              setSelectedView("Op-Browser");
+              setSelectedView("Pb-Browser");
               setSelectedDok(null);
             }}>
-            Op-Browser
+            Projekt / Bieter
           </button>
           <button
             className={`px-3 py-1 border rounded ${
@@ -669,7 +669,7 @@ export default function VaultPage() {
           <Loader2 className="h-6 w-6 animate-spin" />
           <span className="ml-2">Loading...</span>
         </div>
-      ) : selectedView === "Op-Browser" ? (
+      ) : selectedView === "Pb-Browser" ? (
         <>
           <div className="flex space-x-4">
             {/* Left Card: Ausschreibungen */}
