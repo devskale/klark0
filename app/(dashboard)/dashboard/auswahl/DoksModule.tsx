@@ -98,7 +98,7 @@ export default function DoksModule({
                 Name
               </th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Größe
+                Status
               </th>
               <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Aktionen
@@ -108,7 +108,7 @@ export default function DoksModule({
           <tbody className="bg-white divide-y divide-gray-200">
             {docs
               .filter(f => f.path !== docsPath)
-              .map((f: FileEntry & { hasParser?: boolean }) => (
+              .map((f: FileEntry & { hasParser?: boolean; parserStatus?: string }) => (
                 <tr
                   key={f.path}
                   className={`cursor-pointer ${
@@ -121,14 +121,16 @@ export default function DoksModule({
                       {f.type === "directory"
                         ? <Folder className="mr-2 h-4 w-4" />
                         : getFileIcon(f.name)}
-                      {f.type === 'file' && f.hasParser && (
-                        <span className="inline-block w-2 h-2 bg-blue-500 rounded-full mr-2" title="Parser vorhanden"></span>
-                      )}
                       {f.name}
+                      {f.type === 'file' && f.hasParser && (
+                        <span className="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-sky-100 text-sky-800">
+                          struct
+                        </span>
+                      )}
                     </div>
                   </td>
-                  <td className="px-4 py-2 whitespace-nowrap">
-                    {f.type === "file" && f.size ? `${f.size} bytes` : "-"}
+                  <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
+                    {f.parserStatus || "-"}
                   </td>
                   <td className="px-4 py-2 whitespace-nowrap text-right">
                     <DropdownMenu>
@@ -163,7 +165,7 @@ export default function DoksModule({
 
 async function fileTreeFetcher(
   [path, settings]: [string, Record<string, string | undefined>]
-): Promise<(FileEntry & { hasParser?: boolean })[]> {
+): Promise<(FileEntry & { hasParser?: boolean; parserStatus?: string })[]> {
   const fileSystemConfig = {
     type: "webdav",
     noshowList: ["archive", ".archive"],
@@ -180,7 +182,7 @@ async function fileTreeFetcher(
   const res = await fetch(`/api/fs?${query.toString()}`);
   const dirData = await res.json();
 
-  let parserIndex: Record<string, boolean> = {};
+  let parserInfoMap: Record<string, { status: string; hasActualParser: boolean }> = {};
   const indexFilePath = normalizePath(path) + PDF2MD_INDEX_FILE_NAME;
 
   const indexFileQuery = new URLSearchParams({
@@ -197,10 +199,13 @@ async function fileTreeFetcher(
       const indexJson = await indexResponse.json();
       if (indexJson && Array.isArray(indexJson.files)) {
         for (const fileInfo of indexJson.files) {
-          if (typeof fileInfo.name === 'string' && fileInfo.name && fileInfo.parsers &&
-              ((Array.isArray(fileInfo.parsers.det) && fileInfo.parsers.det.length > 0) ||
-               (typeof fileInfo.parsers.default === 'string' && fileInfo.parsers.default !== ''))) {
-            parserIndex[fileInfo.name] = true;
+          if (typeof fileInfo.name === 'string' && fileInfo.name && fileInfo.parsers) {
+              const hasActualParser = ((Array.isArray(fileInfo.parsers.det) && fileInfo.parsers.det.length > 0) ||
+                                     (typeof fileInfo.parsers.default === 'string' && fileInfo.parsers.default !== ''));
+              parserInfoMap[fileInfo.name] = {
+                  hasActualParser: hasActualParser,
+                  status: fileInfo.parsers.status || "" 
+              };
           }
         }
       } else {
@@ -220,13 +225,14 @@ async function fileTreeFetcher(
     noshowList: fileSystemConfig.noshowList 
   });
 
-  const entriesWithParsers = rawEntries.map(entry => {
-    const hasParserValue = entry.type === 'file' && parserIndex[entry.name] === true;
+  const entriesWithData = rawEntries.map(entry => {
+    const pInfo = entry.type === 'file' ? parserInfoMap[entry.name] : undefined;
     return {
       ...entry,
-      hasParser: hasParserValue,
+      hasParser: pInfo?.hasActualParser || false,
+      parserStatus: pInfo?.status || ""
     };
   });
   
-  return entriesWithParsers;
+  return entriesWithData;
 }

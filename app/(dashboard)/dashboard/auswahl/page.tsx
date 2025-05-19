@@ -40,7 +40,7 @@ import DateibrowserModule from "./DateibrowserModule";
 
 const PDF2MD_INDEX_FILE_NAME = ".pdf2md_index.json";
 
-type FileTreeNode = FileEntry & { hasParser?: boolean }; // Ensure FileEntry can accommodate hasParser
+type FileTreeNode = FileEntry & { hasParser?: boolean; parserStatus?: string };
 
 // Utility to normalize paths (ensure trailing slash)
 function normalizePath(path: string) {
@@ -69,7 +69,7 @@ const fileTreeFetcher = async ([currentPath, settings]: [
   const response = await fetch(`/api/fs?${queryParams.toString()}`);
   const dirData = await response.json();
 
-  let parserIndex: Record<string, boolean> = {};
+  let parserInfoMap: Record<string, { status: string; hasActualParser: boolean }> = {};
   const indexFilePath = normalizePath(currentPath) + PDF2MD_INDEX_FILE_NAME;
 
   const indexFileQuery = new URLSearchParams({
@@ -86,10 +86,13 @@ const fileTreeFetcher = async ([currentPath, settings]: [
       const indexJson = await indexResponse.json();
       if (indexJson && Array.isArray(indexJson.files)) {
         for (const fileInfo of indexJson.files) {
-          if (fileInfo.name && fileInfo.parsers &&
-              ((Array.isArray(fileInfo.parsers.det) && fileInfo.parsers.det.length > 0) ||
-               (typeof fileInfo.parsers.default === 'string' && fileInfo.parsers.default !== ''))) {
-            parserIndex[fileInfo.name] = true;
+          if (fileInfo.name && fileInfo.parsers) {
+              const hasActualParser = ((Array.isArray(fileInfo.parsers.det) && fileInfo.parsers.det.length > 0) ||
+                                     (typeof fileInfo.parsers.default === 'string' && fileInfo.parsers.default !== ''));
+              parserInfoMap[fileInfo.name] = {
+                  hasActualParser: hasActualParser,
+                  status: fileInfo.parsers.status || ""
+              };
           }
         }
       }
@@ -104,15 +107,19 @@ const fileTreeFetcher = async ([currentPath, settings]: [
       noshowList: fileSystemConfig.noshowList,
     });
 
-    const entriesWithParsers = rawEntries
-      .map((entry) => ({
-        ...entry,
-        hasParser: entry.type === "file" && parserIndex[entry.name] === true,
-      }))
+    const entriesWithData = rawEntries
+      .map((entry) => {
+        const pInfo = entry.type === "file" ? parserInfoMap[entry.name] : undefined;
+        return {
+          ...entry,
+          hasParser: pInfo?.hasActualParser || false,
+          parserStatus: pInfo?.status || "",
+        };
+      })
       .filter(
         (entry) => normalizePath(entry.path) !== normalizePath(currentPath)
       );
-    return entriesWithParsers;
+    return entriesWithData;
   }
   throw new Error("Unexpected API response");
 };
