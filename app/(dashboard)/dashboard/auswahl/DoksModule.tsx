@@ -52,6 +52,7 @@ export default function DoksModule({
   // clear selection on project/bieter change
   useEffect(() => {
     setSelectedDocs([]);
+    // Only clear selectedDok when switching project or bieter
     setSelectedDok(null);
   }, [projectPath, bieterPath, setSelectedDok]);
 

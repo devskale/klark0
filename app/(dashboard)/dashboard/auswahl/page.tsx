@@ -91,7 +91,7 @@ export default function VaultPage() {
   const [showSettings, setShowSettings] = useState(false);
   const [showRefreshMessage, setShowRefreshMessage] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedView, setSelectedView] = useState("Op-Browser");
+  const [selectedView, setSelectedView] = useState("Pb-Browser");
 
   // State for Add Project Dialog
   const [isAddProjectDialogOpen, setIsAddProjectDialogOpen] = useState(false);
@@ -531,16 +531,6 @@ export default function VaultPage() {
       <div className="flex justify-between items-center mb-4">
         {/* MenuBar for view selection */}
         <div className="flex space-x-4">
-          <button
-            className={`px-3 py-1 border rounded ${
-              selectedView === "Dateibrowser" ? "bg-gray-200" : ""
-            }`}
-            onClick={() => {
-              setSelectedView("Dateibrowser");
-              setSelectedDok(null);
-            }}>
-            Dateien
-          </button>
           <button
             className={`px-3 py-1 border rounded ${
               selectedView === "Pb-Browser" ? "bg-gray-200" : ""
@@ -1206,13 +1196,8 @@ export default function VaultPage() {
             )}
           </div>
         </>
-      ) : selectedView === "Docs" ? (
-        <DoksModule webdavSettings={webdavSettings} />
       ) : (
-        <DateibrowserModule
-          fileTree={fileTree}
-          basePath={fileSystemConfig.basePath}
-        />
+        <DoksModule webdavSettings={webdavSettings} />
       )}
     </section>
   );
