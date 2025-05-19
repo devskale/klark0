@@ -1,8 +1,16 @@
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
-  const { indexPath, fileName, meta, host, username, password, type } =
-    await req.json();
+  const {
+    indexPath,
+    fileName,
+    meta,
+    parserDefault, // ← new
+    host,
+    username,
+    password,
+    type,
+  } = await req.json();
 
   if (type !== "webdav") {
     return NextResponse.json({ error: "Unsupported FS" }, { status: 400 });
@@ -33,7 +41,16 @@ export async function POST(req: Request) {
   // 2) Patch entry
   const entry = (indexJson.files || []).find((f: any) => f.name === fileName);
   if (entry) {
-    entry.meta = { ...(entry.meta || {}), ...meta };
+    // update metadata
+    entry.meta = { ...(entry.meta || {}), ...(meta || {}) };
+
+    // update default parser if provided
+    if (parserDefault != null) {
+      entry.parsers = {
+        ...(entry.parsers || {}),
+        default: parserDefault,
+      };
+    }
   }
 
   // 3) Update timestamp

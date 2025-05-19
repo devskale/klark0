@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
 export default function Strukt() {
   const { selectedProject, selectedDok } = useProject();
@@ -26,19 +27,17 @@ export default function Strukt() {
   const [availableVariants, setAvailableVariants] = useState<Array<{key: string, label: string, path: string}>>([]);
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
 
-  // Fetch filesystem settings
+  // SWR for index JSON now also grabs mutate:
   const { data: fsSettings } = useSWR<FileSystemSettings>(
     "/api/settings?key=fileSystem",
     (url) => fetch(url).then((res) => res.json())
   );
 
-  // Get the parent directory from selectedDok
   const parentDir = selectedDok
     ? normalizePath(selectedDok.replace(/\/[^\/]+$/, ""))
     : null;
 
-  // Fetch index JSON - similar to how info.tsx does it
-  const { data: indexData } = useSWR(
+  const { data: indexData, mutate: mutateIndex } = useSWR(
     fsSettings && parentDir
       ? [parentDir + PDF2MD_INDEX_FILE_NAME, fsSettings]
       : null,
@@ -57,6 +56,20 @@ export default function Strukt() {
     { revalidateOnFocus: false }
   );
 
+  // NEW: parser options & default-parser state
+  const [parserOptions, setParserOptions] = useState<string[]>([]);
+  const [defaultParser, setDefaultParser] = useState<string>("");
+
+  useEffect(() => {
+    if (!indexData || !selectedDok) return;
+    const fileBase = decodeURIComponent(selectedDok.split("/").pop()!);
+    const entry = indexData.files?.find((f: any) => f.name === fileBase);
+    if (entry) {
+      setParserOptions(entry.parserDet || [entry.parserDefault || ""]);
+      setDefaultParser(entry.parserDefault || "");
+    }
+  }, [indexData, selectedDok]);
+
   useEffect(() => {
     const loadMarkdown = async () => {
       if (!selectedDok || !fsSettings || !indexData) {
@@ -68,7 +81,6 @@ export default function Strukt() {
         setLoading(true);
         setDebugInfo([]);
         
-        // Get the filename and basename
         const fileBaseName = selectedDok
           ? decodeURIComponent(selectedDok.split("/").pop()!)
           : "";
@@ -76,29 +88,23 @@ export default function Strukt() {
         const debugLog: string[] = [];
         debugLog.push(`Looking for markdown file for: ${fileBaseName}`);
         
-        // Find file entry in the index
         const fileEntry = indexData.files?.find((f: any) => f.name === fileBaseName);
         if (!fileEntry) {
           throw new Error(`File entry not found in index for: ${fileBaseName}`);
         }
         
-        // Get the parser type and available parsers from the index
         const parserDefault = fileEntry.parserDefault || "docling";
         const parserDet = fileEntry.parserDet || [parserDefault];
         debugLog.push(`Default parser type: ${parserDefault}`);
         debugLog.push(`Available parsers: ${parserDet.join(', ')}`);
         
-        // Remove extension from filename to get basename
         const baseName = fileBaseName.replace(/\.[^/.]+$/, "");
         debugLog.push(`Base name without extension: ${baseName}`);
         
-        // Track available parser variants
         const variants: Array<{key: string, label: string, path: string}> = [];
         
-        // Always check for marker files, regardless of parserDet
         debugLog.push(`MARKER DEBUG: Checking for marker files regardless of parser list`);
         try {
-          // Check if the md/basename directory exists
           const mdBaseParams = new URLSearchParams({
             type: fsSettings.type || "webdav",
             path: `${parentDir}md/${baseName}/`,
@@ -112,14 +118,12 @@ export default function Strukt() {
             const baseContents = await mdBaseResponse.json();
             debugLog.push(`MARKER DEBUG: Found subdirectory md/${baseName}/ with ${baseContents.length} items`);
             
-            // Look for marker file
             const markerFile = baseContents.find((item: any) => 
               item.type === 'file' && item.name.endsWith('.marker.md'));
               
             if (markerFile) {
               debugLog.push(`MARKER DEBUG: Found marker file: ${markerFile.name}`);
               
-              // Add marker as a variant
               const markerPath = `${parentDir}md/${baseName}/${markerFile.name}`;
               variants.push({
                 key: `${baseName}.marker.found`,
@@ -127,7 +131,6 @@ export default function Strukt() {
                 path: markerPath
               });
               
-              // If marker isn't in parserDet, add it
               if (!parserDet.includes('marker')) {
                 debugLog.push(`MARKER DEBUG: Adding marker to parser list`);
                 parserDet.push('marker');
@@ -142,15 +145,12 @@ export default function Strukt() {
           debugLog.push(`MARKER DEBUG: Error checking for marker files: ${markerCheckError instanceof Error ? markerCheckError.message : String(markerCheckError)}`);
         }
         
-        // Create variants for all parser types
         for (const parser of parserDet) {
-          // Skip marker here if we already added it above
           if (parser === 'marker' && variants.some(v => v.label === "Marker")) {
             continue;
           }
           
           if (parser === 'marker') {
-            // Marker type has a special directory structure
             const markerPath = `${parentDir}md/${baseName}/${baseName}.marker.md`;
             debugLog.push(`Adding marker file at: ${markerPath}`);
             debugLog.push(`VERBOSE: Looking for marker file:`);
@@ -159,7 +159,6 @@ export default function Strukt() {
             debugLog.push(`VERBOSE: Full path constructed: ${markerPath}`);
             debugLog.push(`VERBOSE: Expected directory structure: parentDir/md/baseName/baseName.marker.md`);
             
-            // Also try alternative paths to help find the issue
             const altMarkerPaths = [
               `${parentDir}${baseName}/md/${baseName}/${baseName}.marker.md`,
               `${parentDir}${baseName}/md/${baseName}.marker.md`,
@@ -177,7 +176,6 @@ export default function Strukt() {
               path: markerPath
             });
             
-            // Also add alternative paths as hidden variants for fallback
             altMarkerPaths.forEach((path, idx) => {
               variants.push({
                 key: `${baseName}.marker.alt${idx+1}`,
@@ -186,7 +184,6 @@ export default function Strukt() {
               });
             });
           } else {
-            // Standard parser - single path option
             const path = `${parentDir}md/${baseName}.${parser}.md`;
             debugLog.push(`Adding ${parser} at: ${path}`);
             
@@ -198,7 +195,6 @@ export default function Strukt() {
           }
         }
         
-        // Check for any additional parser types in the md directory
         try {
           const params = new URLSearchParams({
             type: fsSettings.type || "webdav",
@@ -213,7 +209,6 @@ export default function Strukt() {
           if (dirResponse.ok) {
             const dirListing = await dirResponse.json();
             
-            // Look for files that match our basename but might have different parser types
             const mdFilePattern = new RegExp(`^${baseName}(?:_red)?\\.([a-zA-Z0-9]+)\\.md$`);
             
             for (const file of dirListing) {
@@ -224,10 +219,8 @@ export default function Strukt() {
               
               const parserType = match[1].toLowerCase();
               
-              // Skip if we already have this parser type
               if (parserDet.includes(parserType)) continue;
               
-              // Add this discovered parser variant
               variants.push({
                 key: `discovered-${parserType}`,
                 label: `${parserType} (Entdeckt)`,
@@ -243,20 +236,16 @@ export default function Strukt() {
         
         setAvailableVariants(variants);
         
-        // Log all available variants for debugging
         debugLog.push(`DEBUG: Available variants (${variants.length}):`);
         variants.forEach((v, idx) => {
           debugLog.push(`DEBUG: Variant ${idx+1}: ${v.label} - ${v.path}`);
         });
         
-        // If we have a current selection, keep it, otherwise use the first variant
         if (!selectedVariant && variants.length > 0) {
-          // Prefer the default parser if available
           const defaultVariant = variants.find(v => v.label === parserDefault);
           setSelectedVariant(defaultVariant ? defaultVariant.label : variants[0].label);
         }
         
-        // Find the selected variant path
         const variantToLoad = selectedVariant 
           ? variants.find(v => v.label === selectedVariant)
           : variants[0];
@@ -265,18 +254,14 @@ export default function Strukt() {
           throw new Error("Keine gültigen Markdown-Varianten gefunden");
         }
         
-        // Log which variant we're going to load
         debugLog.push(`DEBUG: Selected variant to load: ${variantToLoad.label} at ${variantToLoad.path}`);
         
-        // Check if info object has marker
         if (fileEntry.parserDet && Array.isArray(fileEntry.parserDet)) {
           debugLog.push(`DEBUG: Parser types in index: ${fileEntry.parserDet.join(', ')}`);
           debugLog.push(`DEBUG: Marker in index: ${fileEntry.parserDet.includes('marker')}`);
         }
         
-        // Fetch the markdown content using the proper API endpoint
         try {
-          // Use the dedicated file read endpoint to fetch the actual content
           const response = await fetch("/api/fs/read", {
             method: "POST",
             headers: {
@@ -295,14 +280,11 @@ export default function Strukt() {
             debugLog.push(`Fetch failed with status: ${response.status}`);
             debugLog.push(`VERBOSE: Failed to load path: ${variantToLoad.path}`);
             
-            // If this is a marker file that failed, add special debugging
             if (variantToLoad.label === "Marker" || variantToLoad.label.includes("Marker (Alt")) {
               debugLog.push(`MARKER DEBUG: Failed to load marker file`);
               debugLog.push(`MARKER DEBUG: Checking if marker is in parserDet array: ${parserDet.includes('marker')}`);
               
-              // Let's check if directories exist
               try {
-                // Check the base md directory
                 const mdDirParams = new URLSearchParams({
                   type: fsSettings.type || "webdav",
                   path: `${parentDir}md/`,
@@ -316,14 +298,12 @@ export default function Strukt() {
                   const mdDirContents = await mdDirResponse.json();
                   debugLog.push(`MARKER DEBUG: md/ directory exists and contains ${mdDirContents.length} items`);
                   
-                  // Look for basename directory inside md/
                   const baseNameDir = mdDirContents.find((item: any) => 
                     item.type === 'directory' && item.name === baseName);
                     
                   if (baseNameDir) {
                     debugLog.push(`MARKER DEBUG: Found directory ${baseName}/ inside md/`);
                     
-                    // Now check inside that directory
                     const baseNameDirParams = new URLSearchParams({
                       type: fsSettings.type || "webdav",
                       path: `${parentDir}md/${baseName}/`,
@@ -337,14 +317,12 @@ export default function Strukt() {
                       const baseNameDirContents = await baseNameDirResponse.json();
                       debugLog.push(`MARKER DEBUG: ${baseName}/ contains ${baseNameDirContents.length} items`);
                       
-                      // Look for the marker file
                       const markerFile = baseNameDirContents.find((item: any) => 
                         item.name.endsWith('.marker.md'));
                         
                       if (markerFile) {
                         debugLog.push(`MARKER DEBUG: Found marker file: ${markerFile.name} - adding correct path`);
                         
-                        // Add the correct path as a new variant
                         const correctPath = `${parentDir}md/${baseName}/${markerFile.name}`;
                         variants.push({
                           key: `${baseName}.marker.correct`,
@@ -382,11 +360,10 @@ export default function Strukt() {
         } catch (fetchError) {
           debugLog.push(`Error fetching content: ${fetchError instanceof Error ? fetchError.message : String(fetchError)}`);
           
-          // Try each variant until one works
           let foundContent = false;
           
           for (const variant of variants) {
-            if (variant.path === variantToLoad.path) continue; // Skip the one we just tried
+            if (variant.path === variantToLoad.path) continue;
             
             debugLog.push(`Trying alternative path: ${variant.path}`);
             
@@ -444,10 +421,33 @@ export default function Strukt() {
     loadMarkdown();
   }, [selectedDok, fsSettings, indexData, parentDir, selectedVariant]);
 
-  // Handle variant change
   const handleVariantChange = async (variantLabel: string) => {
     if (variantLabel === selectedVariant) return;
     setSelectedVariant(variantLabel);
+  };
+
+  const handleSaveDefaultParser = async () => {
+    if (!fsSettings || !parentDir || !selectedDok || !selectedVariant) return;
+    const fileBase = decodeURIComponent(selectedDok.split("/").pop()!);
+    const idxPath = parentDir + PDF2MD_INDEX_FILE_NAME;
+
+    // derive parser key (first word, lowercase), e.g. "Marker" → "marker"
+    const parserKey = selectedVariant.split(" ")[0].toLowerCase();
+
+    await fetch("/api/fs/index", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        indexPath: idxPath,
+        fileName: fileBase,
+        parserDefault: parserKey,
+        type: fsSettings.type,
+        host: fsSettings.host,
+        username: fsSettings.username,
+        password: fsSettings.password,
+      }),
+    });
+    mutateIndex();
   };
 
   const markdownComponents = {
@@ -526,6 +526,12 @@ export default function Strukt() {
           </Tabs>
         </div>
       )}
+
+      {selectedVariant && (
+        <div className="flex items-center gap-2">
+          <Button onClick={handleSaveDefaultParser}>Als Standard speichern</Button>
+        </div>
+      )}
       
       {markdown ? (
         <Card className="border border-gray-200">
@@ -548,7 +554,6 @@ export default function Strukt() {
         </div>
       )}
       
-      {/* Debug Information (collapsible) */}
       {debugInfo.length > 0 && (
         <details className="mt-8 border border-gray-200 rounded-md overflow-hidden">
           <summary className="bg-gray-50 px-4 py-2 cursor-pointer text-sm font-medium">
