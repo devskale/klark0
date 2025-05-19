@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Loader2, ChevronDown, X } from "lucide-react";
+import { Loader2, ChevronDown, X, Sparkles } from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -280,6 +280,12 @@ const markdownConversionConfig = {
   forceOcr: { id: "ocrforced", label: "OCR Erzwingen", defaultValue: false },
 };
 
+// Configuration for KI Einstellungen
+const kiEinstellungenConfig = {
+  displayName: "KI Einstellungen",
+  fields: [], // Placeholder for future form fields
+};
+
 // Konfiguration für Personendaten Anonymisierung
 const personDataConfig = {
   displayName: "Personendaten",
@@ -339,28 +345,33 @@ export default function GeneralPage() {
     fetcher
   );
 
-  const { data: mdConvSettings, mutate: mutateMdConvSettings } =
-    useSWR<Record<string, boolean>>(
-      "/api/settings?key=markdownKonversion",
-      fetcher
-    );
+  const { data: mdConvSettings, mutate: mutateMdConvSettings } = useSWR<
+    Record<string, boolean>
+  >("/api/settings?key=markdownKonversion", fetcher);
 
-  const { data: personSettings, mutate: mutatePersonSettings } =
-    useSWR<Record<string, boolean>>(
-      "/api/settings?key=personendaten",
-      fetcher
-    );
+  const { data: personSettings, mutate: mutatePersonSettings } = useSWR<
+    Record<string, boolean>
+  >("/api/settings?key=personendaten", fetcher);
+
+  const { data: kiSettings, mutate: mutateKiSettings } = useSWR<
+    Record<string, any>
+  >(
+    "/api/settings?key=kiEinstellungen", // New setting key
+    fetcher
+  );
 
   const [isInfoCardOpen, setIsInfoCardOpen] = useState(true);
   const [isWebsitesCardOpen, setIsWebsitesCardOpen] = useState(false);
   const [isFileSystemCardOpen, setIsFileSystemCardOpen] = useState(false);
   const [isMdConvCardOpen, setIsMdConvCardOpen] = useState(false);
   const [isPersonCardOpen, setIsPersonCardOpen] = useState(false);
+  const [isKiCardOpen, setIsKiCardOpen] = useState(false); // State for the new KI card
 
   const [infoSaving, setInfoSaving] = useState(false);
   const [websitesSaving, setWebsitesSaving] = useState(false);
   const [mdSaving, setMdSaving] = useState(false);
   const [personSaving, setPersonSaving] = useState(false);
+  const [kiSaving, setKiSaving] = useState(false); // Saving state for KI settings
 
   const currentFields =
     fileSystemConfigurations[dbSettings?.type || "local"]?.fields || [];
@@ -382,7 +393,8 @@ export default function GeneralPage() {
   const [mdInputValue, setMdInputValue] = useState("");
   const [mdOpen, setMdOpen] = useState(false);
   const mdFiltered = useMemo(
-    () => mdOptions.filter((opt) => !mdSelected.some((s) => s.value === opt.value)),
+    () =>
+      mdOptions.filter((opt) => !mdSelected.some((s) => s.value === opt.value)),
     [mdSelected]
   );
   const handleMdUnselect = useCallback((opt: MdOption) => {
@@ -400,7 +412,7 @@ export default function GeneralPage() {
   // reset Markdown Konversion selection when settings load
   useEffect(() => {
     if (mdConvSettings) {
-      setMdSelected(mdOptions.filter(opt => mdConvSettings[opt.value]));
+      setMdSelected(mdOptions.filter((opt) => mdConvSettings[opt.value]));
     }
   }, [mdConvSettings]);
 
@@ -421,7 +433,10 @@ export default function GeneralPage() {
   const [webInputValue, setWebInputValue] = useState("");
   const [webOpen, setWebOpen] = useState(false);
   const webFiltered = useMemo(
-    () => webOptions.filter((opt) => !webSelected.some((s) => s.value === opt.value)),
+    () =>
+      webOptions.filter(
+        (opt) => !webSelected.some((s) => s.value === opt.value)
+      ),
     [webSelected]
   );
   const handleWebUnselect = useCallback((opt: WebOption) => {
@@ -439,7 +454,7 @@ export default function GeneralPage() {
   // reset External Websites selection when settings load
   useEffect(() => {
     if (externalWebsites) {
-      setWebSelected(webOptions.filter(opt => externalWebsites[opt.value]));
+      setWebSelected(webOptions.filter((opt) => externalWebsites[opt.value]));
     }
   }, [externalWebsites]);
 
@@ -457,7 +472,10 @@ export default function GeneralPage() {
   const [personInput, setPersonInput] = useState("");
   const [personOpen, setPersonOpen] = useState(false);
   const personFiltered = useMemo(
-    () => personOptions.filter((opt) => !personSelected.some((s) => s.value === opt.value)),
+    () =>
+      personOptions.filter(
+        (opt) => !personSelected.some((s) => s.value === opt.value)
+      ),
     [personSelected]
   );
   const handlePersonUnselect = useCallback((opt: PersonOption) => {
@@ -475,9 +493,18 @@ export default function GeneralPage() {
   // reset Personendaten selection when settings load
   useEffect(() => {
     if (personSettings) {
-      setPersonSelected(personOptions.filter(opt => personSettings[opt.value]));
+      setPersonSelected(
+        personOptions.filter((opt) => personSettings[opt.value])
+      );
     }
   }, [personSettings]);
+
+  // Placeholder useEffect for KI settings if needed in the future
+  useEffect(() => {
+    if (kiSettings) {
+      // Logic to handle KI settings when loaded, e.g., set form defaults
+    }
+  }, [kiSettings]);
 
   // Multi-select state for Datenklassen
   type DataClassOption = { value: string; label: string };
@@ -488,7 +515,9 @@ export default function GeneralPage() {
     { value: "telefonnummer", label: "Telefonnummer" },
     { value: "email", label: "E-Mail" },
   ];
-  const [dataClassSelected, setDataClassSelected] = useState<DataClassOption[]>([]);
+  const [dataClassSelected, setDataClassSelected] = useState<DataClassOption[]>(
+    []
+  );
   const [dataClassInput, setDataClassInput] = useState("");
   const [dataClassOpen, setDataClassOpen] = useState(false);
   const dataClassFiltered = useMemo(
@@ -503,7 +532,11 @@ export default function GeneralPage() {
   }, []);
   const handleDataClassKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Backspace" && dataClassInput === "" && dataClassSelected.length > 0) {
+      if (
+        e.key === "Backspace" &&
+        dataClassInput === "" &&
+        dataClassSelected.length > 0
+      ) {
         e.preventDefault();
         setDataClassSelected((prev) => prev.slice(0, -1));
       } else if (e.key === "Enter" && dataClassInput.trim() !== "") {
@@ -514,7 +547,10 @@ export default function GeneralPage() {
 
         // Check if this custom tag (by value) is already selected
         if (!dataClassSelected.some((opt) => opt.value === newValue)) {
-          const newOption: DataClassOption = { value: newValue, label: newLabel };
+          const newOption: DataClassOption = {
+            value: newValue,
+            label: newLabel,
+          };
           setDataClassSelected((prev) => [...prev, newOption]);
         }
         setDataClassInput(""); // Clear input after adding
@@ -577,13 +613,15 @@ export default function GeneralPage() {
                     });
                     mutate();
                     toast.success("Einstellungen gespeichert", {
-                      description: "Die Info-Einstellungen wurden erfolgreich gespeichert.",
+                      description:
+                        "Die Info-Einstellungen wurden erfolgreich gespeichert.",
                       position: "top-center",
                       duration: 3000,
                     });
                   } catch (error) {
                     toast.error("Fehler beim Speichern", {
-                      description: "Die Änderungen konnten nicht gespeichert werden.",
+                      description:
+                        "Die Änderungen konnten nicht gespeichert werden.",
                       position: "top-center",
                     });
                   } finally {
@@ -608,14 +646,17 @@ export default function GeneralPage() {
                     />
                   </div>
                 ))}
-                <Button type="submit" className="bg-orange-500 text-white" disabled={infoSaving}>
+                <Button
+                  type="submit"
+                  className="bg-orange-500 text-white"
+                  disabled={infoSaving}>
                   {infoSaving ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Wird gespeichert...
                     </>
                   ) : (
-                    'Speichern'
+                    "Speichern"
                   )}
                 </Button>
               </form>
@@ -644,7 +685,9 @@ export default function GeneralPage() {
           </CardHeader>
           <CollapsibleContent>
             <CardContent className="space-y-4 pt-0">
-              <p className="text-sm text-muted-foreground">Websiten für das Beziehen von externen Daten</p>
+              <p className="text-sm text-muted-foreground">
+                Websiten für das Beziehen von externen Daten
+              </p>
               <form
                 className="space-y-4"
                 onSubmit={async (e) => {
@@ -652,7 +695,10 @@ export default function GeneralPage() {
                   setWebsitesSaving(true);
                   const formData = new FormData(e.currentTarget);
                   const newSettings = Object.fromEntries(
-                    Array.from(formData.entries()).map(([k, v]) => [k, v === "on"])
+                    Array.from(formData.entries()).map(([k, v]) => [
+                      k,
+                      v === "on",
+                    ])
                   );
                   try {
                     await fetch("/api/settings", {
@@ -668,13 +714,15 @@ export default function GeneralPage() {
                       ...newSettings,
                     });
                     toast.success("Einstellungen gespeichert", {
-                      description: "Die Webseiten-Einstellungen wurden erfolgreich gespeichert.",
+                      description:
+                        "Die Webseiten-Einstellungen wurden erfolgreich gespeichert.",
                       position: "top-center",
                       duration: 3000,
                     });
                   } catch (error) {
                     toast.error("Fehler beim Speichern", {
-                      description: "Die Änderungen konnten nicht gespeichert werden.",
+                      description:
+                        "Die Änderungen konnten nicht gespeichert werden.",
                       position: "top-center",
                     });
                   } finally {
@@ -683,7 +731,12 @@ export default function GeneralPage() {
                 }}>
                 {/* Hidden inputs for selected websites */}
                 {webSelected.map((opt) => (
-                  <input key={opt.value} type="hidden" name={opt.value} value="on" />
+                  <input
+                    key={opt.value}
+                    type="hidden"
+                    name={opt.value}
+                    value="on"
+                  />
                 ))}
 
                 {/* Multi-select UI for external websites */}
@@ -746,14 +799,17 @@ export default function GeneralPage() {
                   </div>
                 </Command>
 
-                <Button type="submit" className="bg-orange-500 text-white" disabled={websitesSaving}>
+                <Button
+                  type="submit"
+                  className="bg-orange-500 text-white"
+                  disabled={websitesSaving}>
                   {websitesSaving ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Wird gespeichert...
                     </>
                   ) : (
-                    'Speichern'
+                    "Speichern"
                   )}
                 </Button>
               </form>
@@ -783,7 +839,8 @@ export default function GeneralPage() {
           <CollapsibleContent>
             <CardContent className="space-y-4 pt-0">
               <p className="text-sm text-muted-foreground">
-                Modelle für das Konvertieren von Originaldateien in Markdown-Format
+                Modelle für das Konvertieren von Originaldateien in
+                Markdown-Format
               </p>
               <form
                 className="space-y-4"
@@ -792,7 +849,10 @@ export default function GeneralPage() {
                   setMdSaving(true);
                   const formData = new FormData(e.currentTarget);
                   const newSettings = Object.fromEntries(
-                    Array.from(formData.entries()).map(([k, v]) => [k, v === "on"])
+                    Array.from(formData.entries()).map(([k, v]) => [
+                      k,
+                      v === "on",
+                    ])
                   );
                   try {
                     await fetch("/api/settings", {
@@ -808,13 +868,15 @@ export default function GeneralPage() {
                       ...newSettings,
                     });
                     toast.success("Einstellungen gespeichert", {
-                      description: "Die Konversionsoptionen wurden erfolgreich gespeichert.",
+                      description:
+                        "Die Konversionsoptionen wurden erfolgreich gespeichert.",
                       position: "top-center",
                       duration: 3000,
                     });
                   } catch (error) {
                     toast.error("Fehler beim Speichern", {
-                      description: "Die Änderungen konnten nicht gespeichert werden.",
+                      description:
+                        "Die Änderungen konnten nicht gespeichert werden.",
                       position: "top-center",
                     });
                   } finally {
@@ -907,14 +969,17 @@ export default function GeneralPage() {
                   </Label>
                 </div>
 
-                <Button type="submit" className="bg-orange-500 text-white" disabled={mdSaving}>
+                <Button
+                  type="submit"
+                  className="bg-orange-500 text-white"
+                  disabled={mdSaving}>
                   {mdSaving ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Wird gespeichert...
                     </>
                   ) : (
-                    'Speichern'
+                    "Speichern"
                   )}
                 </Button>
               </form>
@@ -943,7 +1008,9 @@ export default function GeneralPage() {
           </CardHeader>
           <CollapsibleContent>
             <CardContent className="space-y-4 pt-0">
-              <p className="text-sm text-muted-foreground">Modelle für das Entfernen von Personenbezogenen </p>
+              <p className="text-sm text-muted-foreground">
+                Modelle für das Entfernen von Personenbezogenen{" "}
+              </p>
 
               <form
                 className="space-y-4"
@@ -965,13 +1032,15 @@ export default function GeneralPage() {
                     });
                     mutatePersonSettings({ ...personSettings, ...newSettings });
                     toast.success("Einstellungen gespeichert", {
-                      description: "Die Personendaten-Einstellungen wurden erfolgreich gespeichert.",
+                      description:
+                        "Die Personendaten-Einstellungen wurden erfolgreich gespeichert.",
                       position: "top-center",
                       duration: 3000,
                     });
                   } catch (error) {
                     toast.error("Fehler beim Speichern", {
-                      description: "Die Änderungen konnten nicht gespeichert werden.",
+                      description:
+                        "Die Änderungen konnten nicht gespeichert werden.",
                       position: "top-center",
                     });
                   } finally {
@@ -980,7 +1049,12 @@ export default function GeneralPage() {
                 }}>
                 {/* Hidden inputs für Auswahl */}
                 {personSelected.map((opt) => (
-                  <input key={opt.value} type="hidden" name={opt.value} value="on" />
+                  <input
+                    key={opt.value}
+                    type="hidden"
+                    name={opt.value}
+                    value="on"
+                  />
                 ))}
 
                 {/* Multi-select UI */}
@@ -988,7 +1062,10 @@ export default function GeneralPage() {
                   <div className="rounded-md border border-input px-3 py-2 text-sm focus-within:ring-2 focus-within:ring-ring">
                     <div className="flex flex-wrap gap-1">
                       {personSelected.map((opt) => (
-                        <Badge key={opt.value} variant="secondary" className="select-none">
+                        <Badge
+                          key={opt.value}
+                          variant="secondary"
+                          className="select-none">
                           {opt.label}
                           <span
                             className="ml-2 cursor-pointer inline-flex"
@@ -1045,13 +1122,21 @@ export default function GeneralPage() {
                   <Label className="block mb-2">Datenklassen</Label>
                   {/* Hidden inputs for selected data classes */}
                   {dataClassSelected.map((opt) => (
-                    <input key={opt.value} type="hidden" name={opt.value} value="on" />
+                    <input
+                      key={opt.value}
+                      type="hidden"
+                      name={opt.value}
+                      value="on"
+                    />
                   ))}
                   <Command className="overflow-visible">
                     <div className="rounded-md border border-input px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring">
                       <div className="flex flex-wrap gap-1">
                         {dataClassSelected.map((opt) => (
-                          <Badge key={opt.value} variant="secondary" className="select-none">
+                          <Badge
+                            key={opt.value}
+                            variant="secondary"
+                            className="select-none">
                             {opt.label}
                             <span
                               className="ml-2 cursor-pointer inline-flex"
@@ -1104,16 +1189,101 @@ export default function GeneralPage() {
                   </Command>
                 </div>
 
-                  <Button type="submit" className="bg-orange-500 text-white" disabled={personSaving}>
-                    {personSaving ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Wird gespeichert...
-                      </>
-                    ) : (
-                      'Speichern'
-                    )}
-                  </Button>
+                <Button
+                  type="submit"
+                  className="bg-orange-500 text-white"
+                  disabled={personSaving}>
+                  {personSaving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Wird gespeichert...
+                    </>
+                  ) : (
+                    "Speichern"
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
+      {/* KI Einstellungen Section */}
+      <Collapsible
+        open={isKiCardOpen}
+        onOpenChange={setIsKiCardOpen}
+        className="mb-8">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between cursor-pointer">
+            <CollapsibleTrigger asChild>
+              <div className="flex items-center justify-between w-full">
+                <CardTitle className="flex items-center gap-2">
+                  {kiEinstellungenConfig.displayName}
+                  <Sparkles className="h-5 w-5 text-orange-500" />
+                </CardTitle>
+                <ChevronDown
+                  className={`h-5 w-5 transition-transform ${
+                    isKiCardOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </div>
+            </CollapsibleTrigger>
+          </CardHeader>
+          <CollapsibleContent>
+            <CardContent className="space-y-4 pt-0">
+              <p className="text-sm text-muted-foreground">
+                Einstellungen für KI-Funktionen.
+              </p>
+              <form
+                className="space-y-4"
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  setKiSaving(true);
+                  const formData = new FormData(e.currentTarget);
+                  const newKiSettings = Object.fromEntries(formData.entries()); // Adjust if complex data
+                  try {
+                    await fetch("/api/settings", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        settingKey: "kiEinstellungen",
+                        value: newKiSettings,
+                      }),
+                    });
+                    if (mutateKiSettings) mutateKiSettings();
+                    toast.success("KI Einstellungen gespeichert", {
+                      description:
+                        "Die KI-Einstellungen wurden erfolgreich gespeichert.",
+                      position: "top-center",
+                      duration: 3000,
+                    });
+                  } catch (error) {
+                    toast.error("Fehler beim Speichern der KI Einstellungen", {
+                      description:
+                        "Die KI-Änderungen konnten nicht gespeichert werden.",
+                      position: "top-center",
+                    });
+                  } finally {
+                    setKiSaving(false);
+                  }
+                }}>
+                {/* Placeholder for form fields - to be added later */}
+                <p className="text-sm text-gray-500">
+                  Weitere Formularfelder werden hier in Kürze hinzugefügt.
+                </p>
+                <Button
+                  type="submit"
+                  className="bg-orange-500 text-white"
+                  disabled={kiSaving}>
+                  {kiSaving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Wird gespeichert...
+                    </>
+                  ) : (
+                    "Speichern"
+                  )}
+                </Button>
               </form>
             </CardContent>
           </CollapsibleContent>
@@ -1139,21 +1309,23 @@ export default function GeneralPage() {
           </CardHeader>
           <CollapsibleContent>
             <CardContent>
-              <form className="space-y-4" action={async (formData) => {
-                const result = await formAction(formData);
-                if (result?.success) {
-                  toast.success("Einstellungen gespeichert", {
-                    description: result.success,
-                    position: "top-center",
-                    duration: 3000,
-                  });
-                } else if (result?.error) {
-                  toast.error("Fehler beim Speichern", {
-                    description: result.error,
-                    position: "top-center",
-                  });
-                }
-              }}>
+              <form
+                className="space-y-4"
+                action={async (formData) => {
+                  const result = await formAction(formData);
+                  if (result?.success) {
+                    toast.success("Einstellungen gespeichert", {
+                      description: result.success,
+                      position: "top-center",
+                      duration: 3000,
+                    });
+                  } else if (result?.error) {
+                    toast.error("Fehler beim Speichern", {
+                      description: result.error,
+                      position: "top-center",
+                    });
+                  }
+                }}>
                 <div className="space-y-2 mb-4">
                   <Label htmlFor="fileSystemSetting" className="block mb-2">
                     Dateisystem Typ
