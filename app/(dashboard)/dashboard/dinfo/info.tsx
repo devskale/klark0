@@ -10,6 +10,7 @@ import {
   fileTreeFetcher,
   normalizePath,
   FileSystemSettings,
+  PDF2MD_INDEX_FILE_NAME,
 } from "@/lib/fs/fileTreeUtils";
 
 export default function Info() {
@@ -82,11 +83,32 @@ export default function Info() {
     { revalidateOnFocus: false }
   );
 
+  // fetch index JSON
+  const { data: idxJson, mutate: mutateIndex } = useSWR(
+    fsSettings && parentDir
+      ? [parentDir + PDF2MD_INDEX_FILE_NAME, fsSettings]
+      : null,
+    async ([path, settings]) => {
+      const params = new URLSearchParams({
+        type: settings.type || "webdav",
+        path,
+        host: settings.host || "",
+        username: settings.username || "",
+        password: settings.password || "",
+      });
+      const res = await fetch(`/api/fs?${params.toString()}`);
+      if (!res.ok) return null;
+      return res.json();
+    },
+    { revalidateOnFocus: false }
+  );
+
   // editable state
   const [issuer, setIssuer] = React.useState("");
   const [title, setTitle] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [metadataList, setMetadataList] = React.useState("");
+  const [category, setCategory] = React.useState("");
 
   // populate form when metadata loads
   React.useEffect(() => {
@@ -104,6 +126,16 @@ export default function Info() {
       setMetadataList(docMeta.metadaten.join(", "));
     }
   }, [docMeta]);
+
+  // populate category from index JSON
+  React.useEffect(() => {
+    if (idxJson?.files) {
+      const entry = idxJson.files.find((f: any) => f.name === fileBaseName);
+      if (entry?.meta?.kategorie != null) {
+        setCategory(entry.meta.kategorie);
+      }
+    }
+  }, [idxJson, fileBaseName]);
 
   // save handler uses existing upload endpoint
   const handleSaveMeta = async () => {
@@ -135,6 +167,26 @@ export default function Info() {
       // update SWR cache without revalidation
       mutateMeta(() => json.metadata, false);
     }
+
+    // update .pdf2md_index.json
+    if (fsSettings && parentDir) {
+      const idxPath = parentDir + PDF2MD_INDEX_FILE_NAME;
+      await fetch("/api/fs/index", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          indexPath: idxPath,
+          fileName: fileBaseName,
+          meta: { kategorie: category, name: title },
+          type: fsSettings.type,
+          host: fsSettings.host,
+          username: fsSettings.username,
+          password: fsSettings.password,
+        }),
+      });
+      // re-fetch index to reflect saved category
+      mutateIndex();
+    }
   };
 
   return (
@@ -142,7 +194,13 @@ export default function Info() {
       <h2 className="text-2xl font-bold">{trimName(dokName)}</h2>
       <div className="space-y-1">
         <p><strong>Bieter:</strong> {bieterName}</p>
-        <p><strong>Kategorie:</strong> Beispielkategorie.</p>
+        <label>
+          <strong>Kategorie:</strong>
+          <Input
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+          />
+        </label>
         <label>
           <strong>Aussteller:</strong>
           <Input value={issuer} onChange={(e) => setIssuer(e.target.value)} />
