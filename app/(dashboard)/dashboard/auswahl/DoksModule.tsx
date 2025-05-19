@@ -152,7 +152,12 @@ export default function DoksModule({
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {docs
-              .filter(f => f.path !== docsPath)
+              .filter(f => 
+                // Filter out the root path, JSON files, and directories
+                f.path !== docsPath && 
+                f.type !== "directory" && 
+                !f.name.toLowerCase().endsWith('.json')
+              )
               .map((f: FileTreeEntry) => (
                 <tr
                   key={f.path}
