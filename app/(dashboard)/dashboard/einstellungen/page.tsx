@@ -283,12 +283,23 @@ const markdownConversionConfig = {
 // Configuration for KI Einstellungen
 const kiEinstellungenConfig = {
   displayName: "KI Einstellungen",
-  fields: [], // Placeholder for future form fields
+  fields: [
+    {
+      id: "kiFramework" as const,
+      label: "KI Framework",
+      type: "select" as const,
+      options: [
+        { value: "uniinfer", label: "uniinfer" },
+        { value: "aisdk", label: "aisdk" },
+      ],
+      defaultValue: "uniinfer",
+    },
+  ],
 };
 
 // Konfiguration für Personendaten Anonymisierung
 const personDataConfig = {
-  displayName: "Personendaten",
+  displayName: "Anonymisierung",
   options: [
     { id: "glna", label: "glna" },
     { id: "glnb", label: "glnb" },
@@ -366,6 +377,29 @@ export default function GeneralPage() {
   const [isMdConvCardOpen, setIsMdConvCardOpen] = useState(false);
   const [isPersonCardOpen, setIsPersonCardOpen] = useState(false);
   const [isKiCardOpen, setIsKiCardOpen] = useState(false); // State for the new KI card
+
+  // New state for the selected KI Framework
+  const [selectedKiFramework, setSelectedKiFramework] = useState<string>("");
+
+  // Effect to initialize and update selectedKiFramework
+  useEffect(() => {
+    const frameworkField = kiEinstellungenConfig.fields.find(
+      (f) => f.id === "kiFramework"
+    ) as
+      | (FormField & {
+          type: "select";
+          options: { value: string; label: string }[];
+          defaultValue: string;
+        })
+      | undefined;
+    if (kiSettings?.kiFramework && typeof kiSettings.kiFramework === "string") {
+      setSelectedKiFramework(kiSettings.kiFramework);
+    } else if (frameworkField?.defaultValue) {
+      setSelectedKiFramework(frameworkField.defaultValue);
+    } else {
+      setSelectedKiFramework(""); // Default to empty if no value found
+    }
+  }, [kiSettings, kiEinstellungenConfig.fields]);
 
   const [infoSaving, setInfoSaving] = useState(false);
   const [websitesSaving, setWebsitesSaving] = useState(false);
@@ -997,7 +1031,10 @@ export default function GeneralPage() {
           <CardHeader className="flex items-center justify-between cursor-pointer">
             <CollapsibleTrigger asChild>
               <div className="flex items-center justify-between w-full">
-                <CardTitle>{personDataConfig.displayName}</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  {personDataConfig.displayName}
+                  <Sparkles className="h-5 w-5 text-black-400" />
+                </CardTitle>
                 <ChevronDown
                   className={`h-5 w-5 transition-transform ${
                     isPersonCardOpen ? "rotate-180" : ""
@@ -1219,7 +1256,7 @@ export default function GeneralPage() {
               <div className="flex items-center justify-between w-full">
                 <CardTitle className="flex items-center gap-2">
                   {kiEinstellungenConfig.displayName}
-                  <Sparkles className="h-5 w-5 text-orange-500" />
+                  <Sparkles className="h-5 w-5 text-orange-400" />
                 </CardTitle>
                 <ChevronDown
                   className={`h-5 w-5 transition-transform ${
@@ -1231,16 +1268,36 @@ export default function GeneralPage() {
           </CardHeader>
           <CollapsibleContent>
             <CardContent className="space-y-4 pt-0">
-              <p className="text-sm text-muted-foreground">
-                Einstellungen für KI-Funktionen.
-              </p>
               <form
                 className="space-y-4"
                 onSubmit={async (e) => {
                   e.preventDefault();
                   setKiSaving(true);
                   const formData = new FormData(e.currentTarget);
-                  const newKiSettings = Object.fromEntries(formData.entries()); // Adjust if complex data
+                  const kiFrameworkValue = formData.get(
+                    "kiFramework"
+                  ) as string;
+                  const newKiSettings: Record<string, any> = {
+                    kiFramework:
+                      kiFrameworkValue ||
+                      (
+                        kiEinstellungenConfig.fields.find(
+                          (f) => f.id === "kiFramework"
+                        ) as any
+                      )?.defaultValue,
+                  };
+
+                  kiEinstellungenConfig.fields.forEach((field) => {
+                    if (field.id !== "kiFramework") {
+                      const value = formData.get(field.id);
+                      if (value !== null) {
+                        newKiSettings[field.id] = value;
+                      } else if (field.defaultValue) {
+                        newKiSettings[field.id] = field.defaultValue;
+                      }
+                    }
+                  });
+
                   try {
                     await fetch("/api/settings", {
                       method: "POST",
@@ -1250,7 +1307,7 @@ export default function GeneralPage() {
                         value: newKiSettings,
                       }),
                     });
-                    if (mutateKiSettings) mutateKiSettings();
+                    mutateKiSettings();
                     toast.success("KI Einstellungen gespeichert", {
                       description:
                         "Die KI-Einstellungen wurden erfolgreich gespeichert.",
@@ -1267,13 +1324,46 @@ export default function GeneralPage() {
                     setKiSaving(false);
                   }
                 }}>
-                {/* Placeholder for form fields - to be added later */}
-                <p className="text-sm text-gray-500">
-                  Weitere Formularfelder werden hier in Kürze hinzugefügt.
-                </p>
+                {kiEinstellungenConfig.fields.map((field) => {
+                  if (field.type === "select" && field.id === "kiFramework") {
+                    const selectField = field as typeof field & {
+                      options: { value: string; label: string }[];
+                      defaultValue: string;
+                    };
+                    return (
+                      <div key={selectField.id} className="mb-6">
+                        <Label htmlFor={selectField.id} className="mb-3">
+                          {selectField.label}
+                        </Label>
+                        <Select
+                          name={selectField.id}
+                          value={selectedKiFramework}
+                          onValueChange={(value) =>
+                            setSelectedKiFramework(value)
+                          }>
+                          <SelectTrigger>
+                            <SelectValue
+                              placeholder={`Wähle ${selectField.label}`}
+                            />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {selectField.options.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    );
+                  }
+                  return null;
+                })}
                 <Button
                   type="submit"
-                  className="bg-orange-500 text-white"
+                  className="bg-orange-500 text-white hover:bg-orange-600"
                   disabled={kiSaving}>
                   {kiSaving ? (
                     <>
@@ -1281,7 +1371,7 @@ export default function GeneralPage() {
                       Wird gespeichert...
                     </>
                   ) : (
-                    "Speichern"
+                    "KI Einstellungen Speichern"
                   )}
                 </Button>
               </form>
