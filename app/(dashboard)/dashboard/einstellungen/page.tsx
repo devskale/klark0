@@ -294,6 +294,48 @@ const kiEinstellungenConfig = {
       ],
       defaultValue: "uniinfer",
     },
+    {
+      id: "baseUrl",
+      label: "Base URL",
+      type: "text",
+      placeholder: "https://api.example.com",
+      defaultValue: "",
+    },
+    {
+      id: "bearer",
+      label: "Bearer Token",
+      type: "password",
+      placeholder: "Ihr Bearer Token",
+      defaultValue: "",
+    },
+    {
+      id: "encryptionKey",
+      label: "Encryption Key",
+      type: "password",
+      placeholder: "Ihr Encryption Key",
+      defaultValue: "",
+    },
+    {
+      id: "workModel",
+      label: "Work Model",
+      type: "text",
+      placeholder: "Provider Model",
+      defaultValue: "",
+    },
+    {
+      id: "elaborateModel",
+      label: "Elaborate Model",
+      type: "text",
+      placeholder: "Provider Model",
+      defaultValue: "",
+    },
+    {
+      id: "classifierModel",
+      label: "Classifier Model",
+      type: "text",
+      placeholder: "Provider Model",
+      defaultValue: "",
+    },
   ],
 };
 
@@ -1356,6 +1398,21 @@ export default function GeneralPage() {
                             ))}
                           </SelectContent>
                         </Select>
+                      </div>
+                    );
+                  } else if (field.type === "text" || field.type === "password") {
+                    return (
+                      <div key={field.id} className="mb-6">
+                        <Label htmlFor={field.id} className="mb-3">
+                          {field.label}
+                        </Label>
+                        <Input
+                          id={field.id}
+                          name={field.id}
+                          type={field.type}
+                          placeholder={field.placeholder}
+                          defaultValue={kiSettings?.[field.id] || field.defaultValue}
+                        />
                       </div>
                     );
                   }
