@@ -110,14 +110,11 @@ export default function Info() {
   const [metadataList, setMetadataList] = React.useState("");
   const [category, setCategory] = React.useState("");
 
-  // populate form when metadata loads
+  // populate form when metadata (.meta.json) loads
   React.useEffect(() => {
     if (!docMeta) return;
     if (docMeta.aussteller != null) {
       setIssuer(docMeta.aussteller);
-    }
-    if (docMeta.name != null) {
-      setTitle(docMeta.name);
     }
     if (docMeta.beschreibung != null) {
       setDescription(docMeta.beschreibung);
@@ -127,12 +124,15 @@ export default function Info() {
     }
   }, [docMeta]);
 
-  // populate category from index JSON
+  // populate category and name from index JSON
   React.useEffect(() => {
     if (idxJson?.files) {
       const entry = idxJson.files.find((f: any) => f.name === fileBaseName);
       if (entry?.meta?.kategorie != null) {
         setCategory(entry.meta.kategorie);
+      }
+      if (entry?.meta?.name != null) {
+        setTitle(entry.meta.name);
       }
     }
   }, [idxJson, fileBaseName]);
@@ -142,7 +142,6 @@ export default function Info() {
     if (!fsSettings || !metadataPath) return;
     const metaObj = {
       aussteller: issuer || null,
-      name: title || null,
       beschreibung: description || null,
       metadaten: metadataList
         .split(",")
