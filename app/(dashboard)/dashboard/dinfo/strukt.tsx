@@ -82,9 +82,11 @@ export default function Strukt() {
           throw new Error(`File entry not found in index for: ${fileBaseName}`);
         }
         
-        // Get the parser type from the index
-        const parserType = fileEntry.parserDefault || "docling";
-        debugLog.push(`Parser type from index: ${parserType}`);
+        // Get the parser type and available parsers from the index
+        const parserDefault = fileEntry.parserDefault || "docling";
+        const parserDet = fileEntry.parserDet || [parserDefault];
+        debugLog.push(`Default parser type: ${parserDefault}`);
+        debugLog.push(`Available parsers: ${parserDet.join(', ')}`);
         
         // Remove extension from filename to get basename
         const baseName = fileBaseName.replace(/\.[^/.]+$/, "");
@@ -93,55 +95,92 @@ export default function Strukt() {
         // Track available parser variants
         const variants: Array<{key: string, label: string, path: string}> = [];
         
-        // Determine markdown path based on parser type
-        let markdownPath;
-        if (parserType === 'marker') {
-          markdownPath = `${parentDir}md/${baseName}/${baseName}.marker.md`;
-          debugLog.push(`Looking for marker file at: ${markdownPath}`);
-          
-          variants.push({
-            key: `${baseName}.marker`,
-            label: "Marker",
-            path: markdownPath
-          });
-        } else {
-          // Check if basename already ends with _red to avoid duplication
-          const baseNameForPath = baseName.endsWith('_red') 
-            ? baseName 
-            : `${baseName}_red`;
-          
-          markdownPath = `${parentDir}md/${baseNameForPath}.${parserType}.md`;
-          debugLog.push(`Looking for regular markdown file at: ${markdownPath}`);
-          
-          variants.push({
-            key: `${baseNameForPath}.${parserType}`,
-            label: parserType,
-            path: markdownPath
-          });
-          
-          // Add alternative path without _red suffix as another variant
-          if (baseName.endsWith('_red')) {
-            const altVariantPath = `${parentDir}md/${baseName}.${parserType}.md`;
+        // Create variants for all parser types
+        for (const parser of parserDet) {
+          if (parser === 'marker') {
+            // Marker type has a special directory structure
+            const markerPath = `${parentDir}md/${baseName}/${baseName}.marker.md`;
+            debugLog.push(`Adding marker file at: ${markerPath}`);
+            
             variants.push({
-              key: `${baseName}.${parserType}`,
-              label: `${parserType} (alt)`,
-              path: altVariantPath
+              key: `${baseName}.marker`,
+              label: "Marker",
+              path: markerPath
             });
           } else {
-            const altVariantPath = `${parentDir}md/${baseName}.${parserType}.md`;
-            variants.push({
-              key: `${baseName}.${parserType}`,
-              label: `${parserType} (ohne _red)`,
-              path: altVariantPath
+            // Standard parsers - try both naming conventions
+            const paths = [
+              `${parentDir}md/${baseName}.${parser}.md`,
+              `${parentDir}md/${baseName}_red.${parser}.md`
+            ];
+            
+            paths.forEach((path, index) => {
+              const isDefault = parser === parserDefault && index === 0;
+              const label = isDefault 
+                ? parser 
+                : `${parser}${index === 1 ? ' (Red)' : ''}`;
+                
+              variants.push({
+                key: `${parser}-${index}`,
+                label: label,
+                path: path
+              });
+              
+              debugLog.push(`Adding ${label} at: ${path}`);
             });
           }
+        }
+        
+        // Check for any additional parser types in the md directory
+        try {
+          const params = new URLSearchParams({
+            type: fsSettings.type || "webdav",
+            path: `${parentDir}md/`,
+            host: fsSettings.host || "",
+            username: fsSettings.username || "",
+            password: fsSettings.password || "",
+          });
+          
+          const dirResponse = await fetch(`/api/fs?${params.toString()}`);
+          
+          if (dirResponse.ok) {
+            const dirListing = await dirResponse.json();
+            
+            // Look for files that match our basename but might have different parser types
+            const mdFilePattern = new RegExp(`^${baseName}(?:_red)?\\.([a-zA-Z0-9]+)\\.md$`);
+            
+            for (const file of dirListing) {
+              if (file.type !== 'file') continue;
+              
+              const match = file.name.match(mdFilePattern);
+              if (!match) continue;
+              
+              const parserType = match[1].toLowerCase();
+              
+              // Skip if we already have this parser type
+              if (parserDet.includes(parserType)) continue;
+              
+              // Add this discovered parser variant
+              variants.push({
+                key: `discovered-${parserType}`,
+                label: `${parserType} (Entdeckt)`,
+                path: `${parentDir}md/${file.name}`
+              });
+              
+              debugLog.push(`Discovered additional parser: ${parserType} at ${file.name}`);
+            }
+          }
+        } catch (dirError) {
+          debugLog.push(`Error scanning md directory: ${dirError instanceof Error ? dirError.message : String(dirError)}`);
         }
         
         setAvailableVariants(variants);
         
         // If we have a current selection, keep it, otherwise use the first variant
         if (!selectedVariant && variants.length > 0) {
-          setSelectedVariant(variants[0].label);
+          // Prefer the default parser if available
+          const defaultVariant = variants.find(v => v.label === parserDefault);
+          setSelectedVariant(defaultVariant ? defaultVariant.label : variants[0].label);
         }
         
         // Find the selected variant path
@@ -188,7 +227,7 @@ export default function Strukt() {
         } catch (fetchError) {
           debugLog.push(`Error fetching content: ${fetchError instanceof Error ? fetchError.message : String(fetchError)}`);
           
-          // Try alternative variants
+          // Try each variant until one works
           let foundContent = false;
           
           for (const variant of variants) {
@@ -322,7 +361,7 @@ export default function Strukt() {
             onValueChange={handleVariantChange}
             className="w-full"
           >
-            <TabsList className="mb-2">
+            <TabsList className="mb-2 flex flex-wrap">
               {availableVariants.map(variant => (
                 <TabsTrigger key={variant.key} value={variant.label}>
                   {variant.label}
