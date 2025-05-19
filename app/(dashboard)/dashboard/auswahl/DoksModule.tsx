@@ -47,12 +47,50 @@ export default function DoksModule({
   );
 
   const [selectedDocs, setSelectedDocs] = useState<string[]>([]);
+  const [metadataMap, setMetadataMap] = useState<Record<string, any>>({});
 
   // clear selection on project/bieter change
   useEffect(() => {
     setSelectedDocs([]);
     setSelectedDok(null);
   }, [projectPath, bieterPath, setSelectedDok]);
+
+  // clear and fetch index metadata when docs or settings change
+  useEffect(() => {
+    if (docs && webdavSettings && docsPath) {
+      const fetchIndexMeta = async () => {
+        // build index side-car path
+        const indexSidecar = `${docsPath.replace(/\/$/, "")}/.pdf2md_index.json`;
+        const params = new URLSearchParams({
+          path: indexSidecar,
+          type: "webdav",
+          host: webdavSettings.host,
+          username: webdavSettings.username,
+          password: webdavSettings.password,
+        });
+        const res = await fetch(`/api/fs/metadata?${params.toString()}`);
+        if (!res.ok) {
+          setMetadataMap({});
+          return;
+        }
+        const idx = await res.json();
+        // map meta by file path
+        const map: Record<string, any> = {};
+        docs
+          .filter(f => f.type === "file")
+          .forEach(f => {
+            const entry = (idx.files || []).find((e: any) => e.name === f.name);
+            if (entry?.meta) {
+              map[f.path] = entry.meta;
+            }
+          });
+        setMetadataMap(map);
+      };
+      fetchIndexMeta();
+    } else {
+      setMetadataMap({});
+    }
+  }, [docs, webdavSettings, docsPath]);
 
   const toggleSelect = (path: string) => {
     setSelectedDocs(prev =>
@@ -103,6 +141,9 @@ export default function DoksModule({
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
               </th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Kategorie
+              </th>
               <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Aktionen
               </th>
@@ -124,7 +165,7 @@ export default function DoksModule({
                       {f.type === "directory"
                         ? <Folder className="mr-2 h-4 w-4" />
                         : getFileIcon(f.name)}
-                      {f.name}
+                      {metadataMap[f.path]?.name ?? f.name}
                       {f.type === 'file' && f.hasParser && (
                         <span className="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-sky-100 text-sky-800">
                           struct
@@ -134,6 +175,9 @@ export default function DoksModule({
                   </td>
                   <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
                     {f.parserStatus || "-"}
+                  </td>
+                  <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
+                    {metadataMap[f.path]?.kategorie ?? "-"}
                   </td>
                   <td className="px-4 py-2 whitespace-nowrap text-right">
                     <DropdownMenu>
