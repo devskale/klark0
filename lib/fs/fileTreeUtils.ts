@@ -4,7 +4,11 @@ export const PDF2MD_INDEX_FILE_NAME = ".pdf2md_index.json";
 
 export type FileSystemSettings = Record<string, string | undefined>;
 
-export type FileTreeEntry = FileEntry & { hasParser?: boolean; parserStatus?: string };
+export type FileTreeEntry = FileEntry & {
+  hasParser?: boolean;
+  parserStatus?: string;
+  parserDet?: string[];
+};
 
 export interface FileTreeFetcherOptions {
   noshowList?: string[];
@@ -39,7 +43,10 @@ export const fileTreeFetcher = async ([path, settings, options]: [
   }
   const dirData = await response.json();
 
-  let parserInfoMap: Record<string, { status: string; hasActualParser: boolean }> = {};
+  let parserInfoMap: Record<
+    string,
+    { status: string; hasActualParser: boolean; det: string[] }
+  > = {};
   const indexFilePath = normalizePath(path) + PDF2MD_INDEX_FILE_NAME;
 
   const indexFileQuery = new URLSearchParams({
@@ -57,12 +64,17 @@ export const fileTreeFetcher = async ([path, settings, options]: [
       if (indexJson && Array.isArray(indexJson.files)) {
         for (const fileInfo of indexJson.files) {
           if (fileInfo.name && fileInfo.parsers) {
+            const detList = Array.isArray(fileInfo.parsers.det)
+              ? fileInfo.parsers.det
+              : [];
             const hasActualParser =
-              (Array.isArray(fileInfo.parsers.det) && fileInfo.parsers.det.length > 0) ||
-              (typeof fileInfo.parsers.default === "string" && fileInfo.parsers.default !== "");
+              detList.length > 0 ||
+              (typeof fileInfo.parsers.default === "string" &&
+                fileInfo.parsers.default !== "");
             parserInfoMap[fileInfo.name] = {
-              hasActualParser: hasActualParser,
+              hasActualParser,
               status: fileInfo.parsers.status || "",
+              det: detList,
             };
           }
         }
@@ -84,11 +96,13 @@ export const fileTreeFetcher = async ([path, settings, options]: [
 
     const entriesWithData = rawEntries
       .map((entry): FileTreeEntry => {
-        const pInfo = entry.type === "file" ? parserInfoMap[entry.name] : undefined;
+        const pInfo =
+          entry.type === "file" ? parserInfoMap[entry.name] : undefined;
         return {
           ...entry,
           hasParser: pInfo?.hasActualParser || false,
           parserStatus: pInfo?.status || "",
+          parserDet: pInfo?.det || [],
         };
       })
       .filter(
