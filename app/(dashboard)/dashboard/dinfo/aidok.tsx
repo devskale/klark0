@@ -720,7 +720,7 @@ export default function Aidok() {
             {aiResponse && (
               <div className="mt-4 p-4 border rounded-md bg-muted/30">
                 <h3 className="text-lg font-semibold mb-2">Analyseergebnis:</h3>
-                <ScrollArea className="h-[300px] w-full">
+                <ScrollArea className="max-h-[40vh] w-full">
                   <div className="prose prose-sm max-w-none">
                     <ReactMarkdown
                       remarkPlugins={[remarkGfm]}
