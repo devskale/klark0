@@ -10,6 +10,8 @@ export const AI_QUERIES = {
     "Geben Sie eine umfassende Analyse des folgenden Dokuments einschließlich Zusammenfassung, Kernpunkten, Dokumenttyp und Metadaten auf Deutsch an:",
   ASSISTANT:
     "Du bist ein hilfreicher Assistent. Gib eine kurze und prägnante deutsche Antwort auf die folgende Frage oder Anweisung. :",
+  SIMPLE_ANALYSIS:
+    "Führe eine einfache Analyse des folgenden Textes durch und gib die wichtigsten Erkenntnisse auf Deutsch wieder:",
   DOKUMENTTYP: `### Prompt:
 
 Du bist ein professioneller Dokumenten-Analyst für Vergabeverfahren und öffentliche Ausschreibungen.  

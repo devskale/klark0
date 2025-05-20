@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useProject } from "@/context/ProjectContext";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -14,7 +14,7 @@ import {
 } from "@/lib/fs/fileTreeUtils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { AlertCircle, Loader2, Eye, Check } from "lucide-react";
+import { AlertCircle, Loader2, Eye, Check, Wand2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +25,14 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
+import { AI_QUERIES } from "@/app/api/ai/config";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function Aidok() {
   const { selectedProject, selectedDok } = useProject();
@@ -32,9 +40,15 @@ export default function Aidok() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<string[]>([]);
-  const [availableVariants, setAvailableVariants] = useState<Array<{key: string, label: string, path: string}>>([]);
+  const [availableVariants, setAvailableVariants] = useState<Array<{ key: string, label: string, path: string }>>([]);
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
   const [showPreviewModal, setShowPreviewModal] = useState<boolean>(false);
+
+  // AI Interaction State
+  const [selectedAiQuery, setSelectedAiQuery] = useState<string>("");
+  const [aiResponse, setAiResponse] = useState<string>("");
+  const [isAiLoading, setIsAiLoading] = useState<boolean>(false);
+  const [aiError, setAiError] = useState<string | null>(null);
 
   const { data: fsSettings } = useSWR<FileSystemSettings>(
     "/api/settings?key=fileSystem",
@@ -84,7 +98,6 @@ export default function Aidok() {
 
   useEffect(() => {
     const loadMarkdown = async () => {
-      // --- new: immediately clear on "None" tab ---
       if (selectedVariant === "") {
         setLoading(false);
         setError(null);
@@ -101,29 +114,29 @@ export default function Aidok() {
       try {
         setLoading(true);
         setDebugInfo([]);
-        
+
         const fileBaseName = selectedDok
           ? decodeURIComponent(selectedDok.split("/").pop()!)
           : "";
-        
+
         const debugLog: string[] = [];
         debugLog.push(`Looking for markdown file for: ${fileBaseName}`);
-        
+
         const fileEntry = indexData.files?.find((f: any) => f.name === fileBaseName);
         if (!fileEntry) {
           throw new Error(`File entry not found in index for: ${fileBaseName}`);
         }
-        
+
         const parserDefault = fileEntry.parsers?.default || "docling";
         const parserDet = fileEntry.parsers?.det || [parserDefault];
         debugLog.push(`Default parser type: ${parserDefault}`);
         debugLog.push(`Available parsers: ${parserDet.join(', ')}`);
-        
+
         const baseName = fileBaseName.replace(/\.[^/.]+$/, "");
         debugLog.push(`Base name without extension: ${baseName}`);
-        
-        const variants: Array<{key: string, label: string, path: string}> = [];
-        
+
+        const variants: Array<{ key: string, label: string, path: string }> = [];
+
         debugLog.push(`MARKER DEBUG: Checking for marker files regardless of parser list`);
         try {
           const mdBaseParams = new URLSearchParams({
@@ -133,25 +146,25 @@ export default function Aidok() {
             username: fsSettings.username || "",
             password: fsSettings.password || "",
           });
-          
+
           const mdBaseResponse = await fetch(`/api/fs?${mdBaseParams.toString()}`);
           if (mdBaseResponse.ok) {
             const baseContents = await mdBaseResponse.json();
             debugLog.push(`MARKER DEBUG: Found subdirectory md/${baseName}/ with ${baseContents.length} items`);
-            
-            const markerFile = baseContents.find((item: any) => 
+
+            const markerFile = baseContents.find((item: any) =>
               item.type === 'file' && item.name.endsWith('.marker.md'));
-              
+
             if (markerFile) {
               debugLog.push(`MARKER DEBUG: Found marker file: ${markerFile.name}`);
-              
+
               const markerPath = `${parentDir}md/${baseName}/${markerFile.name}`;
               variants.push({
                 key: `${baseName}.marker.found`,
                 label: "Marker",
                 path: markerPath
               });
-              
+
               if (!parserDet.includes('marker')) {
                 debugLog.push(`MARKER DEBUG: Adding marker to parser list`);
                 parserDet.push('marker');
@@ -165,12 +178,12 @@ export default function Aidok() {
         } catch (markerCheckError) {
           debugLog.push(`MARKER DEBUG: Error checking for marker files: ${markerCheckError instanceof Error ? markerCheckError.message : String(markerCheckError)}`);
         }
-        
+
         for (const parser of parserDet) {
           if (parser === 'marker' && variants.some(v => v.label === "Marker")) {
             continue;
           }
-          
+
           if (parser === 'marker') {
             const markerPath = `${parentDir}md/${baseName}/${baseName}.marker.md`;
             debugLog.push(`Adding marker file at: ${markerPath}`);
@@ -179,35 +192,35 @@ export default function Aidok() {
             debugLog.push(`VERBOSE: Base name: ${baseName}`);
             debugLog.push(`VERBOSE: Full path constructed: ${markerPath}`);
             debugLog.push(`VERBOSE: Expected directory structure: parentDir/md/baseName/baseName.marker.md`);
-            
+
             const altMarkerPaths = [
               `${parentDir}${baseName}/md/${baseName}/${baseName}.marker.md`,
               `${parentDir}${baseName}/md/${baseName}.marker.md`,
               `${parentDir}md/${baseName}.marker.md`
             ];
-            
+
             debugLog.push(`VERBOSE: Will also try alternative paths:`);
             altMarkerPaths.forEach((path, idx) => {
-              debugLog.push(`VERBOSE: Alt path ${idx+1}: ${path}`);
+              debugLog.push(`VERBOSE: Alt path ${idx + 1}: ${path}`);
             });
-            
+
             variants.push({
               key: `${baseName}.marker`,
               label: "Marker",
               path: markerPath
             });
-            
+
             altMarkerPaths.forEach((path, idx) => {
               variants.push({
-                key: `${baseName}.marker.alt${idx+1}`,
-                label: `Marker (Alt ${idx+1})`,
+                key: `${baseName}.marker.alt${idx + 1}`,
+                label: `Marker (Alt ${idx + 1})`,
                 path: path
               });
             });
           } else {
             const path = `${parentDir}md/${baseName}.${parser}.md`;
             debugLog.push(`Adding ${parser} at: ${path}`);
-            
+
             variants.push({
               key: `${parser}-0`,
               label: parser,
@@ -215,7 +228,7 @@ export default function Aidok() {
             });
           }
         }
-        
+
         try {
           const params = new URLSearchParams({
             type: fsSettings.type || "webdav",
@@ -224,64 +237,64 @@ export default function Aidok() {
             username: fsSettings.username || "",
             password: fsSettings.password || "",
           });
-          
+
           const dirResponse = await fetch(`/api/fs?${params.toString()}`);
-          
+
           if (dirResponse.ok) {
             const dirListing = await dirResponse.json();
-            
+
             const mdFilePattern = new RegExp(`^${baseName}(?:_red)?\\.([a-zA-Z0-9]+)\\.md$`);
-            
+
             for (const file of dirListing) {
               if (file.type !== 'file') continue;
-              
+
               const match = file.name.match(mdFilePattern);
               if (!match) continue;
-              
+
               const parserType = match[1].toLowerCase();
-              
+
               if (parserDet.includes(parserType)) continue;
-              
+
               variants.push({
                 key: `discovered-${parserType}`,
                 label: `${parserType} (Entdeckt)`,
                 path: `${parentDir}md/${file.name}`
               });
-              
+
               debugLog.push(`Discovered additional parser: ${parserType} at ${file.name}`);
             }
           }
         } catch (dirError) {
           debugLog.push(`Error scanning md directory: ${dirError instanceof Error ? dirError.message : String(dirError)}`);
         }
-        
+
         setAvailableVariants(variants);
-        
+
         debugLog.push(`DEBUG: Available variants (${variants.length}):`);
         variants.forEach((v, idx) => {
-          debugLog.push(`DEBUG: Variant ${idx+1}: ${v.label} - ${v.path}`);
+          debugLog.push(`DEBUG: Variant ${idx + 1}: ${v.label} - ${v.path}`);
         });
-        
+
         if (!selectedVariant && variants.length > 0) {
           const defaultVariant = variants.find(v => v.label.toLowerCase() === parserDefault);
           setSelectedVariant(defaultVariant ? defaultVariant.label : variants[0].label);
         }
-        
+
         const variantToLoad = selectedVariant !== null
           ? variants.find(v => v.label === selectedVariant)
           : variants[0];
-        
+
         if (!variantToLoad) {
           throw new Error("Keine gültigen Markdown-Varianten gefunden");
         }
-        
+
         debugLog.push(`DEBUG: Selected variant to load: ${variantToLoad.label} at ${variantToLoad.path}`);
-        
+
         if (fileEntry.parsers?.det && Array.isArray(fileEntry.parsers.det)) {
           debugLog.push(`DEBUG: Parser types in index: ${fileEntry.parsers.det.join(', ')}`);
           debugLog.push(`DEBUG: Marker in index: ${fileEntry.parsers.det.includes('marker')}`);
         }
-        
+
         try {
           const response = await fetch("/api/fs/read", {
             method: "POST",
@@ -296,15 +309,15 @@ export default function Aidok() {
               password: fsSettings.password || "",
             }),
           });
-          
+
           if (!response.ok) {
             debugLog.push(`Fetch failed with status: ${response.status}`);
             debugLog.push(`VERBOSE: Failed to load path: ${variantToLoad.path}`);
-            
+
             if (variantToLoad.label === "Marker" || variantToLoad.label.includes("Marker (Alt")) {
               debugLog.push(`MARKER DEBUG: Failed to load marker file`);
               debugLog.push(`MARKER DEBUG: Checking if marker is in parserDet array: ${parserDet.includes('marker')}`);
-              
+
               try {
                 const mdDirParams = new URLSearchParams({
                   type: fsSettings.type || "webdav",
@@ -313,18 +326,18 @@ export default function Aidok() {
                   username: fsSettings.username || "",
                   password: fsSettings.password || "",
                 });
-                
+
                 const mdDirResponse = await fetch(`/api/fs?${mdDirParams.toString()}`);
                 if (mdDirResponse.ok) {
                   const mdDirContents = await mdDirResponse.json();
                   debugLog.push(`MARKER DEBUG: md/ directory exists and contains ${mdDirContents.length} items`);
-                  
-                  const baseNameDir = mdDirContents.find((item: any) => 
+
+                  const baseNameDir = mdDirContents.find((item: any) =>
                     item.type === 'directory' && item.name === baseName);
-                    
+
                   if (baseNameDir) {
                     debugLog.push(`MARKER DEBUG: Found directory ${baseName}/ inside md/`);
-                    
+
                     const baseNameDirParams = new URLSearchParams({
                       type: fsSettings.type || "webdav",
                       path: `${parentDir}md/${baseName}/`,
@@ -332,18 +345,18 @@ export default function Aidok() {
                       username: fsSettings.username || "",
                       password: fsSettings.password || "",
                     });
-                    
+
                     const baseNameDirResponse = await fetch(`/api/fs?${baseNameDirParams.toString()}`);
                     if (baseNameDirResponse.ok) {
                       const baseNameDirContents = await baseNameDirResponse.json();
                       debugLog.push(`MARKER DEBUG: ${baseName}/ contains ${baseNameDirContents.length} items`);
-                      
-                      const markerFile = baseNameDirContents.find((item: any) => 
+
+                      const markerFile = baseNameDirContents.find((item: any) =>
                         item.name.endsWith('.marker.md'));
-                        
+
                       if (markerFile) {
                         debugLog.push(`MARKER DEBUG: Found marker file: ${markerFile.name} - adding correct path`);
-                        
+
                         const correctPath = `${parentDir}md/${baseName}/${markerFile.name}`;
                         variants.push({
                           key: `${baseName}.marker.correct`,
@@ -366,12 +379,12 @@ export default function Aidok() {
                 debugLog.push(`MARKER DEBUG: Error checking directories: ${dirCheckError instanceof Error ? dirCheckError.message : String(dirCheckError)}`);
               }
             }
-            
+
             throw new Error(`Fehler beim Laden der Markdown-Datei: ${response.statusText}`);
           }
-          
+
           const data = await response.json();
-          
+
           if (data.content) {
             setMarkdown(data.content);
             debugLog.push(`Successfully loaded markdown content (${data.content.length} chars)`);
@@ -380,14 +393,14 @@ export default function Aidok() {
           }
         } catch (fetchError) {
           debugLog.push(`Error fetching content: ${fetchError instanceof Error ? fetchError.message : String(fetchError)}`);
-          
+
           let foundContent = false;
-          
+
           for (const variant of variants) {
             if (variant.path === variantToLoad.path) continue;
-            
+
             debugLog.push(`Trying alternative path: ${variant.path}`);
-            
+
             try {
               const altResponse = await fetch("/api/fs/read", {
                 method: "POST",
@@ -402,14 +415,14 @@ export default function Aidok() {
                   password: fsSettings.password || "",
                 }),
               });
-              
+
               if (!altResponse.ok) {
                 debugLog.push(`Alternative fetch failed with status: ${altResponse.status}`);
                 continue;
               }
-              
+
               const altData = await altResponse.json();
-              
+
               if (altData.content) {
                 setSelectedVariant(variant.label);
                 setMarkdown(altData.content);
@@ -421,12 +434,12 @@ export default function Aidok() {
               debugLog.push(`Error with alternative: ${altError instanceof Error ? altError.message : String(altError)}`);
             }
           }
-          
+
           if (!foundContent) {
             throw new Error(`Keine Markdown-Inhalte für ${baseName} gefunden`);
           }
         }
-        
+
         setDebugInfo(debugLog);
         setError(null);
       } catch (err) {
@@ -470,6 +483,56 @@ export default function Aidok() {
     mutateIndex();
   };
 
+  const handleAiQuerySubmit = async () => {
+    if (!selectedAiQuery || !markdown) {
+      setAiError("Bitte wählen Sie eine Analyseart aus und stellen Sie sicher, dass Strukturdaten geladen sind.");
+      return;
+    }
+
+    setIsAiLoading(true);
+    setAiResponse("");
+    setAiError(null);
+
+    try {
+      const response = await fetch("/api/ai/gem/stream", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          queryType: selectedAiQuery,
+          context: markdown,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `API-Fehler: ${response.statusText}`);
+      }
+
+      if (response.body) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let result = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value, { stream: true });
+          result += chunk;
+          setAiResponse(prev => prev + chunk);
+        }
+      } else {
+        throw new Error("Antwort des Servers enthält keinen Body.");
+      }
+    } catch (err: any) {
+      console.error("AI query error:", err);
+      setAiError(err.message || "Ein unbekannter Fehler ist aufgetreten.");
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
+
   const markdownComponents = {
     code({ node, inline, className, children, ...props }: any) {
       const match = /language-(\w+)/.exec(className || "");
@@ -497,9 +560,9 @@ export default function Aidok() {
     },
     th({ node, ...props }: any) {
       return (
-        <th 
-          className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50" 
-          {...props} 
+        <th
+          className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50"
+          {...props}
         />
       );
     },
@@ -522,10 +585,9 @@ export default function Aidok() {
     },
   };
 
-  // --- new: compute token estimate (4 chars ≈ 1 token)
   const tokenEstimate = markdown ? Math.ceil(markdown.length / 4) : 0;
 
-  if (loading) {
+  if (loading && !selectedVariant) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
@@ -536,7 +598,6 @@ export default function Aidok() {
 
   return (
     <div className="space-y-4 p-2">
-      {/* show estimate when markdown exists */}
       <h2 className="text-2xl font-bold mb-2">
         Strukturübersicht
         {markdown && (
@@ -545,7 +606,7 @@ export default function Aidok() {
           </span>
         )}
       </h2>
-      
+
       {error && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
@@ -553,16 +614,15 @@ export default function Aidok() {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-      
+
       {availableVariants.length > 0 && (
         <div className="mb-2 flex items-center justify-between flex-wrap">
-          <Tabs 
-            value={selectedVariant !== null ? selectedVariant : availableVariants[0]?.label} 
+          <Tabs
+            value={selectedVariant !== null ? selectedVariant : availableVariants[0]?.label}
             onValueChange={handleVariantChange}
             className="flex-1 min-w-[200px]"
           >
             <TabsList className="flex flex-wrap">
-              {/* --- new: None tab --- */}
               <TabsTrigger key="none" value="">
                 None
               </TabsTrigger>
@@ -580,7 +640,6 @@ export default function Aidok() {
             {selectedVariant && (
               <Button onClick={handleSaveDefaultParser} className="whitespace-nowrap">
                 <Check className="h-4 w-4 mr-2" />
-
               </Button>
             )}
             {markdown && selectedVariant && (
@@ -596,8 +655,8 @@ export default function Aidok() {
                   </DialogHeader>
                   <ScrollArea className="flex-grow rounded-md border">
                     <div className="p-6 prose prose-sm max-w-none">
-                      <ReactMarkdown 
-                        remarkPlugins={[remarkGfm]} 
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
                         components={markdownComponents}
                       >
                         {markdown}
@@ -616,12 +675,67 @@ export default function Aidok() {
         </div>
       )}
 
-      {!loading && availableVariants.length === 0 && !error && (
-         <div className="p-8 text-center text-gray-500 border border-dashed rounded-md">
-          <p>Keine Strukturdaten-Varianten für dieses Dokument gefunden.</p>
+      {!loading && availableVariants.length === 0 && !error && markdown === "" && (
+        <div className="p-8 text-center text-gray-500 border border-dashed rounded-md">
+          <p>Keine Strukturdaten-Varianten für dieses Dokument gefunden oder ausgewählt.</p>
         </div>
       )}
-      
+
+      {markdown && selectedVariant && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Wand2 className="h-5 w-5 mr-2" />
+              KI-Analyse der Strukturdaten
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Select onValueChange={setSelectedAiQuery} value={selectedAiQuery}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Analyseart auswählen..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(AI_QUERIES).map(([key, value]) => (
+                    <SelectItem key={key} value={key}>
+                      {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button onClick={handleAiQuerySubmit} disabled={isAiLoading || !selectedAiQuery}>
+              {isAiLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Analyse starten
+            </Button>
+
+            {aiError && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Analysefehler</AlertTitle>
+                <AlertDescription>{aiError}</AlertDescription>
+              </Alert>
+            )}
+
+            {aiResponse && (
+              <div className="mt-4 p-4 border rounded-md bg-muted/30">
+                <h3 className="text-lg font-semibold mb-2">Analyseergebnis:</h3>
+                <ScrollArea className="h-[300px] w-full">
+                  <div className="prose prose-sm max-w-none">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={markdownComponents}
+                    >
+                      {aiResponse}
+                    </ReactMarkdown>
+                  </div>
+                </ScrollArea>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {debugInfo.length > 0 && (
         <details className="mt-8 border border-gray-200 rounded-md overflow-hidden">
           <summary className="bg-gray-50 px-4 py-2 cursor-pointer text-sm font-medium">
