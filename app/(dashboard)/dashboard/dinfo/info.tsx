@@ -190,16 +190,16 @@ export default function Info() {
   };
 
   return (
-    <div className="space-y-4 p-4 bg-white rounded-md shadow">
+    <div className="space-y-3 p-4 bg-white rounded-md shadow">
       <h2 className="text-2xl font-bold">{trimName(dokName)}</h2>
-      <div className="space-y-1">
-        <div className="flex items-start py-1">
-          <strong className="mr-2 py-2 whitespace-nowrap shrink-0">Projekt:</strong>
-          <span className="py-2 px-3 min-h-10 w-full flex items-center">{projectName}</span>
+      <div className="space-y-0.5">
+        <div className="flex items-start">
+          <strong className="mr-2 py-1.5 whitespace-nowrap shrink-0">Projekt:</strong>
+          <span className="py-1.5 px-3 min-h-[36px] w-full flex items-center">{projectName}</span>
         </div>
-        <div className="flex items-start py-1">
-          <strong className="mr-2 py-2 whitespace-nowrap shrink-0">Bieter:</strong>
-          <span className="py-2 px-3 min-h-10 w-full flex items-center">{bieterName}</span>
+        <div className="flex items-start">
+          <strong className="mr-2 py-1.5 whitespace-nowrap shrink-0">Bieter:</strong>
+          <span className="py-1.5 px-3 min-h-[36px] w-full flex items-center">{bieterName}</span>
         </div>
         
         <EditableText
@@ -226,12 +226,12 @@ export default function Info() {
           onChange={setDescription}
           as="textarea"
           placeholder="Beschreibung hinzufügen"
-          inputClassName="min-h-[80px]"
+          inputClassName="min-h-[70px]"
         />
         
-        <div className="flex items-start py-1">
-          <strong className="mr-2 py-2 whitespace-nowrap shrink-0">Strukt:</strong>
-          <span className="py-2 px-3 min-h-10 w-full flex items-center">
+        <div className="flex items-start">
+          <strong className="mr-2 py-1.5 whitespace-nowrap shrink-0">Strukt:</strong>
+          <span className="py-1.5 px-3 min-h-[36px] w-full flex items-center">
             {parserDetList.length > 0 ? (
               parserDetList.map((name, i) => (
                 <span key={name}>
@@ -247,9 +247,9 @@ export default function Info() {
           </span>
         </div>
         
-        <div className="flex items-start py-1">
-          <strong className="mr-2 py-2 whitespace-nowrap shrink-0">Dok ID:</strong>
-          <span className="py-2 px-3 min-h-10 w-full break-all flex items-center">{dokPathDecoded}</span>
+        <div className="flex items-start">
+          <strong className="mr-2 py-1.5 whitespace-nowrap shrink-0">Dok ID:</strong>
+          <span className="py-1.5 px-3 min-h-[36px] w-full break-all flex items-center">{dokPathDecoded}</span>
         </div>
 
         <EditableText
@@ -258,7 +258,7 @@ export default function Info() {
           onChange={setMetadataList}
           as="textarea"
           placeholder="Einträge kommasepariert (z.B. Tag1, Tag2)"
-          inputClassName="min-h-[80px]"
+          inputClassName="min-h-[70px]"
         />
       </div>
       <div className="flex justify-end gap-4 p-4 border-t">
