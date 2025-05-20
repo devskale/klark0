@@ -522,6 +522,9 @@ export default function Aidok() {
     },
   };
 
+  // --- new: compute token estimate (4 chars ≈ 1 token)
+  const tokenEstimate = markdown ? Math.ceil(markdown.length / 4) : 0;
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -533,7 +536,15 @@ export default function Aidok() {
 
   return (
     <div className="space-y-4 p-2">
-      <h2 className="text-2xl font-bold mb-2">Strukturübersicht</h2>
+      {/* show estimate when markdown exists */}
+      <h2 className="text-2xl font-bold mb-2">
+        Strukturübersicht
+        {markdown && (
+          <span className="ml-4 text-sm text-gray-500">
+            (~{tokenEstimate} Tokens)
+          </span>
+        )}
+      </h2>
       
       {error && (
         <Alert variant="destructive">
