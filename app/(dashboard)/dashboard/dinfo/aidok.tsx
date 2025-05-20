@@ -14,7 +14,7 @@ import {
 } from "@/lib/fs/fileTreeUtils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { AlertCircle, Loader2, Eye } from "lucide-react";
+import { AlertCircle, Loader2, Eye, Check } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -84,6 +84,15 @@ export default function Aidok() {
 
   useEffect(() => {
     const loadMarkdown = async () => {
+      // --- new: immediately clear on "None" tab ---
+      if (selectedVariant === "") {
+        setLoading(false);
+        setError(null);
+        setDebugInfo([]);
+        setMarkdown("");
+        return;
+      }
+
       if (!selectedDok || !fsSettings || !indexData) {
         setLoading(false);
         return;
@@ -258,7 +267,7 @@ export default function Aidok() {
           setSelectedVariant(defaultVariant ? defaultVariant.label : variants[0].label);
         }
         
-        const variantToLoad = selectedVariant 
+        const variantToLoad = selectedVariant !== null
           ? variants.find(v => v.label === selectedVariant)
           : variants[0];
         
@@ -537,11 +546,15 @@ export default function Aidok() {
       {availableVariants.length > 0 && (
         <div className="mb-2 flex items-center justify-between flex-wrap">
           <Tabs 
-            value={selectedVariant || availableVariants[0]?.label} 
+            value={selectedVariant !== null ? selectedVariant : availableVariants[0]?.label} 
             onValueChange={handleVariantChange}
             className="flex-1 min-w-[200px]"
           >
             <TabsList className="flex flex-wrap">
+              {/* --- new: None tab --- */}
+              <TabsTrigger key="none" value="">
+                None
+              </TabsTrigger>
               {availableVariants.map(variant => (
                 <TabsTrigger key={variant.key} value={variant.label}>
                   {variant.label.toLowerCase() === defaultParser
@@ -555,7 +568,8 @@ export default function Aidok() {
           <div className="flex items-center space-x-2 mt-2 sm:mt-0">
             {selectedVariant && (
               <Button onClick={handleSaveDefaultParser} className="whitespace-nowrap">
-                Als Standard speichern
+                <Check className="h-4 w-4 mr-2" />
+
               </Button>
             )}
             {markdown && selectedVariant && (
@@ -588,13 +602,6 @@ export default function Aidok() {
               </Dialog>
             )}
           </div>
-        </div>
-      )}
-
-      {!markdown && !loading && availableVariants.length > 0 && (
-        <div className="p-8 text-center text-gray-500 border border-dashed rounded-md">
-          <p>Keine Strukturdaten für die ausgewählte Variante geladen oder die Datei ist leer.</p>
-          <p className="text-xs mt-1">Wählen Sie eine andere Variante oder prüfen Sie die Debug-Informationen.</p>
         </div>
       )}
 
