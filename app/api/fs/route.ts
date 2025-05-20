@@ -13,6 +13,11 @@ export async function GET(request: Request) {
 
   console.log("Received request with parameters:", { path, type, host, username });
 
+  // Hinweis zu den API-Varianten:
+  // - PROPFIND: listet Verzeichnisse und Dateien via WebDAV-PROPFIND (hier).
+  // - Read (in app/api/fs/read/route.ts): holt den Inhalt einer Datei per WebDAV GET.
+  // - Metadata-Read (in app/api/fs/metadata/route.ts): holt ausschließlich die JSON-Metadaten-Sidecar-Datei per WebDAV GET.
+
   try {
     if (type === "webdav") {
       if (!host || !username || !password) {

@@ -35,14 +35,11 @@ export async function GET(req: Request) {
       );
     }
 
-    // Get the content type to determine how to handle the response
-    const contentType = response.headers.get("content-type");
-    
-    // Return the file content directly as text
-    const content = await response.text();
-    return new NextResponse(content, {
+    // Directly return the body stream to correctly transfer binary and text files
+    return new NextResponse(response.body, {
+      status: response.status,
       headers: {
-        "Content-Type": contentType || "text/plain",
+        "Content-Type": response.headers.get("content-type") || "application/octet-stream",
       },
     });
   } catch (error) {

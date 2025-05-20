@@ -165,3 +165,52 @@ Um die opinionated Dateistruktur zu abstrahieren, wurde eine Middleware-Schicht 
 - Fügt Metadaten wie Erstellungs- und Änderungsdaten sowie Dateigrößen hinzu.
 
 Diese Abstraktion ermöglicht eine einheitliche API und eine flexible Darstellung des Dateisystems.
+
+## API: Dateisystem-Operationen
+
+Klark0 stellt REST-Endpunkte unter `/api/fs/*` zur Verfügung, um Dateien per WebDAV zu verwalten. Alle Endpunkte erwarten die Query-Parameter `host`, `username`, `password` und optional `type` (Standard: `webdav`).
+
+Unterschied der Endpunkte:
+- `GET /api/fs`  
+  Verzeichnis auflisten via WebDAV PROPFIND  
+- `GET /api/fs/read`  
+  Dateiinhalt direkt zurückgeben (binary/text) via WebDAV GET  
+- `POST /api/fs/read`  
+  Dateiinhalt als JSON (`{ content: string }`)  
+- `GET /api/fs/metadata`  
+  Metadaten-Sidecar (JSON) lesen  
+- `POST /api/fs/metadata`  
+  Metadaten-Sidecar (JSON) schreiben  
+- `POST /api/fs/mkdir`  
+  Verzeichnis erstellen  
+- `POST /api/fs/delete`  
+  Datei oder Verzeichnis löschen  
+- `POST /api/fs/rename`  
+  Datei oder Verzeichnis umbenennen  
+- `POST /api/fs/index`  
+  Index-Datei erstellen oder aktualisieren  
+- `POST /api/fs/upload`  
+  Datei(en) hochladen  
+
+### Beispiele
+
+```bash
+# Verzeichnis auflisten
+curl -X GET "http://localhost:3000/api/fs?host=...&username=...&password=...&path=/klark0"
+
+# Datei direkt holen
+curl -X GET "http://localhost:3000/api/fs/read?host=...&username=...&password=...&path=/klark0/dokument.md"
+
+# Datei als JSON
+curl -X POST "http://localhost:3000/api/fs/read" \
+  -H "Content-Type: application/json" \
+  -d '{"type":"webdav","host":"...","username":"...","password":"...","path":"/klark0/dokument.md"}'
+
+# Metadaten lesen
+curl -X GET "http://localhost:3000/api/fs/metadata?host=...&username=...&password=...&path=/klark0/dokument.json"
+
+# Metadaten schreiben
+curl -X POST "http://localhost:3000/api/fs/metadata" \
+  -H "Content-Type: application/json" \
+  -d '{"type":"webdav","host":"...","username":"...","password":"...","path":"/klark0/dokument.json","metadata":{"titel":"Dokument"}}'
+```
