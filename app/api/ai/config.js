@@ -1,4 +1,3 @@
-
 /**
  * Predefined queries for the Gemini AI API
  */
@@ -9,6 +8,8 @@ export const AI_QUERIES = {
     "Identifizieren und listen Sie 3–5 Kernpunkte aus dem folgenden Text auf Deutsch auf:",
   COMPREHENSIVE:
     "Geben Sie eine umfassende Analyse des folgenden Dokuments einschließlich Zusammenfassung, Kernpunkten, Dokumenttyp und Metadaten auf Deutsch an:",
+  ASSISTANT:
+    "Du bist ein hilfreicher Assistent. Gib eine kurze und prägnante deutsche Antwort auf die folgende Frage oder Anweisung. :",
   DOKUMENTTYP: `### Prompt:
 
 Du bist ein professioneller Dokumenten-Analyst für Vergabeverfahren und öffentliche Ausschreibungen.  

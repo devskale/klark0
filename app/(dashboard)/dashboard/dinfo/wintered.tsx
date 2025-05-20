@@ -14,19 +14,11 @@ import {
 } from "@/lib/fs/fileTreeUtils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { AlertCircle, Loader2, Eye } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose,
-} from "@/components/ui/dialog";
 
-export default function Aidok() {
+export default function Wintered() {
   const { selectedProject, selectedDok } = useProject();
   const [markdown, setMarkdown] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
@@ -34,8 +26,8 @@ export default function Aidok() {
   const [debugInfo, setDebugInfo] = useState<string[]>([]);
   const [availableVariants, setAvailableVariants] = useState<Array<{key: string, label: string, path: string}>>([]);
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
-  const [showPreviewModal, setShowPreviewModal] = useState<boolean>(false);
 
+  // SWR for index JSON now also grabs mutate:
   const { data: fsSettings } = useSWR<FileSystemSettings>(
     "/api/settings?key=fileSystem",
     (url) => fetch(url).then((res) => res.json())
@@ -64,9 +56,11 @@ export default function Aidok() {
     { revalidateOnFocus: false }
   );
 
+  // NEW: parser options & default-parser state
   const [parserOptions, setParserOptions] = useState<string[]>([]);
   const [defaultParser, setDefaultParser] = useState<string>("");
 
+  // derive baseName once here so the img renderer can use it
   const fileBaseName = selectedDok
     ? decodeURIComponent(selectedDok.split("/").pop()!)
     : "";
@@ -443,6 +437,7 @@ export default function Aidok() {
     const fileBase = decodeURIComponent(selectedDok.split("/").pop()!);
     const idxPath = parentDir + PDF2MD_INDEX_FILE_NAME;
 
+    // derive parser key (first word, lowercase), e.g. "Marker" → "marker"
     const parserKey = selectedVariant.split(" ")[0].toLowerCase();
 
     await fetch("/api/fs/index", {
@@ -498,9 +493,11 @@ export default function Aidok() {
       return <td className="px-3 py-2 text-sm whitespace-nowrap border-t border-gray-100" {...props} />;
     },
     img({ node, src, alt, ...props }: any) {
+      // leave absolute URLs alone
       if (!src || src.match(/^https?:\/\//)) {
         return <img src={src} alt={alt} {...props} />;
       }
+      // build WebDAV path under md/<baseName>/
       const imagePath = `${parentDir}md/${baseName}/${src}`;
       const params = new URLSearchParams({
         type: fsSettings?.type || "",
@@ -535,11 +532,11 @@ export default function Aidok() {
       )}
       
       {availableVariants.length > 0 && (
-        <div className="mb-2 flex items-center justify-between flex-wrap">
+        <div className="mb-2 flex items-center justify-between">
           <Tabs 
             value={selectedVariant || availableVariants[0]?.label} 
             onValueChange={handleVariantChange}
-            className="flex-1 min-w-[200px]"
+            className="flex-1"
           >
             <TabsList className="flex flex-wrap">
               {availableVariants.map(variant => (
@@ -552,55 +549,32 @@ export default function Aidok() {
             </TabsList>
           </Tabs>
 
-          <div className="flex items-center space-x-2 mt-2 sm:mt-0">
-            {selectedVariant && (
-              <Button onClick={handleSaveDefaultParser} className="whitespace-nowrap">
-                Als Standard speichern
-              </Button>
-            )}
-            {markdown && selectedVariant && (
-              <Dialog open={showPreviewModal} onOpenChange={setShowPreviewModal}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="icon" title="Vorschau anzeigen">
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-3xl w-[90vw] h-[80vh] flex flex-col">
-                  <DialogHeader>
-                    <DialogTitle>Vorschau: {selectedVariant}</DialogTitle>
-                  </DialogHeader>
-                  <ScrollArea className="flex-grow rounded-md border">
-                    <div className="p-6 prose prose-sm max-w-none">
-                      <ReactMarkdown 
-                        remarkPlugins={[remarkGfm]} 
-                        components={markdownComponents}
-                      >
-                        {markdown}
-                      </ReactMarkdown>
-                    </div>
-                  </ScrollArea>
-                  <DialogClose asChild>
-                    <Button type="button" variant="outline" className="mt-4 self-end">
-                      Schließen
-                    </Button>
-                  </DialogClose>
-                </DialogContent>
-              </Dialog>
-            )}
-          </div>
+          {selectedVariant && (
+            <Button onClick={handleSaveDefaultParser} className="ml-4 whitespace-nowrap">
+              Als Standard speichern
+            </Button>
+          )}
         </div>
       )}
 
-      {!markdown && !loading && availableVariants.length > 0 && (
-        <div className="p-8 text-center text-gray-500 border border-dashed rounded-md">
-          <p>Keine Strukturdaten für die ausgewählte Variante geladen oder die Datei ist leer.</p>
-          <p className="text-xs mt-1">Wählen Sie eine andere Variante oder prüfen Sie die Debug-Informationen.</p>
-        </div>
-      )}
-
-      {!loading && availableVariants.length === 0 && !error && (
-         <div className="p-8 text-center text-gray-500 border border-dashed rounded-md">
-          <p>Keine Strukturdaten-Varianten für dieses Dokument gefunden.</p>
+      {markdown ? (
+        <Card className="border border-gray-200">
+          <CardContent className="p-0 overflow-hidden">
+            <ScrollArea className="h-[70vh] rounded-md">
+              <div className="p-6 prose prose-sm max-w-none">
+                <ReactMarkdown 
+                  remarkPlugins={[remarkGfm]} 
+                  components={markdownComponents}
+                >
+                  {markdown}
+                </ReactMarkdown>
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="p-8 text-center text-gray-500">
+          <p>Keine Strukturdaten verfügbar.</p>
         </div>
       )}
       
