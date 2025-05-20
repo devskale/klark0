@@ -290,6 +290,7 @@ const kiEinstellungenConfig = {
       type: "select" as const,
       options: [
         { value: "uniinfer", label: "uniinfer" },
+        { value: "gemini", label: "gem" },
         { value: "aisdk", label: "aisdk" },
       ],
       defaultValue: "uniinfer",
@@ -303,7 +304,7 @@ const kiEinstellungenConfig = {
     },
     {
       id: "bearer",
-      label: "Bearer Token",
+      label: "API/Bearer Token",
       type: "password",
       placeholder: "Ihr Bearer Token",
       defaultValue: "",
