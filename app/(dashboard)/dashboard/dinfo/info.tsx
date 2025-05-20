@@ -12,6 +12,7 @@ import {
   FileSystemSettings,
   PDF2MD_INDEX_FILE_NAME,
 } from "@/lib/fs/fileTreeUtils";
+import { EditableText } from "@/components/ui/editable-text";
 
 export default function Info() {
   const {
@@ -192,53 +193,73 @@ export default function Info() {
     <div className="space-y-4 p-4 bg-white rounded-md shadow">
       <h2 className="text-2xl font-bold">{trimName(dokName)}</h2>
       <div className="space-y-1">
-        <p><strong>Bieter:</strong> {bieterName}</p>
-        <label>
-          <strong>Kategorie:</strong>
-          <Input
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-          />
-        </label>
-        <label>
-          <strong>Aussteller:</strong>
-          <Input value={issuer} onChange={(e) => setIssuer(e.target.value)} />
-        </label>
-        <label>
-          <strong>Name:</strong>
-          <Input value={title} onChange={(e) => setTitle(e.target.value)} />
-        </label>
-        <label>
-          <strong>Beschreibung:</strong>
-          <Textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </label>
-        <p>
-          <strong>Strukt:</strong>{" "}
-          {parserDetList.length > 0 ? (
-            parserDetList.map((name, i) => (
-              <span key={name}>
-                {i > 0 && ", "}
-                {name === parserDefault ? <strong>{name}</strong> : name}
-              </span>
-            ))
-          ) : parserDefault ? (
-            <strong>{parserDefault}</strong>
-          ) : (
-            "Keine"
-          )}
-        </p>
-        <p><strong>Dok ID:</strong> {dokPathDecoded}</p>
-        <label>
-          <strong>Metadaten:</strong>
-          <Textarea
-            value={metadataList}
-            placeholder="Einträge kommasepariert"
-            onChange={(e) => setMetadataList(e.target.value)}
-          />
-        </label>
+        <div className="flex items-start py-1">
+          <strong className="mr-2 py-2 whitespace-nowrap shrink-0">Projekt:</strong>
+          <span className="py-2 px-3 min-h-10 w-full flex items-center">{projectName}</span>
+        </div>
+        <div className="flex items-start py-1">
+          <strong className="mr-2 py-2 whitespace-nowrap shrink-0">Bieter:</strong>
+          <span className="py-2 px-3 min-h-10 w-full flex items-center">{bieterName}</span>
+        </div>
+        
+        <EditableText
+          label="Kategorie:"
+          value={category}
+          onChange={setCategory}
+          placeholder="Kategorie eingeben"
+        />
+        <EditableText
+          label="Aussteller:"
+          value={issuer}
+          onChange={setIssuer}
+          placeholder="Aussteller eingeben"
+        />
+        <EditableText
+          label="Name:"
+          value={title}
+          onChange={setTitle}
+          placeholder="Dokumentname eingeben"
+        />
+        <EditableText
+          label="Beschreibung:"
+          value={description}
+          onChange={setDescription}
+          as="textarea"
+          placeholder="Beschreibung hinzufügen"
+          inputClassName="min-h-[80px]"
+        />
+        
+        <div className="flex items-start py-1">
+          <strong className="mr-2 py-2 whitespace-nowrap shrink-0">Strukt:</strong>
+          <span className="py-2 px-3 min-h-10 w-full flex items-center">
+            {parserDetList.length > 0 ? (
+              parserDetList.map((name, i) => (
+                <span key={name}>
+                  {i > 0 && ", "}
+                  {name === parserDefault ? <strong>{name}</strong> : name}
+                </span>
+              ))
+            ) : parserDefault ? (
+              <strong>{parserDefault}</strong>
+            ) : (
+              <span className="italic text-muted-foreground">Keine</span>
+            )}
+          </span>
+        </div>
+        
+        <div className="flex items-start py-1">
+          <strong className="mr-2 py-2 whitespace-nowrap shrink-0">Dok ID:</strong>
+          <span className="py-2 px-3 min-h-10 w-full break-all flex items-center">{dokPathDecoded}</span>
+        </div>
+
+        <EditableText
+          label="Metadaten:"
+          value={metadataList}
+          onChange={setMetadataList}
+          as="textarea"
+          placeholder="Einträge kommasepariert (z.B. Tag1, Tag2)"
+          inputClassName="min-h-[80px]"
+        />
       </div>
       <div className="flex justify-end gap-4 p-4 border-t">
         <Button variant="outline" onClick={handleSaveMeta}>

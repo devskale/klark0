@@ -94,10 +94,13 @@ export function AppSidebar({ versions, navMain, ...props }: AppSidebarProps) {
             <CircleIcon className="h-6 w-6 text-orange-500" />
           </div>
         ) : (
-          <div className="flex items-center p-4 text-gray-800 font-bold text-xl">
-            <CircleIcon className="h-6 w-6 mr-2 text-orange-500" />
-            Simmer0
-          </div>
+            <div className="flex flex-col items-start p-4 text-gray-800">
+            <div className="flex items-center font-bold text-xl">
+              <CircleIcon className="h-6 w-6 mr-2 text-orange-500" />
+              KI Vergabe
+            </div>
+            <span className="text-xs text-gray-500 mt-1">Digitale Vergabeplattform</span>
+            </div>
         )}
         {state !== "collapsed" && (
           <>
