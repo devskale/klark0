@@ -138,15 +138,8 @@ v0.0 initiale Version in deutsch. Boilperplate webapp mit Basis Layout und Desig
 
 Dateiordnersystem
 
-ORDNERNAME: Im Root Ordner ist es ein Ordner eine Ausschreibung
-    - ausschreibung.json
-        - holds info about the ausschreibungs project
-        - Datum, Status, etc
-    - A: hält die unterschiedlichen Vergabe/Ausschreibungs Dokumente
-        md: kann md ordner enthalten mit markdown versionen der dokumente
-    - B: Hält die unterschiedlichen Bieterordner
-        - BIETERORDNER: Ordner für Bieterdokumente
-            - md: kann md ordner enthalten mit markdown versionen der dokumente
+ORDNERNAME: Im Root Ordner ist es ein Ordner eine Ausschreibung - ausschreibung.json - holds info about the ausschreibungs project - Datum, Status, etc - A: hält die unterschiedlichen Vergabe/Ausschreibungs Dokumente
+md: kann md ordner enthalten mit markdown versionen der dokumente - B: Hält die unterschiedlichen Bieterordner - BIETERORDNER: Ordner für Bieterdokumente - md: kann md ordner enthalten mit markdown versionen der dokumente
 
 archiv: Ordner, reservierte für archivierte projekte
 .NAME: versteckte ordner sind reserviert für system
@@ -160,8 +153,9 @@ Dateiendungen
 ## Abstracted Filesystem Layer
 
 Um die opinionated Dateistruktur zu abstrahieren, wurde eine Middleware-Schicht entwickelt, die zwischen den physischen Dateien/Ordnern und ihrer logischen Darstellung vermittelt. Diese Schicht:
-- Filtert Elemente, die als *hidden* oder *noshow* markiert sind (z.B. Ordner, beginnend mit einem Punkt oder explizit in der Konfiguration ausgeschlossen),
-- Zeigt nur *show*-Elemente an,
+
+- Filtert Elemente, die als _hidden_ oder _noshow_ markiert sind (z.B. Ordner, beginnend mit einem Punkt oder explizit in der Konfiguration ausgeschlossen),
+- Zeigt nur _show_-Elemente an,
 - Fügt Metadaten wie Erstellungs- und Änderungsdaten sowie Dateigrößen hinzu.
 
 Diese Abstraktion ermöglicht eine einheitliche API und eine flexible Darstellung des Dateisystems.
@@ -170,27 +164,53 @@ Diese Abstraktion ermöglicht eine einheitliche API und eine flexible Darstellun
 
 Klark0 stellt REST-Endpunkte unter `/api/fs/*` zur Verfügung, um Dateien per WebDAV zu verwalten. Alle Endpunkte erwarten die Query-Parameter `host`, `username`, `password` und optional `type` (Standard: `webdav`).
 
-Unterschied der Endpunkte:
+The metadata endpoints (`/api/fs/metadata`) provide functionality to manage JSON sidecar files that store additional information about documents:
+
+- `GET /api/fs/metadata`: Reads metadata from a JSON sidecar file (filename.json for filename.ext)
+- `POST /api/fs/metadata`: Writes metadata to a JSON sidecar file
+
+Metadata files contain structured information about documents like:
+
+- Document title and description
+- Creation/modification dates
+- Document status and workflow state
+- Custom tags and categories
+- Document relationships
+- Audit trail information
+
+**Endpunkte:**
+
 - `GET /api/fs`  
-  Verzeichnis auflisten via WebDAV PROPFIND  
+  List directory contents via WebDAV PROPFIND
+
 - `GET /api/fs/read`  
-  Dateiinhalt direkt zurückgeben (binary/text) via WebDAV GET  
+  Get file content directly (binary/text) via WebDAV GET
+
 - `POST /api/fs/read`  
-  Dateiinhalt als JSON (`{ content: string }`)  
+  Get file content as JSON (`{ content: string }`)
+
 - `GET /api/fs/metadata`  
-  Metadaten-Sidecar (JSON) lesen  
+  Read JSON metadata sidecar file
+
 - `POST /api/fs/metadata`  
-  Metadaten-Sidecar (JSON) schreiben  
+  Write JSON metadata sidecar file
+
 - `POST /api/fs/mkdir`  
-  Verzeichnis erstellen  
+  Create new directory
+
 - `POST /api/fs/delete`  
-  Datei oder Verzeichnis löschen  
+  Delete file or directory
+
 - `POST /api/fs/rename`  
-  Datei oder Verzeichnis umbenennen  
+  Rename/move file or directory
+
+- `GET /api/fs/index`  
+  Read index file (`.pdf2md_index.json`) via WebDAV GET
 - `POST /api/fs/index`  
-  Index-Datei erstellen oder aktualisieren  
+  Create/update index file (`.pdf2md_index.json`)
+
 - `POST /api/fs/upload`  
-  Datei(en) hochladen  
+  Upload one or multiple files
 
 ### Beispiele
 
