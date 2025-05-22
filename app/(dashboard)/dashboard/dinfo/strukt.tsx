@@ -673,7 +673,7 @@ export default function Strukt() {
     },
     table({ node, ...props }: any) {
       return (
-        <div className="my-4 overflow-x-auto border border-gray-200 rounded-md">
+        <div className="w-full my-4 overflow-x-auto border border-gray-200 rounded-md">
           <table className="min-w-full divide-y divide-gray-200" {...props} />
         </div>
       );
@@ -732,11 +732,11 @@ export default function Strukt() {
       )}
 
       {availableVariants.length > 0 && (
-        <div className="mb-2 flex items-center justify-between">
+        <div className="mb-2 flex flex-wrap items-center gap-y-2">
           <Tabs
             value={selectedVariant || availableVariants[0]?.label}
             onValueChange={handleVariantChange}
-            className="flex-1">
+            className="min-w-0 flex-grow-0">
             <TabsList className="flex flex-wrap">
               {availableVariants.map((variant) => (
                 <TabsTrigger key={variant.key} value={variant.label}>
@@ -750,7 +750,7 @@ export default function Strukt() {
             </TabsList>
           </Tabs>
 
-          <div className="flex items-center ml-4">
+          <div className="flex items-center ml-auto flex-shrink-0">
             {selectedVariant && (
               <Button
                 onClick={handleSaveDefaultParser}
@@ -802,8 +802,6 @@ export default function Strukt() {
                   </>
                 ) : (
                   <div className="prose prose-xs font-mono">
-                    {" "}
-                    {/* <--- Added font-mono here */}
                     <ReactMarkdown
                       remarkPlugins={[remarkGfm, remarkBreaks]}
                       components={markdownComponents}>
