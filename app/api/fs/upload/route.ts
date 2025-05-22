@@ -11,10 +11,16 @@ export async function POST(request: Request) {
   const password = url.searchParams.get("password");
 
   if (type !== "webdav") {
-    return NextResponse.json({ error: "Unsupported filesystem type." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Unsupported filesystem type." },
+      { status: 400 }
+    );
   }
   if (!host || !username || !password) {
-    return NextResponse.json({ error: "Missing WebDAV credentials." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Missing WebDAV credentials." },
+      { status: 400 }
+    );
   }
 
   const form = await request.formData();
@@ -34,11 +40,20 @@ export async function POST(request: Request) {
         host.endsWith("/") ? host : host + "/"
       ).toString();
 
+      const headers: HeadersInit = {
+        Authorization: `Basic ${Buffer.from(`${username}:${password}`).toString(
+          "base64"
+        )}`,
+      };
+
+      // Add Content-Type header if the blob/file has a type specified
+      if (f.type) {
+        headers["Content-Type"] = f.type;
+      }
+
       const resp = await fetch(uploadUrl, {
         method: "PUT",
-        headers: {
-          Authorization: `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`,
-        },
+        headers: headers,
         body: f.stream(),
       });
 
