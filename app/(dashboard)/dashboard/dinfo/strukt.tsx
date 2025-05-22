@@ -754,7 +754,18 @@ export default function Strukt() {
               <Button
                 onClick={handleSaveDefaultParser}
                 className="whitespace-nowrap mr-2">
-                Als Standard speichern
+                Setze Default Strukt
+              </Button>
+            )}
+            {isEditingView && (
+              <Button
+                onClick={handleSaveMarkdown}
+                disabled={isSaving || !selectedVariant}
+                className="mr-2">
+                {isSaving ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : null}
+                {isSaving ? "Speichern..." : "Speichern"}
               </Button>
             )}
             {(markdown || editedMarkdown) && (
@@ -787,15 +798,6 @@ export default function Strukt() {
                       className="min-h-[60vh] w-full font-mono text-sm border rounded-md p-2 prose prose-xs max-w-none"
                       placeholder="Markdown-Inhalt hier bearbeiten..."
                     />
-                    <Button
-                      onClick={handleSaveMarkdown}
-                      disabled={isSaving || !selectedVariant}
-                      className="mt-4">
-                      {isSaving ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : null}
-                      {isSaving ? "Speichern..." : "Speichern"}
-                    </Button>
                   </>
                 ) : (
                   <div className="prose prose-xs max-w-none">
