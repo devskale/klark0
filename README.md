@@ -233,4 +233,9 @@ curl -X GET "http://localhost:3000/api/fs/metadata?host=...&username=...&passwor
 curl -X POST "http://localhost:3000/api/fs/metadata" \
   -H "Content-Type: application/json" \
   -d '{"type":"webdav","host":"...","username":"...","password":"...","path":"/klark0/dokument.json","metadata":{"titel":"Dokument"}}'
+
+# Datei(en) hochladen
+curl -X POST "http://localhost:3000/api/fs/upload?host=...&username=...&password=...&path=/klark0/neuer-ordner/" \
+  -F "files=@/pfad/zur/lokalen/datei1.pdf" \
+  -F "files=@/pfad/zur/lokalen/datei2.txt"
 ```

@@ -14,13 +14,15 @@ import {
 } from "@/lib/fs/fileTreeUtils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2, Eye, Edit3 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function Strukt() {
   const { selectedProject, selectedDok } = useProject();
   const [markdown, setMarkdown] = useState<string>("");
+  const [editedMarkdown, setEditedMarkdown] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<string[]>([]);
@@ -28,8 +30,9 @@ export default function Strukt() {
     Array<{ key: string; label: string; path: string }>
   >([]);
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [isEditingView, setIsEditingView] = useState<boolean>(false);
 
-  // SWR for index JSON now also grabs mutate:
   const { data: fsSettings } = useSWR<FileSystemSettings>(
     "/api/settings?key=fileSystem",
     (url) => fetch(url).then((res) => res.json())
@@ -58,11 +61,9 @@ export default function Strukt() {
     { revalidateOnFocus: false }
   );
 
-  // NEW: parser options & default-parser state
   const [parserOptions, setParserOptions] = useState<string[]>([]);
   const [defaultParser, setDefaultParser] = useState<string>("");
 
-  // derive baseName once here so the img renderer can use it
   const fileBaseName = selectedDok
     ? decodeURIComponent(selectedDok.split("/").pop()!)
     : "";
@@ -77,6 +78,10 @@ export default function Strukt() {
       setDefaultParser(entry.parsers?.default || "");
     }
   }, [indexData, selectedDok]);
+
+  useEffect(() => {
+    setEditedMarkdown(markdown);
+  }, [markdown]);
 
   useEffect(() => {
     const loadMarkdown = async () => {
@@ -551,7 +556,6 @@ export default function Strukt() {
     const fileBase = decodeURIComponent(selectedDok.split("/").pop()!);
     const idxPath = parentDir + PDF2MD_INDEX_FILE_NAME;
 
-    // derive parser key (first word, lowercase), e.g. "Marker" → "marker"
     const parserKey = selectedVariant.split(" ")[0].toLowerCase();
 
     await fetch("/api/fs/index", {
@@ -568,6 +572,80 @@ export default function Strukt() {
       }),
     });
     mutateIndex();
+  };
+
+  const handleSaveMarkdown = async () => {
+    if (!selectedVariant || !fsSettings || !parentDir) {
+      setError("Speichern nicht möglich: Fehlende Konfiguration.");
+      return;
+    }
+
+    const variantToSave = availableVariants.find(
+      (v) => v.label === selectedVariant
+    );
+    if (!variantToSave) {
+      setError("Speichern nicht möglich: Ausgewählte Variante nicht gefunden.");
+      return;
+    }
+
+    setIsSaving(true);
+    setDebugInfo((prev) => [...prev, `Attempting to save: ${variantToSave.path}`]);
+
+    try {
+      const fullPath = variantToSave.path;
+      const pathParts = fullPath.split("/");
+      const fileName = pathParts.pop();
+      const directoryPath = pathParts.join("/") + "/";
+
+      if (!fileName) {
+        throw new Error("Ungültiger Dateipfad zum Speichern.");
+      }
+
+      const file = new File([editedMarkdown], fileName, { type: "text/markdown" });
+      const formData = new FormData();
+      formData.append("files", file);
+
+      const params = new URLSearchParams({
+        type: fsSettings.type || "webdav",
+        path: directoryPath,
+        host: fsSettings.host || "",
+        username: fsSettings.username || "",
+        password: fsSettings.password || "",
+      });
+
+      const response = await fetch(`/api/fs/upload?${params.toString()}`, {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (
+        !response.ok ||
+        (Array.isArray(result) && result[0] && !result[0].ok)
+      ) {
+        const errorMessage =
+          Array.isArray(result) && result[0] && result[0].error
+            ? result[0].error
+            : `Fehler beim Speichern: ${response.statusText}`;
+        throw new Error(errorMessage);
+      }
+
+      setMarkdown(editedMarkdown);
+      setDebugInfo((prev) => [
+        ...prev,
+        `Successfully saved ${fileName} to ${directoryPath}`,
+      ]);
+      setError(null);
+      setIsEditingView(false);
+    } catch (err) {
+      console.error("Failed to save markdown:", err);
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      setError(`Fehler beim Speichern: ${errorMessage}`);
+      setDebugInfo((prev) => [...prev, `Save Error: ${errorMessage}`]);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const markdownComponents = {
@@ -611,11 +689,9 @@ export default function Strukt() {
       );
     },
     img({ node, src, alt, ...props }: any) {
-      // leave absolute URLs alone
       if (!src || src.match(/^https?:\/\//)) {
         return <img src={src} alt={alt} {...props} />;
       }
-      // build WebDAV path under md/<baseName>/
       const imagePath = `${parentDir}md/${baseName}/${src}`;
       const params = new URLSearchParams({
         type: fsSettings?.type || "",
@@ -668,26 +744,60 @@ export default function Strukt() {
             </TabsList>
           </Tabs>
 
-          {selectedVariant && (
-            <Button
-              onClick={handleSaveDefaultParser}
-              className="ml-4 whitespace-nowrap">
-              Als Standard speichern
-            </Button>
-          )}
+          <div className="flex items-center ml-4">
+            {selectedVariant && (
+              <Button
+                onClick={handleSaveDefaultParser}
+                className="whitespace-nowrap mr-2">
+                Als Standard speichern
+              </Button>
+            )}
+            {(markdown || editedMarkdown) && (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setIsEditingView(!isEditingView)}
+                title={isEditingView ? "Vorschau anzeigen" : "Bearbeiten"}
+              >
+                {isEditingView ? <Eye className="h-4 w-4" /> : <Edit3 className="h-4 w-4" />}
+              </Button>
+            )}
+          </div>
         </div>
       )}
 
-      {markdown ? (
+      {markdown || editedMarkdown ? (
         <Card className="border border-gray-200 min-w-0">
           <CardContent className="p-0 overflow-hidden">
             <ScrollArea className="h-[70vh] rounded-md min-w-0">
-              <div className="p-6 prose prose-xs max-w-none">
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  components={markdownComponents}>
-                  {markdown}
-                </ReactMarkdown>
+              <div className="p-6">
+                {isEditingView ? (
+                  <>
+                    <Textarea
+                      value={editedMarkdown}
+                      onChange={(e) => setEditedMarkdown(e.target.value)}
+                      className="min-h-[60vh] w-full font-mono text-sm border rounded-md p-2 prose prose-xs max-w-none"
+                      placeholder="Markdown-Inhalt hier bearbeiten..."
+                    />
+                    <Button
+                      onClick={handleSaveMarkdown}
+                      disabled={isSaving || !selectedVariant}
+                      className="mt-4">
+                      {isSaving ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : null}
+                      {isSaving ? "Speichern..." : "Speichern"}
+                    </Button>
+                  </>
+                ) : (
+                  <div className="prose prose-xs max-w-none">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={markdownComponents}>
+                      {editedMarkdown}
+                    </ReactMarkdown>
+                  </div>
+                )}
               </div>
             </ScrollArea>
           </CardContent>
