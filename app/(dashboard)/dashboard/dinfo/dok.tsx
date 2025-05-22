@@ -34,8 +34,10 @@ export default function Dok() {
     if (selectedDok && fsSettings) {
       // Construct the URL to fetch the PDF file
       // Ensure the path is not normalized if it's a file, as normalizePath adds a trailing slash
-      const pathIsFile = selectedDok.includes('.'); // Basic check if it's a file
-      const documentPath = pathIsFile ? selectedDok : normalizePath(selectedDok);
+      const pathIsFile = selectedDok.includes("."); // Basic check if it's a file
+      const documentPath = pathIsFile
+        ? selectedDok
+        : normalizePath(selectedDok);
 
       const params = new URLSearchParams({
         type: fsSettings.type || "webdav",
@@ -58,7 +60,9 @@ export default function Dok() {
 
   function onDocumentLoadError(error: Error) {
     console.error("Error loading PDF:", error);
-    setError(`Failed to load PDF: ${error.message}. Check if the file is a valid PDF and the path is correct.`);
+    setError(
+      `Failed to load PDF: ${error.message}. Check if the file is a valid PDF and the path is correct.`
+    );
     setPdfUrl(null); // Clear URL on error to prevent retrying with a bad URL
   }
 
@@ -87,7 +91,7 @@ export default function Dok() {
       </div>
     );
   }
-  
+
   if (!pdfUrl) {
     return (
       <div className="p-4">
@@ -121,8 +125,7 @@ export default function Dok() {
           onLoadSuccess={onDocumentLoadSuccess}
           onLoadError={onDocumentLoadError}
           loading="Lade PDF..."
-          error="Fehler beim Laden des PDFs."
-        >
+          error="Fehler beim Laden des PDFs.">
           <Page pageNumber={pageNumber} renderTextLayer={true} />
         </Document>
       </div>
