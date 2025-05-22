@@ -1,5 +1,5 @@
 import React from "react";
-import { Sparkles, RefreshCw, Loader2 } from "lucide-react";
+import { Sparkles, RefreshCw, Loader2, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -325,7 +325,10 @@ export default function Info() {
 
   return (
     <div className="space-y-3 p-4 bg-white rounded-md shadow">
-      <h2 className="text-2xl font-bold">{trimName(dokName)}</h2>
+      <div className="flex items-center">
+        <FileText className="mr-2 h-6 w-6 text-gray-500" />
+        <h2 className="text-2xl font-bold">{trimName(dokName)}</h2>
+      </div>
       <div className="space-y-0.5">
         <div className="flex items-start">
           <strong className="mr-2 py-1.5 whitespace-nowrap shrink-0">
