@@ -61,9 +61,9 @@ export default function BtoolsPage() {
         Tools für Bieter
       </h1>
       <p className="text-sm text-gray-500 mb-4">
-        Für die Bieterdokumente <b>{trimName(selectedBieter)}</b> der
-        Ausschreibung <b>{trimName(selectedProject)}</b> sind die folgenden
-        Aktionen und Tools anwendbar.
+        Für die Bieterdokumente <b>{trimName(selectedBieter ?? "")}</b> der
+        Ausschreibung <b>{trimName(selectedProject ?? "")}</b> sind die
+        folgenden Aktionen und Tools anwendbar.
       </p>
 
       <div className="rounded-md border">

@@ -64,8 +64,8 @@ export default function AtoolsPage() {
         Ausschreibungsprojekt Aktionen
       </h1>
       <p className="text-sm text-gray-500 mb-4">
-        Für das Ausschreibungsprojekt <b>{trimName(selectedProject)}</b> sind
-        die folgenden Aktionen und Tools anwendbar.
+        Für das Ausschreibungsprojekt <b>{trimName(selectedProject ?? "")}</b>{" "}
+        sind die folgenden Aktionen und Tools anwendbar.
       </p>
 
       <div className="rounded-md border">

@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
+import * as React from "react";
+import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog";
 
-import { cn } from "@/lib/utils"
-import { buttonVariants } from "@/components/ui/button"
+import { cn } from "@/lib/utils";
+import { buttonVariants } from "@/components/ui/button";
 
 export function AlertDialog(props: AlertDialogPrimitive.AlertDialogProps) {
-  return <AlertDialogPrimitive.Root {...props} modal={false} />
+  return <AlertDialogPrimitive.Root {...props} />;
 }
 
 export const AlertDialogTrigger = AlertDialogPrimitive.Trigger;
@@ -54,7 +54,7 @@ function AlertDialogHeader({
       className={cn("flex flex-col gap-2 text-center sm:text-left", className)}
       {...props}
     />
-  )
+  );
 }
 
 function AlertDialogFooter({
@@ -70,7 +70,7 @@ function AlertDialogFooter({
       )}
       {...props}
     />
-  )
+  );
 }
 
 function AlertDialogTitle({
@@ -83,7 +83,7 @@ function AlertDialogTitle({
       className={cn("text-lg font-semibold", className)}
       {...props}
     />
-  )
+  );
 }
 
 function AlertDialogDescription({
@@ -96,7 +96,7 @@ function AlertDialogDescription({
       className={cn("text-muted-foreground text-sm", className)}
       {...props}
     />
-  )
+  );
 }
 
 export {
@@ -104,4 +104,4 @@ export {
   AlertDialogFooter,
   AlertDialogTitle,
   AlertDialogDescription,
-}
+};

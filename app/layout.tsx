@@ -31,7 +31,7 @@ export default function RootLayout({
             fallback: {
               "/api/user": getUser(),
               "/api/team": getTeamForUser(),
-              "/api/settings": getAppSetting(),
+              "/api/settings": getTeamForUser().then(team => team ? getAppSetting(team.id, "general") : null),
             },
           }}>
           {children}

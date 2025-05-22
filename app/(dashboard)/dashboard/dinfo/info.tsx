@@ -35,7 +35,7 @@ export default function Info() {
   // fetch filesystem settings
   const { data: fsSettings } = useSWR<FileSystemSettings>(
     "/api/settings?key=fileSystem",
-    (url) => fetch(url).then((res) => res.json())
+    (url: string) => fetch(url).then((res) => res.json())
   );
 
   // fetch directory listing (includes parser info)

@@ -61,13 +61,16 @@ export default function DoksModule({
     if (docs && webdavSettings && docsPath) {
       const fetchIndexMeta = async () => {
         // build index side-car path
-        const indexSidecar = `${docsPath.replace(/\/$/, "")}/.pdf2md_index.json`;
+        const indexSidecar = `${docsPath.replace(
+          /\/$/,
+          ""
+        )}/.pdf2md_index.json`;
         const params = new URLSearchParams({
           path: indexSidecar,
           type: "webdav",
-          host: webdavSettings.host,
-          username: webdavSettings.username,
-          password: webdavSettings.password,
+          host: webdavSettings.host ?? "",
+          username: webdavSettings.username ?? "",
+          password: webdavSettings.password ?? "",
         });
         const res = await fetch(`/api/fs/metadata?${params.toString()}`);
         if (!res.ok) {
@@ -78,8 +81,8 @@ export default function DoksModule({
         // map meta by file path
         const map: Record<string, any> = {};
         docs
-          .filter(f => f.type === "file")
-          .forEach(f => {
+          .filter((f) => f.type === "file")
+          .forEach((f) => {
             const entry = (idx.files || []).find((e: any) => e.name === f.name);
             if (entry?.meta) {
               map[f.path] = entry.meta;
@@ -94,8 +97,8 @@ export default function DoksModule({
   }, [docs, webdavSettings, docsPath]);
 
   const toggleSelect = (path: string) => {
-    setSelectedDocs(prev =>
-      prev.includes(path) ? prev.filter(p => p !== path) : [...prev, path]
+    setSelectedDocs((prev) =>
+      prev.includes(path) ? prev.filter((p) => p !== path) : [...prev, path]
     );
     const wasSelected = selectedDocs.includes(path);
     setSelectedDok(wasSelected ? null : path);
@@ -106,7 +109,8 @@ export default function DoksModule({
   // pick an icon based on file extension
   const getFileIcon = (name: string) => {
     const ext = name.split(".").pop()?.toLowerCase();
-    if (ext === "pdf") return <FileText className="mr-2 h-4 w-4 text-red-500" />;
+    if (ext === "pdf")
+      return <FileText className="mr-2 h-4 w-4 text-red-500" />;
     if (ext && ["doc", "docx", "ppt", "pptx", "xls", "xlsx"].includes(ext))
       return <FileText className="mr-2 h-4 w-4 text-blue-500" />;
     if (ext && ["png", "jpg", "jpeg", "gif", "svg"].includes(ext))
@@ -115,7 +119,11 @@ export default function DoksModule({
   };
 
   if (!projectPath) {
-    return <p className="text-sm text-gray-500">Bitte zuerst ein Projekt auswählen.</p>;
+    return (
+      <p className="text-sm text-gray-500">
+        Bitte zuerst ein Projekt auswählen.
+      </p>
+    );
   }
   if (docsPath && !docs && !error) {
     return (
@@ -152,11 +160,12 @@ export default function DoksModule({
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {docs
-              .filter(f => 
-                // Filter out the root path, JSON files, and directories
-                f.path !== docsPath && 
-                f.type !== "directory" && 
-                !f.name.toLowerCase().endsWith('.json')
+              .filter(
+                (f) =>
+                  // Filter out the root path, JSON files, and directories
+                  f.path !== docsPath &&
+                  f.type !== "directory" &&
+                  !f.name.toLowerCase().endsWith(".json")
               )
               .map((f: FileTreeEntry) => (
                 <tr
@@ -164,15 +173,16 @@ export default function DoksModule({
                   className={`cursor-pointer ${
                     selectedDocs.includes(f.path) ? "bg-gray-100" : ""
                   }`}
-                  onClick={() => toggleSelect(f.path)}
-                >
+                  onClick={() => toggleSelect(f.path)}>
                   <td className="px-4 py-2 whitespace-nowrap">
                     <div className="flex items-center">
-                      {f.type === "directory"
-                        ? <Folder className="mr-2 h-4 w-4" />
-                        : getFileIcon(f.name)}
+                      {f.type === "directory" ? (
+                        <Folder className="mr-2 h-4 w-4" />
+                      ) : (
+                        getFileIcon(f.name)
+                      )}
                       {metadataMap[f.path]?.name ?? f.name}
-                      {f.type === 'file' && f.hasParser && (
+                      {f.type === "file" && f.hasParser && (
                         <span className="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-sky-100 text-sky-800">
                           struct
                         </span>
@@ -191,11 +201,13 @@ export default function DoksModule({
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={e => e.stopPropagation()}>
+                          onClick={(e) => e.stopPropagation()}>
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" onClick={e => e.stopPropagation()}>
+                      <DropdownMenuContent
+                        align="end"
+                        onClick={(e) => e.stopPropagation()}>
                         <DropdownMenuItem onSelect={() => handleDelete(f.path)}>
                           Löschen
                         </DropdownMenuItem>

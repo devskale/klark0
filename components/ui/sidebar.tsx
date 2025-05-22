@@ -778,6 +778,4 @@ export {
   SidebarSeparator,
   SidebarTrigger,
   useSidebar,
-  SelectedProjectProvider,
-  useSelectedProject,
 }

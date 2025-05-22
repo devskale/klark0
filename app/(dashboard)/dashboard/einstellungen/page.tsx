@@ -46,9 +46,10 @@ export type FileSystemType =
 export type FormField = {
   id: string;
   label: string;
-  type: "text" | "password" | "number";
+  type: "text" | "password" | "number" | "select"; // Added "select"
   placeholder?: string;
   defaultValue?: string | number;
+  options?: { value: string; label: string }[]; // Added optional options
 };
 
 // Define the structure for each file system configuration
@@ -285,9 +286,9 @@ const kiEinstellungenConfig = {
   displayName: "KI Einstellungen",
   fields: [
     {
-      id: "kiFramework" as const,
+      id: "kiFramework" as const, // Ensure id is specific for type inference
       label: "KI Framework",
-      type: "select" as const,
+      type: "select" as const, // Ensure type is specific
       options: [
         { value: "uniinfer", label: "uniinfer" },
         { value: "gemini", label: "gem" },
@@ -377,6 +378,8 @@ export default function GeneralPage() {
         return { error: errorData.error || response.statusText };
       }
 
+      mutate(); // Call SWR's mutate to refetch fileSystem settings
+
       return {
         success: "Dateisystem Einstellungen erfolgreich gespeichert!",
         settings: newSettings,
@@ -424,25 +427,43 @@ export default function GeneralPage() {
   // New state for the selected KI Framework
   const [selectedKiFramework, setSelectedKiFramework] = useState<string>("");
 
+  // Effect to handle toasts for file system settings form
+  useEffect(() => {
+    if (state.success) {
+      toast.success("Einstellungen gespeichert", {
+        description: state.success,
+        position: "top-center",
+        duration: 3000,
+      });
+    } else if (state.error) {
+      toast.error("Fehler beim Speichern", {
+        description: state.error,
+        position: "top-center",
+      });
+    }
+  }, [state]);
+
   // Effect to initialize and update selectedKiFramework
   useEffect(() => {
-    const frameworkField = kiEinstellungenConfig.fields.find(
+    let initialFramework = "";
+    const frameworkConfigEntry = kiEinstellungenConfig.fields.find(
       (f) => f.id === "kiFramework"
-    ) as
-      | (FormField & {
-          type: "select";
-          options: { value: string; label: string }[];
-          defaultValue: string;
-        })
-      | undefined;
+    );
+
+    if (
+      frameworkConfigEntry &&
+      frameworkConfigEntry.type === "select" &&
+      typeof frameworkConfigEntry.defaultValue === "string"
+    ) {
+      initialFramework = frameworkConfigEntry.defaultValue;
+    }
+
     if (kiSettings?.kiFramework && typeof kiSettings.kiFramework === "string") {
       setSelectedKiFramework(kiSettings.kiFramework);
-    } else if (frameworkField?.defaultValue) {
-      setSelectedKiFramework(frameworkField.defaultValue);
     } else {
-      setSelectedKiFramework(""); // Default to empty if no value found
+      setSelectedKiFramework(initialFramework);
     }
-  }, [kiSettings, kiEinstellungenConfig.fields]);
+  }, [kiSettings]);
 
   const [infoSaving, setInfoSaving] = useState(false);
   const [websitesSaving, setWebsitesSaving] = useState(false);
@@ -1401,7 +1422,10 @@ export default function GeneralPage() {
                         </Select>
                       </div>
                     );
-                  } else if (field.type === "text" || field.type === "password") {
+                  } else if (
+                    field.type === "text" ||
+                    field.type === "password"
+                  ) {
                     return (
                       <div key={field.id} className="mb-6">
                         <Label htmlFor={field.id} className="mb-3">
@@ -1412,7 +1436,9 @@ export default function GeneralPage() {
                           name={field.id}
                           type={field.type}
                           placeholder={field.placeholder}
-                          defaultValue={kiSettings?.[field.id] || field.defaultValue}
+                          defaultValue={
+                            kiSettings?.[field.id] || field.defaultValue
+                          }
                         />
                       </div>
                     );
@@ -1459,21 +1485,8 @@ export default function GeneralPage() {
             <CardContent>
               <form
                 className="space-y-4"
-                action={async (formData) => {
-                  const result = await formAction(formData);
-                  if (result?.success) {
-                    toast.success("Einstellungen gespeichert", {
-                      description: result.success,
-                      position: "top-center",
-                      duration: 3000,
-                    });
-                  } else if (result?.error) {
-                    toast.error("Fehler beim Speichern", {
-                      description: result.error,
-                      position: "top-center",
-                    });
-                  }
-                }}>
+                action={formAction} // Use formAction directly from useActionState
+              >
                 <div className="space-y-2 mb-4">
                   <Label htmlFor="fileSystemSetting" className="block mb-2">
                     Dateisystem Typ

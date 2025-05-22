@@ -40,7 +40,9 @@ export default function Aidok() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<string[]>([]);
-  const [availableVariants, setAvailableVariants] = useState<Array<{ key: string, label: string, path: string }>>([]);
+  const [availableVariants, setAvailableVariants] = useState<
+    Array<{ key: string; label: string; path: string }>
+  >([]);
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
   const [showPreviewModal, setShowPreviewModal] = useState<boolean>(false);
 
@@ -52,7 +54,7 @@ export default function Aidok() {
 
   const { data: fsSettings } = useSWR<FileSystemSettings>(
     "/api/settings?key=fileSystem",
-    (url) => fetch(url).then((res) => res.json())
+    (url: string) => fetch(url).then((res) => res.json())
   );
 
   const parentDir = selectedDok
@@ -122,7 +124,9 @@ export default function Aidok() {
         const debugLog: string[] = [];
         debugLog.push(`Looking for markdown file for: ${fileBaseName}`);
 
-        const fileEntry = indexData.files?.find((f: any) => f.name === fileBaseName);
+        const fileEntry = indexData.files?.find(
+          (f: any) => f.name === fileBaseName
+        );
         if (!fileEntry) {
           throw new Error(`File entry not found in index for: ${fileBaseName}`);
         }
@@ -130,14 +134,17 @@ export default function Aidok() {
         const parserDefault = fileEntry.parsers?.default || "docling";
         const parserDet = fileEntry.parsers?.det || [parserDefault];
         debugLog.push(`Default parser type: ${parserDefault}`);
-        debugLog.push(`Available parsers: ${parserDet.join(', ')}`);
+        debugLog.push(`Available parsers: ${parserDet.join(", ")}`);
 
         const baseName = fileBaseName.replace(/\.[^/.]+$/, "");
         debugLog.push(`Base name without extension: ${baseName}`);
 
-        const variants: Array<{ key: string, label: string, path: string }> = [];
+        const variants: Array<{ key: string; label: string; path: string }> =
+          [];
 
-        debugLog.push(`MARKER DEBUG: Checking for marker files regardless of parser list`);
+        debugLog.push(
+          `MARKER DEBUG: Checking for marker files regardless of parser list`
+        );
         try {
           const mdBaseParams = new URLSearchParams({
             type: fsSettings.type || "webdav",
@@ -147,56 +154,79 @@ export default function Aidok() {
             password: fsSettings.password || "",
           });
 
-          const mdBaseResponse = await fetch(`/api/fs?${mdBaseParams.toString()}`);
+          const mdBaseResponse = await fetch(
+            `/api/fs?${mdBaseParams.toString()}`
+          );
           if (mdBaseResponse.ok) {
             const baseContents = await mdBaseResponse.json();
-            debugLog.push(`MARKER DEBUG: Found subdirectory md/${baseName}/ with ${baseContents.length} items`);
+            debugLog.push(
+              `MARKER DEBUG: Found subdirectory md/${baseName}/ with ${baseContents.length} items`
+            );
 
-            const markerFile = baseContents.find((item: any) =>
-              item.type === 'file' && item.name.endsWith('.marker.md'));
+            const markerFile = baseContents.find(
+              (item: any) =>
+                item.type === "file" && item.name.endsWith(".marker.md")
+            );
 
             if (markerFile) {
-              debugLog.push(`MARKER DEBUG: Found marker file: ${markerFile.name}`);
+              debugLog.push(
+                `MARKER DEBUG: Found marker file: ${markerFile.name}`
+              );
 
               const markerPath = `${parentDir}md/${baseName}/${markerFile.name}`;
               variants.push({
                 key: `${baseName}.marker.found`,
                 label: "Marker",
-                path: markerPath
+                path: markerPath,
               });
 
-              if (!parserDet.includes('marker')) {
+              if (!parserDet.includes("marker")) {
                 debugLog.push(`MARKER DEBUG: Adding marker to parser list`);
-                parserDet.push('marker');
+                parserDet.push("marker");
               }
             } else {
-              debugLog.push(`MARKER DEBUG: No marker file found in md/${baseName}/ directory`);
+              debugLog.push(
+                `MARKER DEBUG: No marker file found in md/${baseName}/ directory`
+              );
             }
           } else {
-            debugLog.push(`MARKER DEBUG: Subdirectory md/${baseName}/ does not exist`);
+            debugLog.push(
+              `MARKER DEBUG: Subdirectory md/${baseName}/ does not exist`
+            );
           }
         } catch (markerCheckError) {
-          debugLog.push(`MARKER DEBUG: Error checking for marker files: ${markerCheckError instanceof Error ? markerCheckError.message : String(markerCheckError)}`);
+          debugLog.push(
+            `MARKER DEBUG: Error checking for marker files: ${
+              markerCheckError instanceof Error
+                ? markerCheckError.message
+                : String(markerCheckError)
+            }`
+          );
         }
 
         for (const parser of parserDet) {
-          if (parser === 'marker' && variants.some(v => v.label === "Marker")) {
+          if (
+            parser === "marker" &&
+            variants.some((v) => v.label === "Marker")
+          ) {
             continue;
           }
 
-          if (parser === 'marker') {
+          if (parser === "marker") {
             const markerPath = `${parentDir}md/${baseName}/${baseName}.marker.md`;
             debugLog.push(`Adding marker file at: ${markerPath}`);
             debugLog.push(`VERBOSE: Looking for marker file:`);
             debugLog.push(`VERBOSE: Parent dir: ${parentDir}`);
             debugLog.push(`VERBOSE: Base name: ${baseName}`);
             debugLog.push(`VERBOSE: Full path constructed: ${markerPath}`);
-            debugLog.push(`VERBOSE: Expected directory structure: parentDir/md/baseName/baseName.marker.md`);
+            debugLog.push(
+              `VERBOSE: Expected directory structure: parentDir/md/baseName/baseName.marker.md`
+            );
 
             const altMarkerPaths = [
               `${parentDir}${baseName}/md/${baseName}/${baseName}.marker.md`,
               `${parentDir}${baseName}/md/${baseName}.marker.md`,
-              `${parentDir}md/${baseName}.marker.md`
+              `${parentDir}md/${baseName}.marker.md`,
             ];
 
             debugLog.push(`VERBOSE: Will also try alternative paths:`);
@@ -207,14 +237,14 @@ export default function Aidok() {
             variants.push({
               key: `${baseName}.marker`,
               label: "Marker",
-              path: markerPath
+              path: markerPath,
             });
 
             altMarkerPaths.forEach((path, idx) => {
               variants.push({
                 key: `${baseName}.marker.alt${idx + 1}`,
                 label: `Marker (Alt ${idx + 1})`,
-                path: path
+                path: path,
               });
             });
           } else {
@@ -224,7 +254,7 @@ export default function Aidok() {
             variants.push({
               key: `${parser}-0`,
               label: parser,
-              path: path
+              path: path,
             });
           }
         }
@@ -243,10 +273,12 @@ export default function Aidok() {
           if (dirResponse.ok) {
             const dirListing = await dirResponse.json();
 
-            const mdFilePattern = new RegExp(`^${baseName}(?:_red)?\\.([a-zA-Z0-9]+)\\.md$`);
+            const mdFilePattern = new RegExp(
+              `^${baseName}(?:_red)?\\.([a-zA-Z0-9]+)\\.md$`
+            );
 
             for (const file of dirListing) {
-              if (file.type !== 'file') continue;
+              if (file.type !== "file") continue;
 
               const match = file.name.match(mdFilePattern);
               if (!match) continue;
@@ -258,14 +290,20 @@ export default function Aidok() {
               variants.push({
                 key: `discovered-${parserType}`,
                 label: `${parserType} (Entdeckt)`,
-                path: `${parentDir}md/${file.name}`
+                path: `${parentDir}md/${file.name}`,
               });
 
-              debugLog.push(`Discovered additional parser: ${parserType} at ${file.name}`);
+              debugLog.push(
+                `Discovered additional parser: ${parserType} at ${file.name}`
+              );
             }
           }
         } catch (dirError) {
-          debugLog.push(`Error scanning md directory: ${dirError instanceof Error ? dirError.message : String(dirError)}`);
+          debugLog.push(
+            `Error scanning md directory: ${
+              dirError instanceof Error ? dirError.message : String(dirError)
+            }`
+          );
         }
 
         setAvailableVariants(variants);
@@ -276,23 +314,36 @@ export default function Aidok() {
         });
 
         if (!selectedVariant && variants.length > 0) {
-          const defaultVariant = variants.find(v => v.label.toLowerCase() === parserDefault);
-          setSelectedVariant(defaultVariant ? defaultVariant.label : variants[0].label);
+          const defaultVariant = variants.find(
+            (v) => v.label.toLowerCase() === parserDefault
+          );
+          setSelectedVariant(
+            defaultVariant ? defaultVariant.label : variants[0].label
+          );
         }
 
-        const variantToLoad = selectedVariant !== null
-          ? variants.find(v => v.label === selectedVariant)
-          : variants[0];
+        const variantToLoad =
+          selectedVariant !== null
+            ? variants.find((v) => v.label === selectedVariant)
+            : variants[0];
 
         if (!variantToLoad) {
           throw new Error("Keine gültigen Markdown-Varianten gefunden");
         }
 
-        debugLog.push(`DEBUG: Selected variant to load: ${variantToLoad.label} at ${variantToLoad.path}`);
+        debugLog.push(
+          `DEBUG: Selected variant to load: ${variantToLoad.label} at ${variantToLoad.path}`
+        );
 
         if (fileEntry.parsers?.det && Array.isArray(fileEntry.parsers.det)) {
-          debugLog.push(`DEBUG: Parser types in index: ${fileEntry.parsers.det.join(', ')}`);
-          debugLog.push(`DEBUG: Marker in index: ${fileEntry.parsers.det.includes('marker')}`);
+          debugLog.push(
+            `DEBUG: Parser types in index: ${fileEntry.parsers.det.join(", ")}`
+          );
+          debugLog.push(
+            `DEBUG: Marker in index: ${fileEntry.parsers.det.includes(
+              "marker"
+            )}`
+          );
         }
 
         try {
@@ -312,11 +363,20 @@ export default function Aidok() {
 
           if (!response.ok) {
             debugLog.push(`Fetch failed with status: ${response.status}`);
-            debugLog.push(`VERBOSE: Failed to load path: ${variantToLoad.path}`);
+            debugLog.push(
+              `VERBOSE: Failed to load path: ${variantToLoad.path}`
+            );
 
-            if (variantToLoad.label === "Marker" || variantToLoad.label.includes("Marker (Alt")) {
+            if (
+              variantToLoad.label === "Marker" ||
+              variantToLoad.label.includes("Marker (Alt")
+            ) {
               debugLog.push(`MARKER DEBUG: Failed to load marker file`);
-              debugLog.push(`MARKER DEBUG: Checking if marker is in parserDet array: ${parserDet.includes('marker')}`);
+              debugLog.push(
+                `MARKER DEBUG: Checking if marker is in parserDet array: ${parserDet.includes(
+                  "marker"
+                )}`
+              );
 
               try {
                 const mdDirParams = new URLSearchParams({
@@ -327,16 +387,24 @@ export default function Aidok() {
                   password: fsSettings.password || "",
                 });
 
-                const mdDirResponse = await fetch(`/api/fs?${mdDirParams.toString()}`);
+                const mdDirResponse = await fetch(
+                  `/api/fs?${mdDirParams.toString()}`
+                );
                 if (mdDirResponse.ok) {
                   const mdDirContents = await mdDirResponse.json();
-                  debugLog.push(`MARKER DEBUG: md/ directory exists and contains ${mdDirContents.length} items`);
+                  debugLog.push(
+                    `MARKER DEBUG: md/ directory exists and contains ${mdDirContents.length} items`
+                  );
 
-                  const baseNameDir = mdDirContents.find((item: any) =>
-                    item.type === 'directory' && item.name === baseName);
+                  const baseNameDir = mdDirContents.find(
+                    (item: any) =>
+                      item.type === "directory" && item.name === baseName
+                  );
 
                   if (baseNameDir) {
-                    debugLog.push(`MARKER DEBUG: Found directory ${baseName}/ inside md/`);
+                    debugLog.push(
+                      `MARKER DEBUG: Found directory ${baseName}/ inside md/`
+                    );
 
                     const baseNameDirParams = new URLSearchParams({
                       type: fsSettings.type || "webdav",
@@ -346,53 +414,85 @@ export default function Aidok() {
                       password: fsSettings.password || "",
                     });
 
-                    const baseNameDirResponse = await fetch(`/api/fs?${baseNameDirParams.toString()}`);
+                    const baseNameDirResponse = await fetch(
+                      `/api/fs?${baseNameDirParams.toString()}`
+                    );
                     if (baseNameDirResponse.ok) {
-                      const baseNameDirContents = await baseNameDirResponse.json();
-                      debugLog.push(`MARKER DEBUG: ${baseName}/ contains ${baseNameDirContents.length} items`);
+                      const baseNameDirContents =
+                        await baseNameDirResponse.json();
+                      debugLog.push(
+                        `MARKER DEBUG: ${baseName}/ contains ${baseNameDirContents.length} items`
+                      );
 
                       const markerFile = baseNameDirContents.find((item: any) =>
-                        item.name.endsWith('.marker.md'));
+                        item.name.endsWith(".marker.md")
+                      );
 
                       if (markerFile) {
-                        debugLog.push(`MARKER DEBUG: Found marker file: ${markerFile.name} - adding correct path`);
+                        debugLog.push(
+                          `MARKER DEBUG: Found marker file: ${markerFile.name} - adding correct path`
+                        );
 
                         const correctPath = `${parentDir}md/${baseName}/${markerFile.name}`;
                         variants.push({
                           key: `${baseName}.marker.correct`,
                           label: `Marker (Gefunden)`,
-                          path: correctPath
+                          path: correctPath,
                         });
                       } else {
-                        debugLog.push(`MARKER DEBUG: No marker file found in ${baseName}/ directory`);
+                        debugLog.push(
+                          `MARKER DEBUG: No marker file found in ${baseName}/ directory`
+                        );
                       }
                     } else {
-                      debugLog.push(`MARKER DEBUG: Could not read ${baseName}/ directory`);
+                      debugLog.push(
+                        `MARKER DEBUG: Could not read ${baseName}/ directory`
+                      );
                     }
                   } else {
-                    debugLog.push(`MARKER DEBUG: No directory named ${baseName}/ found in md/ directory`);
+                    debugLog.push(
+                      `MARKER DEBUG: No directory named ${baseName}/ found in md/ directory`
+                    );
                   }
                 } else {
                   debugLog.push(`MARKER DEBUG: Could not read md/ directory`);
                 }
               } catch (dirCheckError) {
-                debugLog.push(`MARKER DEBUG: Error checking directories: ${dirCheckError instanceof Error ? dirCheckError.message : String(dirCheckError)}`);
+                debugLog.push(
+                  `MARKER DEBUG: Error checking directories: ${
+                    dirCheckError instanceof Error
+                      ? dirCheckError.message
+                      : String(dirCheckError)
+                  }`
+                );
               }
             }
 
-            throw new Error(`Fehler beim Laden der Markdown-Datei: ${response.statusText}`);
+            throw new Error(
+              `Fehler beim Laden der Markdown-Datei: ${response.statusText}`
+            );
           }
 
           const data = await response.json();
 
           if (data.content) {
             setMarkdown(data.content);
-            debugLog.push(`Successfully loaded markdown content (${data.content.length} chars)`);
+            debugLog.push(
+              `Successfully loaded markdown content (${data.content.length} chars)`
+            );
           } else {
-            throw new Error("Markdown-Datei ist leer oder hat ein ungültiges Format");
+            throw new Error(
+              "Markdown-Datei ist leer oder hat ein ungültiges Format"
+            );
           }
         } catch (fetchError) {
-          debugLog.push(`Error fetching content: ${fetchError instanceof Error ? fetchError.message : String(fetchError)}`);
+          debugLog.push(
+            `Error fetching content: ${
+              fetchError instanceof Error
+                ? fetchError.message
+                : String(fetchError)
+            }`
+          );
 
           let foundContent = false;
 
@@ -417,7 +517,9 @@ export default function Aidok() {
               });
 
               if (!altResponse.ok) {
-                debugLog.push(`Alternative fetch failed with status: ${altResponse.status}`);
+                debugLog.push(
+                  `Alternative fetch failed with status: ${altResponse.status}`
+                );
                 continue;
               }
 
@@ -426,12 +528,20 @@ export default function Aidok() {
               if (altData.content) {
                 setSelectedVariant(variant.label);
                 setMarkdown(altData.content);
-                debugLog.push(`Successfully loaded markdown from alternative path (${altData.content.length} chars)`);
+                debugLog.push(
+                  `Successfully loaded markdown from alternative path (${altData.content.length} chars)`
+                );
                 foundContent = true;
                 break;
               }
             } catch (altError) {
-              debugLog.push(`Error with alternative: ${altError instanceof Error ? altError.message : String(altError)}`);
+              debugLog.push(
+                `Error with alternative: ${
+                  altError instanceof Error
+                    ? altError.message
+                    : String(altError)
+                }`
+              );
             }
           }
 
@@ -443,9 +553,14 @@ export default function Aidok() {
         setDebugInfo(debugLog);
         setError(null);
       } catch (err) {
-        console.error('Failed to load markdown:', err);
-        setError('Fehler beim Laden der Strukturdaten. Details siehe Debug-Informationen unten.');
-        setDebugInfo(prev => [...prev, `Error: ${err instanceof Error ? err.message : String(err)}`]);
+        console.error("Failed to load markdown:", err);
+        setError(
+          "Fehler beim Laden der Strukturdaten. Details siehe Debug-Informationen unten."
+        );
+        setDebugInfo((prev) => [
+          ...prev,
+          `Error: ${err instanceof Error ? err.message : String(err)}`,
+        ]);
         setMarkdown("");
       } finally {
         setLoading(false);
@@ -485,7 +600,9 @@ export default function Aidok() {
 
   const handleAiQuerySubmit = async () => {
     if (!selectedAiQuery || !markdown) {
-      setAiError("Bitte wählen Sie eine Analyseart aus und stellen Sie sicher, dass Strukturdaten geladen sind.");
+      setAiError(
+        "Bitte wählen Sie eine Analyseart aus und stellen Sie sicher, dass Strukturdaten geladen sind."
+      );
       return;
     }
 
@@ -507,7 +624,9 @@ export default function Aidok() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || `API-Fehler: ${response.statusText}`);
+        throw new Error(
+          errorData.error || `API-Fehler: ${response.statusText}`
+        );
       }
 
       if (response.body) {
@@ -520,7 +639,7 @@ export default function Aidok() {
           if (done) break;
           const chunk = decoder.decode(value, { stream: true });
           result += chunk;
-          setAiResponse(prev => prev + chunk);
+          setAiResponse((prev) => prev + chunk);
         }
       } else {
         throw new Error("Antwort des Servers enthält keinen Body.");
@@ -541,8 +660,7 @@ export default function Aidok() {
           style={vscDarkPlus}
           language={match[1]}
           PreTag="div"
-          {...props}
-        >
+          {...props}>
           {String(children).replace(/\n$/, "")}
         </SyntaxHighlighter>
       ) : (
@@ -567,7 +685,12 @@ export default function Aidok() {
       );
     },
     td({ node, ...props }: any) {
-      return <td className="px-3 py-2 text-sm whitespace-nowrap border-t border-gray-100" {...props} />;
+      return (
+        <td
+          className="px-3 py-2 text-sm whitespace-nowrap border-t border-gray-100"
+          {...props}
+        />
+      );
     },
     img({ node, src, alt, ...props }: any) {
       if (!src || src.match(/^https?:\/\//)) {
@@ -618,19 +741,24 @@ export default function Aidok() {
       {availableVariants.length > 0 && (
         <div className="mb-2 flex items-center justify-between flex-wrap">
           <Tabs
-            value={selectedVariant !== null ? selectedVariant : availableVariants[0]?.label}
+            value={
+              selectedVariant !== null
+                ? selectedVariant
+                : availableVariants[0]?.label
+            }
             onValueChange={handleVariantChange}
-            className="flex-1 min-w-[200px]"
-          >
+            className="flex-1 min-w-[200px]">
             <TabsList className="flex flex-wrap">
               <TabsTrigger key="none" value="">
                 None
               </TabsTrigger>
-              {availableVariants.map(variant => (
+              {availableVariants.map((variant) => (
                 <TabsTrigger key={variant.key} value={variant.label}>
-                  {variant.label.toLowerCase() === defaultParser
-                    ? <strong>{variant.label}</strong>
-                    : variant.label}
+                  {variant.label.toLowerCase() === defaultParser ? (
+                    <strong>{variant.label}</strong>
+                  ) : (
+                    variant.label
+                  )}
                 </TabsTrigger>
               ))}
             </TabsList>
@@ -638,14 +766,21 @@ export default function Aidok() {
 
           <div className="flex items-center space-x-2 mt-2 sm:mt-0">
             {selectedVariant && (
-              <Button onClick={handleSaveDefaultParser} className="whitespace-nowrap">
+              <Button
+                onClick={handleSaveDefaultParser}
+                className="whitespace-nowrap">
                 <Check className="h-4 w-4 mr-2" />
               </Button>
             )}
             {markdown && selectedVariant && (
-              <Dialog open={showPreviewModal} onOpenChange={setShowPreviewModal}>
+              <Dialog
+                open={showPreviewModal}
+                onOpenChange={setShowPreviewModal}>
                 <DialogTrigger asChild>
-                  <Button variant="outline" size="icon" title="Vorschau anzeigen">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    title="Vorschau anzeigen">
                     <Eye className="h-4 w-4" />
                   </Button>
                 </DialogTrigger>
@@ -657,14 +792,16 @@ export default function Aidok() {
                     <div className="p-6 prose prose-sm max-w-none">
                       <ReactMarkdown
                         remarkPlugins={[remarkGfm]}
-                        components={markdownComponents}
-                      >
+                        components={markdownComponents}>
                         {markdown}
                       </ReactMarkdown>
                     </div>
                   </ScrollArea>
                   <DialogClose asChild>
-                    <Button type="button" variant="outline" className="mt-4 self-end">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="mt-4 self-end">
                       Schließen
                     </Button>
                   </DialogClose>
@@ -675,11 +812,17 @@ export default function Aidok() {
         </div>
       )}
 
-      {!loading && availableVariants.length === 0 && !error && markdown === "" && (
-        <div className="p-8 text-center text-gray-500 border border-dashed rounded-md">
-          <p>Keine Strukturdaten-Varianten für dieses Dokument gefunden oder ausgewählt.</p>
-        </div>
-      )}
+      {!loading &&
+        availableVariants.length === 0 &&
+        !error &&
+        markdown === "" && (
+          <div className="p-8 text-center text-gray-500 border border-dashed rounded-md">
+            <p>
+              Keine Strukturdaten-Varianten für dieses Dokument gefunden oder
+              ausgewählt.
+            </p>
+          </div>
+        )}
 
       {markdown && selectedVariant && (
         <Card>
@@ -691,20 +834,26 @@ export default function Aidok() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Select onValueChange={setSelectedAiQuery} value={selectedAiQuery}>
+              <Select
+                onValueChange={setSelectedAiQuery}
+                value={selectedAiQuery}>
                 <SelectTrigger>
                   <SelectValue placeholder="Analyseart auswählen..." />
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(AI_QUERIES).map(([key, value]) => (
                     <SelectItem key={key} value={key}>
-                      {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      {key
+                        .replace(/_/g, " ")
+                        .replace(/\b\w/g, (l) => l.toUpperCase())}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={handleAiQuerySubmit} disabled={isAiLoading || !selectedAiQuery}>
+            <Button
+              onClick={handleAiQuerySubmit}
+              disabled={isAiLoading || !selectedAiQuery}>
               {isAiLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Analyse starten
             </Button>
@@ -724,8 +873,7 @@ export default function Aidok() {
                   <div className="prose prose-sm max-w-none">
                     <ReactMarkdown
                       remarkPlugins={[remarkGfm]}
-                      components={markdownComponents}
-                    >
+                      components={markdownComponents}>
                       {aiResponse}
                     </ReactMarkdown>
                   </div>

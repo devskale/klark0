@@ -11,9 +11,9 @@ export async function POST(request: Request) {
         await streamGeminiResponseWithPrompt(
           customPrompt,
           context,
-          (chunk) => controller.enqueue(encoder.encode(chunk)),
+          (chunk: string) => controller.enqueue(encoder.encode(chunk)),
           () => controller.close(),
-          (err) => controller.error(err)
+          (err: any) => controller.error(err)
         );
       } catch (err) {
         controller.error(err);
