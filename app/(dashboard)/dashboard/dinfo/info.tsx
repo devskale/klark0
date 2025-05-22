@@ -109,6 +109,7 @@ export default function Info() {
   const [aiContext, setAiContext] = React.useState<string>("");
   const [aiRaw, setAiRaw] = React.useState<string>("");
   const [aiContextPath, setAiContextPath] = React.useState<string>("");
+  const [isSavingMeta, setIsSavingMeta] = React.useState(false);
 
   // populate form when metadata (.meta.json) loads
   React.useEffect(() => {
@@ -140,51 +141,59 @@ export default function Info() {
   // save handler uses existing upload endpoint
   const handleSaveMeta = async () => {
     if (!fsSettings || !metadataPath) return;
-    const metaObj = {
-      aussteller: issuer || null,
-      beschreibung: description || null,
-      metadaten: metadataList
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean),
-    };
-    // call our new metadata API
-    const res = await fetch("/api/fs/metadata", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        path: metadataPath,
-        metadata: metaObj,
-        type: fsSettings.type,
-        host: fsSettings.host,
-        username: fsSettings.username,
-        password: fsSettings.password,
-      }),
-    });
-    const json = await res.json();
-    if (json.success && json.metadata) {
-      // update SWR cache without revalidation
-      mutateMeta(() => json.metadata, false);
-    }
-
-    // update .pdf2md_index.json
-    if (fsSettings && parentDir) {
-      const idxPath = parentDir + PDF2MD_INDEX_FILE_NAME;
-      await fetch("/api/fs/index", {
+    setIsSavingMeta(true);
+    try {
+      const metaObj = {
+        aussteller: issuer || null,
+        beschreibung: description || null,
+        metadaten: metadataList
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+      };
+      // call our new metadata API
+      const res = await fetch("/api/fs/metadata", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          indexPath: idxPath,
-          fileName: fileBaseName,
-          meta: { kategorie: category, name: title },
+          path: metadataPath,
+          metadata: metaObj,
           type: fsSettings.type,
           host: fsSettings.host,
           username: fsSettings.username,
           password: fsSettings.password,
         }),
       });
-      // re-fetch index to reflect saved category
-      mutateIndex();
+      const json = await res.json();
+      if (json.success && json.metadata) {
+        // update SWR cache without revalidation
+        mutateMeta(() => json.metadata, false);
+      }
+
+      // update .pdf2md_index.json
+      if (fsSettings && parentDir) {
+        const idxPath = parentDir + PDF2MD_INDEX_FILE_NAME;
+        await fetch("/api/fs/index", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            indexPath: idxPath,
+            fileName: fileBaseName,
+            meta: { kategorie: category, name: title },
+            type: fsSettings.type,
+            host: fsSettings.host,
+            username: fsSettings.username,
+            password: fsSettings.password,
+          }),
+        });
+        // re-fetch index to reflect saved category
+        mutateIndex();
+      }
+    } catch (error) {
+      console.error("Error saving metadata:", error);
+      setAiError("Fehler beim Speichern der Metadaten."); // Or a more specific error state for meta saving
+    } finally {
+      setIsSavingMeta(false);
     }
   };
 
@@ -401,7 +410,11 @@ export default function Info() {
         />
       </div>
       <div className="flex justify-end gap-4 p-4 border-t">
-        <Button variant="outline" onClick={handleSaveMeta}>
+        <Button
+          variant="outline"
+          onClick={handleSaveMeta}
+          disabled={isSavingMeta}>
+          {isSavingMeta && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Speichern
         </Button>
         <Button
