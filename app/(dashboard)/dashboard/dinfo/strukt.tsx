@@ -655,6 +655,24 @@ export default function Strukt() {
   };
 
   const markdownComponents = {
+    h1: ({ node, ...props }: any) => (
+      <h1 className="text-lg font-bold mt-4 mb-2" {...props} />
+    ),
+    h2: ({ node, ...props }: any) => (
+      <h2 className="text-base font-bold mt-3 mb-1" {...props} />
+    ),
+    h3: ({ node, ...props }: any) => (
+      <h3 className="text-base font-bold mt-2 mb-1" {...props} />
+    ),
+    h4: ({ node, ...props }: any) => (
+      <h4 className="text-sm font-bold mt-2 mb-1" {...props} />
+    ),
+    h5: ({ node, ...props }: any) => (
+      <h5 className="text-sm font-bold mt-1 mb-1" {...props} />
+    ),
+    h6: ({ node, ...props }: any) => (
+      <h6 className="text-xs font-bold mt-1 mb-1" {...props} />
+    ),
     code({ node, inline, className, children, ...props }: any) {
       const match = /language-(\w+)/.exec(className || "");
       return !inline && match ? (
@@ -689,7 +707,7 @@ export default function Strukt() {
     td({ node, ...props }: any) {
       return (
         <td
-          className="px-3 py-2 text-sm whitespace-nowrap border-t border-gray-100"
+          className="px-3 py-2 text-sm whitespace-normal border-t border-gray-100"
           {...props}
         />
       );
@@ -801,13 +819,47 @@ export default function Strukt() {
                     />
                   </>
                 ) : (
-                  <div className="prose prose-xs font-mono">
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm, remarkBreaks]}
-                      components={markdownComponents}>
-                      {editedMarkdown}
-                    </ReactMarkdown>
-                  </div>
+                  (() => {
+                    const frontmatterRegex =
+                      /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/;
+                    let infoHeader: string | null = null;
+                    let contentForMarkdown: string = editedMarkdown;
+
+                    const matchResult = editedMarkdown.match(frontmatterRegex);
+
+                    if (matchResult && typeof matchResult[1] === "string") {
+                      infoHeader = matchResult[1].trim();
+                      // Ensure contentForMarkdown is a string, even if matchResult[2] is undefined (though unlikely with current regex)
+                      contentForMarkdown =
+                        typeof matchResult[2] === "string"
+                          ? matchResult[2]
+                          : "";
+                    }
+
+                    return (
+                      <>
+                        {infoHeader && (
+                          <details className="mb-4 border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden">
+                            <summary className="bg-gray-100 dark:bg-gray-800 px-4 py-2 cursor-pointer text-sm font-medium">
+                              Info Header
+                            </summary>
+                            <div className="p-4 bg-gray-50 dark:bg-gray-700">
+                              <pre className="text-xs font-mono whitespace-pre-wrap">
+                                {infoHeader}
+                              </pre>
+                            </div>
+                          </details>
+                        )}
+                        <div className="prose dark:prose-invert max-w-none">
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm, remarkBreaks]}
+                            components={markdownComponents}>
+                            {contentForMarkdown}
+                          </ReactMarkdown>
+                        </div>
+                      </>
+                    );
+                  })()
                 )}
               </div>
             </ScrollArea>
