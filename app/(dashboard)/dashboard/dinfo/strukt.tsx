@@ -3,6 +3,7 @@ import { useProject } from "@/context/ProjectContext";
 import { Card, CardContent } from "@/components/ui/card";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks"; // <--- Add this import
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import useSWR from "swr";
@@ -795,14 +796,16 @@ export default function Strukt() {
                     <Textarea
                       value={editedMarkdown}
                       onChange={(e) => setEditedMarkdown(e.target.value)}
-                      className="min-h-[60vh] w-full font-mono text-sm border rounded-md p-2 prose prose-xs max-w-none"
+                      className="min-h-[60vh] w-full font-mono text-sm border rounded-md p-2 prose prose-xs"
                       placeholder="Markdown-Inhalt hier bearbeiten..."
                     />
                   </>
                 ) : (
-                  <div className="prose prose-xs max-w-none">
+                  <div className="prose prose-xs font-mono">
+                    {" "}
+                    {/* <--- Added font-mono here */}
                     <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
+                      remarkPlugins={[remarkGfm, remarkBreaks]}
                       components={markdownComponents}>
                       {editedMarkdown}
                     </ReactMarkdown>
