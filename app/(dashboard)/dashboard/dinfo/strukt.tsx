@@ -874,7 +874,7 @@ export default function Strukt() {
       {debugInfo.length > 0 && (
         <details className="mt-8 border border-gray-200 rounded-md overflow-hidden">
           <summary className="bg-gray-50 px-4 py-2 cursor-pointer text-sm font-medium">
-            Debug Informationen
+            Dev Info
           </summary>
           <div className="p-4 bg-gray-50">
             <ul className="list-disc pl-5 text-xs font-mono space-y-1">
