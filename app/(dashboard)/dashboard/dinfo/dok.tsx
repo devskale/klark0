@@ -6,7 +6,7 @@ import useSWR from "swr";
 import { useProject } from "@/context/ProjectContext";
 import { normalizePath } from "@/lib/fs/fileTreeUtils";
 import { Button } from "@/components/ui/button";
-import { ChevronLeftIcon, ChevronRightIcon } from "@radix-ui/react-icons";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 // PDF.js worker configuration
 pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
@@ -107,7 +107,7 @@ export default function Dok() {
       {numPages && (
         <div className="flex items-center space-x-2 mb-4">
           <Button onClick={goToPrevPage} disabled={pageNumber <= 1}>
-            <ChevronLeftIcon className="h-4 w-4" />
+            <ChevronLeft className="h-4 w-4" />
             Vorherige
           </Button>
           <span>
@@ -115,7 +115,7 @@ export default function Dok() {
           </span>
           <Button onClick={goToNextPage} disabled={pageNumber >= numPages}>
             Nächste
-            <ChevronRightIcon className="h-4 w-4" />
+            <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
       )}
@@ -132,7 +132,7 @@ export default function Dok() {
       {numPages && (
         <div className="flex items-center space-x-2 mt-4">
           <Button onClick={goToPrevPage} disabled={pageNumber <= 1}>
-            <ChevronLeftIcon className="h-4 w-4" />
+            <ChevronLeft className="h-4 w-4" />
             Vorherige
           </Button>
           <span>
@@ -140,7 +140,7 @@ export default function Dok() {
           </span>
           <Button onClick={goToNextPage} disabled={pageNumber >= numPages}>
             Nächste
-            <ChevronRightIcon className="h-4 w-4" />
+            <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
       )}
