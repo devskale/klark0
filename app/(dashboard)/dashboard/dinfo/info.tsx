@@ -206,7 +206,15 @@ export default function Info() {
     try {
       // 1) Construct path to default parser's markdown file
       const baseNameWithoutExt = fileBaseName.replace(/\.[^/.]+$/, "");
-      const defaultParserMdPath = `${parentDir}md/${baseNameWithoutExt}.${parserDefault}.md`;
+      let defaultParserMdPath: string;
+
+      if (parserDefault.toLowerCase() === "marker") {
+        // Marker files are in a subdirectory: md/[baseName]/[baseName].marker.md
+        defaultParserMdPath = `${parentDir}md/${baseNameWithoutExt}/${baseNameWithoutExt}.marker.md`;
+      } else {
+        defaultParserMdPath = `${parentDir}md/${baseNameWithoutExt}.${parserDefault}.md`;
+      }
+
       setAiContextPath(defaultParserMdPath); // Store the path for dev info
 
       // 2) Load default parser's markdown content
