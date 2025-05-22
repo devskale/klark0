@@ -589,7 +589,10 @@ export default function Strukt() {
     }
 
     setIsSaving(true);
-    setDebugInfo((prev) => [...prev, `Attempting to save: ${variantToSave.path}`]);
+    setDebugInfo((prev) => [
+      ...prev,
+      `Attempting to save: ${variantToSave.path}`,
+    ]);
 
     try {
       const fullPath = variantToSave.path;
@@ -601,7 +604,9 @@ export default function Strukt() {
         throw new Error("Ungültiger Dateipfad zum Speichern.");
       }
 
-      const file = new File([editedMarkdown], fileName, { type: "text/markdown" });
+      const file = new File([editedMarkdown], fileName, {
+        type: "text/markdown",
+      });
       const formData = new FormData();
       formData.append("files", file);
 
@@ -757,9 +762,12 @@ export default function Strukt() {
                 variant="outline"
                 size="icon"
                 onClick={() => setIsEditingView(!isEditingView)}
-                title={isEditingView ? "Vorschau anzeigen" : "Bearbeiten"}
-              >
-                {isEditingView ? <Eye className="h-4 w-4" /> : <Edit3 className="h-4 w-4" />}
+                title={isEditingView ? "Vorschau anzeigen" : "Bearbeiten"}>
+                {isEditingView ? (
+                  <Eye className="h-4 w-4" />
+                ) : (
+                  <Edit3 className="h-4 w-4" />
+                )}
               </Button>
             )}
           </div>
