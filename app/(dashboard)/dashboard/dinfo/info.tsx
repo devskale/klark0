@@ -1,5 +1,5 @@
 import React from "react";
-import { Sparkles, RefreshCw } from "lucide-react";
+import { Sparkles, RefreshCw, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,19 +13,14 @@ import {
   PDF2MD_INDEX_FILE_NAME,
 } from "@/lib/fs/fileTreeUtils";
 import { EditableText } from "@/components/ui/editable-text";
+import { AI_QUERIES } from "@/app/api/ai/config";
 
 export default function Info() {
-  const {
-    selectedDok,
-    selectedProject,
-    selectedBieter,
-  } = useProject();
+  const { selectedDok, selectedProject, selectedBieter } = useProject();
   const dokName = selectedDok ?? "Dokname nicht verfügbar";
 
   // decode URL‐encoded dok path for display
-  const dokPathDecoded = selectedDok
-    ? decodeURIComponent(selectedDok)
-    : "N/A";
+  const dokPathDecoded = selectedDok ? decodeURIComponent(selectedDok) : "N/A";
 
   // derive dynamic names
   const projectName = selectedProject
@@ -34,9 +29,7 @@ export default function Info() {
       )
     : "N/A";
   const bieterName = selectedBieter
-    ? decodeURIComponent(
-        selectedBieter.replace(/\/$/, "").split("/").pop()!
-      )
+    ? decodeURIComponent(selectedBieter.replace(/\/$/, "").split("/").pop()!)
     : "N/A";
 
   // fetch filesystem settings
@@ -110,6 +103,12 @@ export default function Info() {
   const [description, setDescription] = React.useState("");
   const [metadataList, setMetadataList] = React.useState("");
   const [category, setCategory] = React.useState("");
+  const [aiLoading, setAiLoading] = React.useState(false);
+  const [aiError, setAiError] = React.useState<string | null>(null);
+  const [aiPrompt, setAiPrompt] = React.useState<string>("");
+  const [aiContext, setAiContext] = React.useState<string>("");
+  const [aiRaw, setAiRaw] = React.useState<string>("");
+  const [aiContextPath, setAiContextPath] = React.useState<string>("");
 
   // populate form when metadata (.meta.json) loads
   React.useEffect(() => {
@@ -189,19 +188,145 @@ export default function Info() {
     }
   };
 
+  // new: fetch doc text + AI call
+  const handleInit = async () => {
+    if (!fsSettings || !selectedDok || !parentDir || !parserDefault) {
+      setAiError(
+        "Erforderliche Informationen (FS-Einstellungen, Dokument, Standardparser) fehlen."
+      );
+      return;
+    }
+    setAiLoading(true);
+    setAiError(null);
+    setAiPrompt(""); // Clear previous debug info
+    setAiContext("");
+    setAiRaw("");
+    setAiContextPath(""); // Clear previous context path
+
+    try {
+      // 1) Construct path to default parser's markdown file
+      const baseNameWithoutExt = fileBaseName.replace(/\.[^/.]+$/, "");
+      const defaultParserMdPath = `${parentDir}md/${baseNameWithoutExt}.${parserDefault}.md`;
+      setAiContextPath(defaultParserMdPath); // Store the path for dev info
+
+      // 2) Load default parser's markdown content
+      const readRes = await fetch("/api/fs/read", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: fsSettings.type,
+          path: defaultParserMdPath,
+          host: fsSettings.host,
+          username: fsSettings.username,
+          password: fsSettings.password,
+        }),
+      });
+
+      if (!readRes.ok) {
+        throw new Error(
+          `Fehler beim Laden der Standard-Parser-Markdown-Datei (${defaultParserMdPath}): ${readRes.statusText}`
+        );
+      }
+      const readJson = await readRes.json();
+      const parserMdContent = readJson.content || "";
+
+      if (!parserMdContent) {
+        throw new Error(
+          `Die Standard-Parser-Markdown-Datei (${defaultParserMdPath}) ist leer oder konnte nicht gelesen werden.`
+        );
+      }
+      setAiContext(parserMdContent);
+
+      // 3) prepare & store prompt
+      const queryPrompt = AI_QUERIES.DOKUMENTTYP_JSON;
+      const fullPrompt = `${queryPrompt}\n\nContext:\n${parserMdContent}`;
+      setAiPrompt(fullPrompt);
+
+      // 4) stream AI JSON
+      const aiRes = await fetch("/api/ai/gem/stream", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          queryType: "DOKUMENTTYP_JSON",
+          context: parserMdContent, // Use parser's markdown content
+        }),
+      });
+      if (!aiRes.ok) throw new Error(`AI Error ${aiRes.status}`);
+
+      // 5) accumulate stream
+      const reader = aiRes.body!.getReader();
+      const decoder = new TextDecoder();
+      let aiRawLocal = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        aiRawLocal += decoder.decode(value, { stream: true });
+      }
+      setAiRaw(aiRawLocal);
+
+      // Clean the raw response: remove markdown fences if present
+      let cleanedJsonString = aiRawLocal.trim();
+      if (cleanedJsonString.startsWith("```json")) {
+        cleanedJsonString = cleanedJsonString.substring(7); // Remove ```json
+      }
+      if (cleanedJsonString.startsWith("```")) {
+        // Handle if it's just ```
+        cleanedJsonString = cleanedJsonString.substring(3);
+      }
+      if (cleanedJsonString.endsWith("```")) {
+        cleanedJsonString = cleanedJsonString.substring(
+          0,
+          cleanedJsonString.length - 3
+        );
+      }
+      cleanedJsonString = cleanedJsonString.trim(); // Trim again after stripping
+
+      // More robust: find the first '{' and last '}'
+      const firstBrace = cleanedJsonString.indexOf("{");
+      const lastBrace = cleanedJsonString.lastIndexOf("}");
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        cleanedJsonString = cleanedJsonString.substring(
+          firstBrace,
+          lastBrace + 1
+        );
+      }
+
+      // 6) parse & populate fields
+      const aiJson = JSON.parse(cleanedJsonString); // Use cleaned string
+      setCategory(aiJson.Kategorie ?? "");
+      setIssuer(aiJson.Aussteller ?? "");
+      setTitle(aiJson.Dokumententyp ?? "");
+      setDescription(aiJson.Begründung ?? "");
+    } catch (err: any) {
+      setAiError(
+        err.message || "Unbekannter AI-Fehler. Rohantwort siehe Dev Info."
+      );
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-3 p-4 bg-white rounded-md shadow">
       <h2 className="text-2xl font-bold">{trimName(dokName)}</h2>
       <div className="space-y-0.5">
         <div className="flex items-start">
-          <strong className="mr-2 py-1.5 whitespace-nowrap shrink-0">Projekt:</strong>
-          <span className="py-1.5 px-3 min-h-[36px] w-full flex items-center">{projectName}</span>
+          <strong className="mr-2 py-1.5 whitespace-nowrap shrink-0">
+            Projekt:
+          </strong>
+          <span className="py-1.5 px-3 min-h-[36px] w-full flex items-center">
+            {projectName}
+          </span>
         </div>
         <div className="flex items-start">
-          <strong className="mr-2 py-1.5 whitespace-nowrap shrink-0">Bieter:</strong>
-          <span className="py-1.5 px-3 min-h-[36px] w-full flex items-center">{bieterName}</span>
+          <strong className="mr-2 py-1.5 whitespace-nowrap shrink-0">
+            Bieter:
+          </strong>
+          <span className="py-1.5 px-3 min-h-[36px] w-full flex items-center">
+            {bieterName}
+          </span>
         </div>
-        
+
         <EditableText
           label="Kategorie:"
           value={category}
@@ -228,9 +353,11 @@ export default function Info() {
           placeholder="Beschreibung hinzufügen"
           inputClassName="min-h-[70px]"
         />
-        
+
         <div className="flex items-start">
-          <strong className="mr-2 py-1.5 whitespace-nowrap shrink-0">Strukt:</strong>
+          <strong className="mr-2 py-1.5 whitespace-nowrap shrink-0">
+            Strukt:
+          </strong>
           <span className="py-1.5 px-3 min-h-[36px] w-full flex items-center">
             {parserDetList.length > 0 ? (
               parserDetList.map((name, i) => (
@@ -246,10 +373,14 @@ export default function Info() {
             )}
           </span>
         </div>
-        
+
         <div className="flex items-start">
-          <strong className="mr-2 py-1.5 whitespace-nowrap shrink-0">Dok ID:</strong>
-          <span className="py-1.5 px-3 min-h-[36px] w-full break-all flex items-center">{dokPathDecoded}</span>
+          <strong className="mr-2 py-1.5 whitespace-nowrap shrink-0">
+            Dok ID:
+          </strong>
+          <span className="py-1.5 px-3 min-h-[36px] w-full break-all flex items-center">
+            {dokPathDecoded}
+          </span>
         </div>
 
         <EditableText
@@ -269,15 +400,77 @@ export default function Info() {
           variant="ghost"
           size="icon"
           onClick={() => mutateMeta()}
-          title="Metadaten neu laden"
-        >
+          title="Metadaten neu laden">
           <RefreshCw className="h-4 w-4" />
         </Button>
-        <Button className="flex items-center gap-2">
+        <Button
+          className="flex items-center gap-2"
+          onClick={handleInit}
+          disabled={aiLoading}>
+          {aiLoading && <Loader2 className="h-4 w-4 animate-spin" />}
           <Sparkles className="h-4 w-4" />
           Init
         </Button>
       </div>
+      {aiError && (
+        <div className="text-destructive text-sm mt-2">{aiError}</div>
+      )}
+
+      {/* Dev-Info */}
+      <details className="mt-4 border border-gray-200 rounded-md overflow-hidden">
+        <summary className="bg-gray-50 px-4 py-2 cursor-pointer text-sm font-medium">
+          Dev Info
+        </summary>
+        <div className="p-4 bg-gray-50 text-xs font-mono space-y-1">
+          <ul className="list-disc pl-5">
+            <li>parserStatus: {parserStatus}</li>
+            <li>hasParser: {hasParser.toString()}</li>
+            <li>parserDetList: {parserDetList.join(", ")}</li>
+            <li>parserDefault: {parserDefault}</li>
+            <li>
+              fsSettings: {fsSettings ? JSON.stringify(fsSettings) : "N/A"}
+            </li>
+            <li>entries count: {entries?.length ?? "N/A"}</li>
+            <li>idxJson files: {idxJson?.files?.length ?? "N/A"}</li>
+            <li>
+              docMeta keys: {docMeta ? Object.keys(docMeta).join(", ") : "N/A"}
+            </li>
+            <li>
+              AI Context Path:
+              <pre className="mt-1 p-2 bg-gray-100 rounded text-xs break-all whitespace-pre-wrap">
+                {aiContextPath || "(not set)"}
+              </pre>
+            </li>
+            <li>
+              AI Prompt:
+              <pre className="mt-1 p-2 bg-gray-100 rounded text-xs break-all whitespace-pre-wrap">
+                {aiPrompt}
+              </pre>
+            </li>
+            <li>
+              AI Context (first 200 chars from default parser's .md):
+              <pre className="mt-1 p-2 bg-gray-100 rounded text-xs break-all whitespace-pre-wrap">
+                {aiContext.slice(0, 200)}
+                {aiContext.length > 200 ? "…" : ""}
+              </pre>
+            </li>
+            <li>
+              AI Raw Response:
+              <pre className="mt-1 p-2 bg-gray-100 rounded text-xs break-all whitespace-pre-wrap">
+                {(() => {
+                  try {
+                    // Attempt to parse and pretty-print if it's JSON
+                    return JSON.stringify(JSON.parse(aiRaw || "{}"), null, 2);
+                  } catch (e) {
+                    // If not valid JSON or empty, show raw (or placeholder if empty)
+                    return aiRaw || "(empty)";
+                  }
+                })()}
+              </pre>
+            </li>
+          </ul>
+        </div>
+      </details>
     </div>
   );
 }
