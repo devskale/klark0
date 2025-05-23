@@ -10,15 +10,22 @@ export default function HomePage() {
           <div className="lg:grid lg:grid-cols-12 lg:gap-8">
             <div className="sm:text-center md:max-w-2xl md:mx-auto lg:col-span-6 lg:text-left">
               <h1 className="text-4xl font-bold text-gray-900 tracking-tight sm:text-4xl md:text-5xl">
-                Vergabeprojekte
+                <div className="flex items-center gap-2">
+                  <img
+                    src="/android-chrome-192x192.png"
+                    alt="FAIrgabe Wien Logo"
+                    className="h-12 w-auto"
+                  />
+                  FAIrgabe Wien
+                </div>
                 <span className="text-3xl block text-orange-500">
-                  Digital, Effizient & Transparent
+                  Digitale Transparente Vergabeaudits
                 </span>
               </h1>
               <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-xl lg:text-lg xl:text-xl">
-                Optimieren Sie Ihre Vergabeprozesse mit Klark0 für sichere und
-                effiziente digitale Prüfungen – selbst bei komplexesten
-                Verfahren.
+                Digitale Vergabeaudits ermöglichen eine faire, transparente und
+                nachvollziehbare Bewertung – unterstützt durch sichere und
+                vertrauenswürdige KI.
               </p>
               <div className="mt-8 sm:max-w-lg sm:mx-auto sm:text-center lg:text-left lg:mx-0">
                 <a href="/dashboard">
