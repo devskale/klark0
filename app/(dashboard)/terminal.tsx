@@ -7,12 +7,12 @@ export function Terminal() {
   const [terminalStep, setTerminalStep] = useState(0);
   const [copied, setCopied] = useState(false);
   const terminalSteps = [
-    "git clone https://github.com/devskale/klark0",
-    "pnpm install",
-    "pnpm db:setup",
-    "pnpm db:migrate",
-    "pnpm db:seed",
-    "pnpm dev 🎉",
+    "Vergabeprojekt: 🚚 Beschaffung",
+    "Bieter Audit: TransportPro GmbH",
+    "Prüfung Vollständigkeit: ✅ 95%",
+    " --->  Nachreichung: Versicherungsnachweis",
+    "Prüfung Kriterien: ✅ 80%",
+    "Freigabe: Mag. Müller ✅",
   ];
 
   useEffect(() => {
