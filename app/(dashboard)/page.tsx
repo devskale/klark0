@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, CreditCard, Database, Zap } from "lucide-react";
+import { ArrowRight, CreditCard, Database, Zap, Code } from "lucide-react";
 import { Terminal } from "./terminal";
 
 export default function HomePage() {
@@ -8,7 +8,7 @@ export default function HomePage() {
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:grid lg:grid-cols-12 lg:gap-8">
-            <div className="sm:text-center md:max-w-2xl md:mx-auto lg:col-span-6 lg:text-left">
+            <div className="sm:text-center md:max-w-2xl md:mx-auto lg:col-span-6 lg:text-left flex flex-col h-full">
               <h1 className="text-4xl font-bold text-gray-900 tracking-tight sm:text-4xl md:text-5xl">
                 <div className="flex items-center gap-2">
                   <img
@@ -37,6 +37,41 @@ export default function HomePage() {
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </a>
+              </div>
+              <div className="mt-auto pt-8 sm:max-w-lg sm:mx-auto sm:text-center lg:text-left lg:mx-0">
+                <div className="flex flex-col items-start text-sm text-gray-500">
+                  <a
+                    href="https://skale.dev"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center hover:text-gray-700">
+                    Ein Projekt von
+                  </a>
+                  <div className="flex items-center gap-2 mt-2 ml-6">
+                    <a
+                      href="https://www.wienerwohnen.at/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="WWHB">
+                      <img
+                        src="/wwhb_logo.png"
+                        alt="WWHB Logo"
+                        className="h-7 w-auto grayscale hover:grayscale-0 transition-all"
+                      />
+                    </a>
+                    <a
+                      href="https://skale.dev"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="Skale.dev">
+                      <img
+                        src="/skaledev_logo.png"
+                        alt="Skale.dev Logo"
+                        className="h-7 w-auto grayscale hover:grayscale-0 transition-all"
+                      />
+                    </a>
+                  </div>
+                </div>
               </div>
             </div>
             <div className="mt-12 relative sm:max-w-lg sm:mx-auto lg:mt-0 lg:max-w-none lg:mx-0 lg:col-span-6 lg:flex lg:items-center">
