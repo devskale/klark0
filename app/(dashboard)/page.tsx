@@ -144,11 +144,11 @@ export default function HomePage() {
               <p className="mt-3 max-w-3xl text-lg text-gray-500">
                 Erstellen Sie Ihr erstes Vergabeprojekt in wenigen Minuten und
                 laden Sie Ihre Dokumente sicher hoch. Starten Sie jetzt mit der
-                digitalen Vergabe.
+                digitalen Vergabebewertung.
               </p>
             </div>
             <div className="mt-8 lg:mt-0 flex justify-center lg:justify-end">
-              <a href="https://github.com/devskale/klark0" target="_blank">
+              <a href="/dashboard" target="_blank">
                 <Button
                   size="lg"
                   className="text-lg rounded-full bg-orange-500 hover:bg-orange-600 text-white">
