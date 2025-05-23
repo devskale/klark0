@@ -7,12 +7,12 @@ export function Terminal() {
   const [terminalStep, setTerminalStep] = useState(0);
   const [copied, setCopied] = useState(false);
   const terminalSteps = [
-    "Vergabeprojekt: 🚚 Beschaffung",
-    "Bieter Audit: TransportPro GmbH",
-    "Prüfung Vollständigkeit: ✅ 95%",
-    " --->  Nachreichung: Versicherungsnachweis",
-    "Prüfung Kriterien: ✅ 80%",
-    "Freigabe: Mag. Müller ✅",
+    "FAIrgabeaudit : KFZ 🚚 Beschaffung.",
+    "Der Bieter-Audit für TransportPro GmbH wird durchgeführt...",
+    "Prüfung auf Vollständigkeit der Unterlagen: ⏳ 95%.",
+    "Es wird noch ein Dokument 📄 benötigt: Versicherungsnachweis.",
+    "Die Prüfung der Eignungskriterien ist zu 100% erfolgt.",
+    "Die Freigabe durch Mag. Müller wurde erteilt. ✅ Alles bereit!",
   ];
 
   useEffect(() => {
@@ -20,7 +20,7 @@ export function Terminal() {
       setTerminalStep((prev) =>
         prev < terminalSteps.length - 1 ? prev + 1 : prev
       );
-    }, 500);
+    }, 1200); // Increased delay for a more natural chat feel
 
     return () => clearTimeout(timer);
   }, [terminalStep]);
@@ -32,33 +32,31 @@ export function Terminal() {
   };
 
   return (
-    <div className="w-full rounded-lg shadow-lg overflow-hidden bg-gray-900 text-white font-mono text-sm relative">
+    <div className="w-full rounded-lg shadow-lg overflow-hidden bg-gray-100 text-gray-800 font-sans text-sm relative">
       <div className="p-4">
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex space-x-2">
-            <div className="w-3 h-3 rounded-full bg-red-500"></div>
-            <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-            <div className="w-3 h-3 rounded-full bg-green-500"></div>
-          </div>
+        <div className="flex justify-end items-center mb-4">
+          {/* Removed traffic light buttons */}
           <button
             onClick={copyToClipboard}
-            className="text-gray-400 hover:text-white transition-colors"
+            className="text-gray-500 hover:text-gray-700 transition-colors"
             aria-label="Copy to clipboard">
             {copied ? (
-              <Check className="h-5 w-5" />
+              <Check className="h-5 w-5 text-blue-500" />
             ) : (
               <Copy className="h-5 w-5" />
             )}
           </button>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-3">
           {terminalSteps.map((step, index) => (
             <div
               key={index}
-              className={`${
+              className={`flex ${
                 index > terminalStep ? "opacity-0" : "opacity-100"
-              } transition-opacity duration-300`}>
-              <span className="text-green-400">$</span> {step}
+              } transition-opacity duration-500 ease-in-out`}>
+              <div className="bg-blue-500 text-white p-3 rounded-lg rounded-bl-none shadow max-w-md">
+                {step}
+              </div>
             </div>
           ))}
         </div>
