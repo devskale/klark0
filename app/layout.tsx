@@ -6,7 +6,7 @@ import { SWRConfig } from "swr";
 import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
-  title: "KI Vergabe",
+  title: "FAIrgabe Wien",
   description: "Digitales Vergabeaudit",
 };
 
@@ -31,7 +31,9 @@ export default function RootLayout({
             fallback: {
               "/api/user": getUser(),
               "/api/team": getTeamForUser(),
-              "/api/settings": getTeamForUser().then(team => team ? getAppSetting(team.id, "general") : null),
+              "/api/settings": getTeamForUser().then((team) =>
+                team ? getAppSetting(team.id, "general") : null
+              ),
             },
           }}>
           {children}

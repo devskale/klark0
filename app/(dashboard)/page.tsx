@@ -14,11 +14,11 @@ export default function HomePage() {
                   <img
                     src="/android-chrome-192x192.png"
                     alt="FAIrgabe Wien Logo"
-                    className="h-12 w-auto"
+                    className="h-9 w-auto"
                   />
                   FAIrgabe Wien
                 </div>
-                <span className="text-3xl block text-orange-500 mt-2">
+                <span className="text-3xl block text-orange-400 mt-2">
                   Digitale Transparente Vergabeaudits
                 </span>
               </h1>
@@ -47,12 +47,13 @@ export default function HomePage() {
                     className="inline-flex items-center hover:text-gray-700">
                     Ein Projekt von
                   </a>
-                  <div className="flex items-center gap-2 mt-2 ml-6">
+                  <div className="flex items-center gap-2 mt-2">
                     <a
                       href="https://www.wienerwohnen.at/"
                       target="_blank"
                       rel="noopener noreferrer"
-                      title="WWHB">
+                      title="WWHB"
+                      className="mr-2">
                       <img
                         src="/wwhb_logo.png"
                         alt="WWHB Logo"
