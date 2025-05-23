@@ -91,16 +91,26 @@ export function AppSidebar({ versions, navMain, ...props }: AppSidebarProps) {
       <SidebarHeader>
         {state === "collapsed" ? (
           <div className="flex justify-center items-center p-2">
-            <CircleIcon className="h-6 w-6 text-orange-500" />
+            <img
+              src="/schild_orange.svg"
+              alt="FAIrgabe Logo"
+              className="h-6 w-6"
+            />
           </div>
         ) : (
-            <div className="flex flex-col items-start p-4 text-gray-800">
+          <div className="flex flex-col items-start p-4 text-gray-800">
             <div className="flex items-center font-bold text-xl">
-              <CircleIcon className="h-6 w-6 mr-2 text-orange-500" />
-              KI Vergabe
+              <img
+                src="/schild_orange.svg"
+                alt="FAIrgabe Logo"
+                className="h-6 w-6 mr-2"
+              />
+              FAIrgabe Wien
             </div>
-            <span className="text-xs text-gray-500 mt-1">Digitale Vergabeplattform</span>
-            </div>
+            <span className="text-xs text-gray-500 mt-1">
+              Digitale Transparente Vergabeaudits
+            </span>
+          </div>
         )}
         {state !== "collapsed" && (
           <>
@@ -113,33 +123,33 @@ export function AppSidebar({ versions, navMain, ...props }: AppSidebarProps) {
         )}
       </SidebarHeader>
       <SidebarContent>
-        {navMain.map((item) =>
-          (item.title !== "Doks" || !!selectedDok) && 
-          (item.title !== "Bieter" || !!selectedBieter) && // Also hide Bieter section if no bieter selected
-          (
-            <SidebarGroup key={item.title}>
-              <SidebarGroupLabel>{item.title}</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {item.items.map((subItem) => (
-                    <SidebarMenuItem key={subItem.title}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={pathname === subItem.url} // Use pathname for isActive
-                      >
-                        <Link href={subItem.url}>
-                          {subItem.icon && (
-                            <subItem.icon className="mr-2 h-4 w-4" />
-                          )}
-                          {subItem.title}
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          )
+        {navMain.map(
+          (item) =>
+            (item.title !== "Doks" || !!selectedDok) &&
+            (item.title !== "Bieter" || !!selectedBieter) && ( // Also hide Bieter section if no bieter selected
+              <SidebarGroup key={item.title}>
+                <SidebarGroupLabel>{item.title}</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {item.items.map((subItem) => (
+                      <SidebarMenuItem key={subItem.title}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={pathname === subItem.url} // Use pathname for isActive
+                        >
+                          <Link href={subItem.url}>
+                            {subItem.icon && (
+                              <subItem.icon className="mr-2 h-4 w-4" />
+                            )}
+                            {subItem.title}
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            )
         )}
       </SidebarContent>
       <SidebarRail />
