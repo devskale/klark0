@@ -226,7 +226,12 @@ export default function Strukt() {
               });
             });
           } else {
-            const path = `${parentDir}md/${baseName}.${parser}.md`;
+            let path: string;
+            if (parser === "md") {
+              path = `${parentDir}md/${baseName}.md`;
+            } else {
+              path = `${parentDir}md/${baseName}.${parser}.md`;
+            }
             debugLog.push(`Adding ${parser} at: ${path}`);
 
             variants.push({

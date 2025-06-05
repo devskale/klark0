@@ -220,6 +220,9 @@ export default function Info() {
       if (parserDefault.toLowerCase() === "marker") {
         // Marker files are in a subdirectory: md/[baseName]/[baseName].marker.md
         defaultParserMdPath = `${parentDir}md/${baseNameWithoutExt}/${baseNameWithoutExt}.marker.md`;
+      } else if (parserDefault.toLowerCase() === "md") {
+        // Special case for md parser: md/[baseName].md
+        defaultParserMdPath = `${parentDir}md/${baseNameWithoutExt}.md`;
       } else {
         defaultParserMdPath = `${parentDir}md/${baseNameWithoutExt}.${parserDefault}.md`;
       }
