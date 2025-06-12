@@ -271,12 +271,22 @@ const infoConfig = {
 // Configuration for Markdown Conversion
 const markdownConversionConfig = {
   displayName: "Markdown Konversion",
+  fields: [
+    {
+      id: "parserUrl",
+      label: "Parser URL",
+      type: "text",
+      placeholder: "https://parser.example.com",
+      defaultValue: "",
+    },
+  ],
   options: [
-    { id: "ocr", label: "OCR", defaultValue: true },
-    { id: "marker", label: "marker", defaultValue: false },
+    { id: "ocr", label: "OCR", defaultValue: false },
+    { id: "marker", label: "marker", defaultValue: true },
     { id: "llamaparse", label: "llamaparse", defaultValue: false },
-    { id: "docling", label: "docling", defaultValue: false },
+    { id: "docling", label: "docling", defaultValue: true },
     { id: "pdfplumber", label: "pdfplumber", defaultValue: false },
+    { id: "molmo", label: "molmo", defaultValue: false },
   ],
   forceOcr: { id: "ocrforced", label: "OCR Erzwingen", defaultValue: false },
 };
@@ -344,6 +354,15 @@ const kiEinstellungenConfig = {
 // Konfiguration für Personendaten Anonymisierung
 const personDataConfig = {
   displayName: "Anonymisierung",
+  fields: [
+    {
+      id: "anonymizerUrl",
+      label: "Anonymizer URL",
+      type: "text",
+      placeholder: "https://anonymizer.example.com",
+      defaultValue: "",
+    },
+  ],
   options: [
     { id: "glna", label: "glna" },
     { id: "glnb", label: "glnb" },
@@ -952,6 +971,11 @@ export default function GeneralPage() {
                       v === "on",
                     ])
                   );
+                  // Add URL field to settings
+                  const parserUrl = formData.get("parserUrl") as string;
+                  if (parserUrl) {
+                    newSettings.parserUrl = parserUrl;
+                  }
                   try {
                     await fetch("/api/settings", {
                       method: "POST",
@@ -981,6 +1005,22 @@ export default function GeneralPage() {
                     setMdSaving(false);
                   }
                 }}>
+                
+                {/* Parser URL Field */}
+                {markdownConversionConfig.fields.map((field) => (
+                  <div key={field.id} className="space-y-2">
+                    <Label htmlFor={field.id}>{field.label}</Label>
+                    <Input
+                      id={field.id}
+                      name={field.id}
+                      type={field.type}
+                      placeholder={field.placeholder}
+                      defaultValue={mdConvSettings?.[field.id] || field.defaultValue}
+                    />
+                  </div>
+                ))}
+
+                {/* Existing multi-select and other form elements */}
                 {/* Hidden inputs für gewählte Tags */}
                 {mdSelected.map((opt) => (
                   <input
@@ -1086,7 +1126,7 @@ export default function GeneralPage() {
         </Card>
       </Collapsible>
 
-      {/* Personendaten Section */}
+      {/* Personendaten Anonymisierung Section */}
       <Collapsible
         open={isPersonCardOpen}
         onOpenChange={setIsPersonCardOpen}
@@ -1095,10 +1135,7 @@ export default function GeneralPage() {
           <CardHeader className="flex items-center justify-between cursor-pointer">
             <CollapsibleTrigger asChild>
               <div className="flex items-center justify-between w-full">
-                <CardTitle className="flex items-center gap-2">
-                  {personDataConfig.displayName}
-                  <Sparkles className="h-5 w-5 text-black-400" />
-                </CardTitle>
+                <CardTitle>{personDataConfig.displayName}</CardTitle>
                 <ChevronDown
                   className={`h-5 w-5 transition-transform ${
                     isPersonCardOpen ? "rotate-180" : ""
@@ -1110,18 +1147,25 @@ export default function GeneralPage() {
           <CollapsibleContent>
             <CardContent className="space-y-4 pt-0">
               <p className="text-sm text-muted-foreground">
-                Modelle für das Entfernen von Personenbezogenen{" "}
+                Modelle für die Anonymisierung von Personendaten
               </p>
-
               <form
                 className="space-y-4"
                 onSubmit={async (e) => {
                   e.preventDefault();
                   setPersonSaving(true);
-                  const fd = new FormData(e.currentTarget);
+                  const formData = new FormData(e.currentTarget);
                   const newSettings = Object.fromEntries(
-                    Array.from(fd.entries()).map(([k, v]) => [k, v === "on"])
+                    Array.from(formData.entries()).map(([k, v]) => [
+                      k,
+                      v === "on",
+                    ])
                   );
+                  // Add URL field to settings
+                  const anonymizerUrl = formData.get("anonymizerUrl") as string;
+                  if (anonymizerUrl) {
+                    newSettings.anonymizerUrl = anonymizerUrl;
+                  }
                   try {
                     await fetch("/api/settings", {
                       method: "POST",
@@ -1131,10 +1175,13 @@ export default function GeneralPage() {
                         value: newSettings,
                       }),
                     });
-                    mutatePersonSettings({ ...personSettings, ...newSettings });
+                    mutatePersonSettings({
+                      ...personSettings,
+                      ...newSettings,
+                    });
                     toast.success("Einstellungen gespeichert", {
                       description:
-                        "Die Personendaten-Einstellungen wurden erfolgreich gespeichert.",
+                        "Die Anonymisierungsoptionen wurden erfolgreich gespeichert.",
                       position: "top-center",
                       duration: 3000,
                     });
@@ -1148,6 +1195,22 @@ export default function GeneralPage() {
                     setPersonSaving(false);
                   }
                 }}>
+                
+                {/* Anonymizer URL Field */}
+                {personDataConfig.fields.map((field) => (
+                  <div key={field.id} className="space-y-2">
+                    <Label htmlFor={field.id}>{field.label}</Label>
+                    <Input
+                      id={field.id}
+                      name={field.id}
+                      type={field.type}
+                      placeholder={field.placeholder}
+                      defaultValue={personSettings?.[field.id] || field.defaultValue}
+                    />
+                  </div>
+                ))}
+
+                {/* Existing multi-select for anonymization options */}
                 {/* Hidden inputs für Auswahl */}
                 {personSelected.map((opt) => (
                   <input
