@@ -51,3 +51,4 @@ data/**
 /public/extensions/
 stripe/
 *.swp
+tmp/

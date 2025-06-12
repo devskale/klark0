@@ -368,8 +368,7 @@ const personDataConfig = {
     { id: "glnb", label: "glnb" },
     { id: "glnc", label: "glnc" },
     { id: "gemma3_4b", label: "gemma3:4b" },
-    { id: "llama3_7b", label: "llama3:7b" },
-  ],
+    { id: "gemma3_12b", label: "gemma3:12b" },],
 };
 
 export default function GeneralPage() {
