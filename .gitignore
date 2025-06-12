@@ -46,3 +46,8 @@ postgres_data/
 #Drizzle Migrations
 lib/db/migrations/
 data/**
+
+#other
+/public/extensions/
+stripe/
+*.swp
