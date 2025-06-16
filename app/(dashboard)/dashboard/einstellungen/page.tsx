@@ -973,7 +973,7 @@ export default function GeneralPage() {
                   // Add URL field to settings
                   const parserUrl = formData.get("parserUrl") as string;
                   if (parserUrl) {
-                    newSettings.parserUrl = parserUrl;
+                    (newSettings as any).parserUrl = parserUrl;
                   }
                   try {
                     await fetch("/api/settings", {
@@ -1014,7 +1014,7 @@ export default function GeneralPage() {
                       name={field.id}
                       type={field.type}
                       placeholder={field.placeholder}
-                      defaultValue={mdConvSettings?.[field.id] || field.defaultValue}
+                      defaultValue={mdConvSettings?.[field.id] !== undefined ? String(mdConvSettings[field.id]) : field.defaultValue}
                     />
                   </div>
                 ))}
@@ -1163,7 +1163,7 @@ export default function GeneralPage() {
                   // Add URL field to settings
                   const anonymizerUrl = formData.get("anonymizerUrl") as string;
                   if (anonymizerUrl) {
-                    newSettings.anonymizerUrl = anonymizerUrl;
+                    (newSettings as any).anonymizerUrl = anonymizerUrl;
                   }
                   try {
                     await fetch("/api/settings", {
@@ -1204,7 +1204,7 @@ export default function GeneralPage() {
                       name={field.id}
                       type={field.type}
                       placeholder={field.placeholder}
-                      defaultValue={personSettings?.[field.id] || field.defaultValue}
+                      defaultValue={personSettings?.[field.id] !== undefined ? String(personSettings[field.id]) : field.defaultValue}
                     />
                   </div>
                 ))}
