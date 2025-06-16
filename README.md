@@ -2,6 +2,9 @@
 
 Klark0 ist eine moderne Webanwendung für sicheres digitales Vergabe Auditing, entwickelt mit **Next.js**. Die Anwendung bietet eine sichere Plattform für Vergabeverfahren mit integrierter Authentifizierung und Benutzerverwaltung.
 
+## Scope
+Build klark0, a webapp for tender document auditing. Webapp language is German.
+
 ## Features
 
 - Sichere Benutzerauthentifizierung mit JWT
@@ -23,9 +26,23 @@ OCI Bucket
 ## Tech Stack
 
 - **Framework**: [Next.js](https://nextjs.org/)
+- **Language**: TypeScript
+- **State Management**: SWR
 - **Datenbank**: [Postgres](https://www.postgresql.org/)
 - **ORM**: [Drizzle](https://orm.drizzle.team/)
 - **UI Library**: [shadcn/ui](https://ui.shadcn.com/)
+- **Payments**: Stripe
+- **Authentication**: JWT with session cookies
+
+## Middleware
+- Global middleware to protect logged-in routes
+- Local middleware to protect Server Actions or validate Zod schemas
+
+## Filesystem
+Access to documents via filesystem, configured in Einstellungen.
+
+## Remote Storage
+Support for remote storage via WebDAV (Other options will be implemented later).
 
 ## Installation
 
@@ -160,7 +177,7 @@ Um die opinionated Dateistruktur zu abstrahieren, wurde eine Middleware-Schicht 
 
 Diese Abstraktion ermöglicht eine einheitliche API und eine flexible Darstellung des Dateisystems.
 
-## API: Dateisystem-Operationen
+## API Routes
 
 Klark0 stellt REST-Endpunkte unter `/api/fs/*` zur Verfügung, um Dateien per WebDAV zu verwalten. Alle Endpunkte erwarten die Query-Parameter `host`, `username`, `password` und optional `type` (Standard: `webdav`).
 
@@ -178,39 +195,37 @@ Metadata files contain structured information about documents like:
 - Document relationships
 - Audit trail information
 
-**Endpunkte:**
+List of available FS endpoints for remote filesystem access:
+- GET `/api/fs`           : list directory via WebDAV PROPFIND  
+- GET `/api/fs/read`      : retrieve file content (binary/text) via WebDAV GET  
+- POST `/api/fs/read`     : return file content as JSON (`content`)  
+- GET `/api/fs/metadata`  : read metadata sidecar (JSON)  
+- POST `/api/fs/metadata` : write metadata sidecar (JSON)  
+- POST `/api/fs/mkdir`    : create directory  
+- POST `/api/fs/delete`   : delete file or directory  
+- POST `/api/fs/rename`   : rename file or directory  
+- POST `/api/fs/index`    : update or create index file  
+- POST `/api/fs/upload`   : upload file(s)
 
-- `GET /api/fs`  
-  List directory contents via WebDAV PROPFIND
+API routes for accessing AI services:
+- api/ai/gem/custom : custom AI service
+- api/ai/gem/stream : AI Streaming service 
 
-- `GET /api/fs/read`  
-  Get file content directly (binary/text) via WebDAV GET
+API Routes for Worker Management:
+- POST /api/worker/jobs : create and start new job
+- GET /api/worker/jobs : list all jobs (with filtering by type, status, project)
+- GET /api/worker/jobs/[jobId] : get specific job details and status
+- DELETE /api/worker/jobs/[jobId] : cancel/stop specific job
 
-- `POST /api/fs/read`  
-  Get file content as JSON (`{ content: string }`)
+Worker System Routes:
+- GET /api/worker/status : get overall worker system status
+- GET /api/worker/types : list all available worker types and capabilities
 
-- `GET /api/fs/metadata`  
-  Read JSON metadata sidecar file
-
-- `POST /api/fs/metadata`  
-  Write JSON metadata sidecar file
-
-- `POST /api/fs/mkdir`  
-  Create new directory
-
-- `POST /api/fs/delete`  
-  Delete file or directory
-
-- `POST /api/fs/rename`  
-  Rename/move file or directory
-
-- `GET /api/fs/index`  
-  Read index file (`.pdf2md_index.json`) via WebDAV GET
-- `POST /api/fs/index`  
-  Create/update index file (`.pdf2md_index.json`)
-
-- `POST /api/fs/upload`  
-  Upload one or multiple files
+Available Worker Types:
+- parsing : Document parsing and structure extraction
+- anonymization : Data anonymization and privacy protection  
+- analysis : AI-based document analysis and criteria extraction
+- fakejob : Testing worker with configurable random duration (3-10+ seconds)
 
 ### Beispiele
 
@@ -238,4 +253,3 @@ curl -X POST "http://localhost:3000/api/fs/metadata" \
 curl -X POST "http://localhost:3000/api/fs/upload?host=...&username=...&password=...&path=/klark0/neuer-ordner/" \
   -F "files=@/pfad/zur/lokalen/datei1.pdf" \
   -F "files=@/pfad/zur/lokalen/datei2.txt"
-```
