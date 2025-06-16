@@ -1,7 +1,7 @@
 /**
  * Predefined queries for the Gemini AI API
  */
-export const AI_QUERIES = {
+export const AI_QUERIES: Record<string, string> = {
   ZUSAMMENFASSUNG:
     "Analysieren Sie den folgenden Text und fassen Sie ihn prägnant auf Deutsch zusammen:",
   KERNPUNKTE:
