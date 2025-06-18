@@ -1,13 +1,14 @@
-// File-based job store for development (replace with Redis in production)
-// This module uses 'fs' and 'path', which are not available in the Edge runtime.
-// It has been temporarily modified to prevent build errors in Edge environments.
-// A proper Edge-compatible solution or conditional import logic is needed if this store is to be used.
+// Simple in-memory job store for development
+// In production, this should be replaced with Redis or database storage
+
+import fs from "fs";
+import path from "path";
 
 export interface Job {
   id: string;
   type: string;
   name: string;
-  status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+  status: "pending" | "running" | "completed" | "failed" | "cancelled";
   project?: string;
   createdAt: string;
   startedAt?: string;
@@ -19,31 +20,80 @@ export interface Job {
   parameters?: Record<string, any>;
 }
 
-// Placeholder job store operations for Edge compatibility
+// Simple in-memory store with file persistence for development
+const jobsMap = new Map<string, Job>();
+
+// File path for persistence (in development only)
+const JOBS_FILE = path.join(process.cwd(), "tmp", "jobs.json");
+
+// Load jobs from file on startup
+function loadJobsFromFile() {
+  try {
+    if (fs.existsSync(JOBS_FILE)) {
+      const data = fs.readFileSync(JOBS_FILE, "utf-8");
+      const jobs = JSON.parse(data) as Job[];
+      for (const job of jobs) {
+        jobsMap.set(job.id, job);
+      }
+      console.log(`📂 Loaded ${jobs.length} jobs from persistent storage`);
+    }
+  } catch (error) {
+    console.error("Failed to load jobs from file:", error);
+  }
+}
+
+// Save jobs to file
+function saveJobsToFile() {
+  try {
+    // Ensure tmp directory exists
+    const tmpDir = path.dirname(JOBS_FILE);
+    if (!fs.existsSync(tmpDir)) {
+      fs.mkdirSync(tmpDir, { recursive: true });
+    }
+
+    const jobs = Array.from(jobsMap.values());
+    fs.writeFileSync(JOBS_FILE, JSON.stringify(jobs, null, 2));
+    console.log(`💾 Saved ${jobs.length} jobs to persistent storage`);
+  } catch (error) {
+    console.error("Failed to save jobs to file:", error);
+  }
+}
+
+// Load jobs on module initialization
+loadJobsFromFile();
+
 export const jobStore = {
   async get(id: string): Promise<Job | undefined> {
-    console.warn('File-based jobStore.get is not available in this environment.');
-    return undefined;
+    return jobsMap.get(id);
   },
 
   async set(id: string, job: Job): Promise<void> {
-    console.warn('File-based jobStore.set is not available in this environment.');
+    jobsMap.set(id, job);
+    // Save to file for persistence (debounced)
+    if (process.env.NODE_ENV === "development") {
+      saveJobsToFile();
+    }
   },
 
   async delete(id: string): Promise<boolean> {
-    console.warn('File-based jobStore.delete is not available in this environment.');
-    return false;
+    const result = jobsMap.delete(id);
+    if (result && process.env.NODE_ENV === "development") {
+      saveJobsToFile();
+    }
+    return result;
   },
 
   async getAll(): Promise<Job[]> {
-    console.warn('File-based jobStore.getAll is not available in this environment.');
-    return [];
+    return Array.from(jobsMap.values());
   },
 
   async clear(): Promise<void> {
-    console.warn('File-based jobStore.clear is not available in this environment.');
-  }
+    jobsMap.clear();
+    if (process.env.NODE_ENV === "development") {
+      saveJobsToFile();
+    }
+  },
 };
 
 // Legacy export for backward compatibility (deprecated)
-export const jobs = new Map<string, Job>();
+export const jobs = jobsMap;

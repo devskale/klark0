@@ -56,12 +56,16 @@ async function triggerRemoteWorker(jobId: string, teamId: number) {
   const job = await jobStore.get(jobId);
   if (!job) return;
 
+  console.log(
+    `🚀 triggerRemoteWorker called for job ${jobId} (${job.name}) - type: ${job.type}`
+  );
+
   try {
     // Get document parser settings
     const parserSettings = await getDocumentParserSettings(teamId);
 
     if (!parserSettings?.parserUrl) {
-      console.error(`Job ${jobId}: Parser URL not configured`);
+      console.error(`❌ Job ${jobId}: Parser URL not configured`);
       job.status = "failed";
       job.error =
         'Parser URL nicht konfiguriert. Bitte konfigurieren Sie die Einstellungen unter "Dokument Parser".';
@@ -70,24 +74,49 @@ async function triggerRemoteWorker(jobId: string, teamId: number) {
       return;
     }
 
+    console.log(
+      `📡 Job ${jobId}: Using parser URL: ${parserSettings.parserUrl}`
+    );
+
     // Update job to running
     job.status = "running";
     job.startedAt = new Date().toISOString();
     job.progress = 5; // Initial progress
-    await jobStore.set(jobId, job);
-
-    // Construct the external API URL for job creation
+    await jobStore.set(jobId, job); // Construct the external API URL for job creation
     const externalApiUrl = `${parserSettings.parserUrl.replace(
       /\/$/,
       ""
     )}/api/worker/jobs`;
-    console.log(`Job ${jobId}: Triggering remote worker at ${externalApiUrl}`); // Prepare job payload for the remote service (matching FastAPI backend format)
+    console.log(
+      `🌐 Job ${jobId}: Making request to external API: ${externalApiUrl}`
+    ); // Prepare job payload for the remote service (matching FastAPI backend format)    // Map internal job types to external function names
+    const externalJobType = job.type === "fakejob" ? "fake_task" : job.type;
+    console.log(
+      `🔄 Job ${jobId}: Mapping job type "${job.type}" → "${externalJobType}" for external API`
+    );
+
+    // Generate random duration for fake_task
+    const randomDuration =
+      externalJobType === "fake_task"
+        ? Math.floor(Math.random() * 11) + 5
+        : null;
+    if (randomDuration) {
+      console.log(
+        `⏱️ Job ${jobId}: Generated random duration: ${randomDuration} seconds for fake_task`
+      );
+    }
+
     const remoteJobPayload = {
-      type: job.type,
+      type: externalJobType, // Use mapped external function name
       name: job.name,
       project: job.project || null,
       parameters: {
         ...job.parameters,
+        // Add specific parameters based on job type
+        ...(externalJobType === "fake_task" && {
+          duration: randomDuration,
+          task_name: job.name || "External Fake Task",
+        }),
         // Add parser-specific settings as they would be expected by the backend
         ocr: parserSettings.ocr,
         marker: parserSettings.marker,
@@ -104,6 +133,11 @@ async function triggerRemoteWorker(jobId: string, teamId: number) {
         }/api/worker/jobs/${jobId}/callback`,
       },
     };
+
+    console.log(
+      `📤 Job ${jobId}: Sending payload to external API:`,
+      JSON.stringify(remoteJobPayload, null, 2)
+    );
 
     // Trigger the remote job
     const response = await fetch(externalApiUrl, {
@@ -276,7 +310,7 @@ async function pollRemoteJobStatus(jobId: string, teamId: number) {
   }
 }
 
-// Simulate job processing for fakejob
+// Simulate job processing for fakejob - simplified version
 async function simulateJobExecution(jobId: string) {
   const job = await jobStore.get(jobId);
   if (!job) return;
@@ -284,39 +318,23 @@ async function simulateJobExecution(jobId: string) {
   // Update job to running
   job.status = "running";
   job.startedAt = new Date().toISOString();
-  job.progress = 0;
+  job.progress = 10;
   await jobStore.set(jobId, job);
 
-  const maxDuration = job.parameters?.maxDuration || 10;
-  const actualDuration = Math.floor(Math.random() * (maxDuration - 3 + 1)) + 3; // 3 to maxDuration seconds
+  // Simple 1-2 second completion (no complex polling needed)
+  const actualDuration = Math.floor(Math.random() * 2) + 1; // 1-2 seconds
 
-  // Simulate progress updates
-  const progressInterval = setInterval(async () => {
-    const currentJob = await jobStore.get(jobId);
-    if (!currentJob || currentJob.status !== "running") {
-      clearInterval(progressInterval);
-      return;
-    }
-
-    currentJob.progress = Math.min(
-      currentJob.progress + Math.random() * 20,
-      95
-    );
-    await jobStore.set(jobId, currentJob);
-  }, actualDuration * 100); // Update progress periodically
+  console.log(`FakeJob ${jobId}: Will complete in ${actualDuration} seconds`);
 
   // Complete the job after the duration
   setTimeout(async () => {
     const currentJob = await jobStore.get(jobId);
     if (!currentJob || currentJob.status === "cancelled") {
-      clearInterval(progressInterval);
       return;
     }
 
-    clearInterval(progressInterval);
-
-    // Random success/failure (90% success rate)
-    const success = Math.random() > 0.1;
+    // Random success/failure (95% success rate for testing)
+    const success = Math.random() > 0.05;
 
     if (success) {
       currentJob.status = "completed";
@@ -329,12 +347,15 @@ async function simulateJobExecution(jobId: string) {
       };
     } else {
       currentJob.status = "failed";
-      currentJob.error = "Simulierter Fehler für Testzwecke";
+      currentJob.error =
+        "Simulierter Fehler für Testzwecke (5% Wahrscheinlichkeit)";
     }
 
     currentJob.completedAt = new Date().toISOString();
     currentJob.duration = actualDuration;
     await jobStore.set(jobId, currentJob);
+
+    console.log(`FakeJob ${jobId}: Completed with status ${currentJob.status}`);
   }, actualDuration * 1000);
 }
 
@@ -405,7 +426,6 @@ async function handlePostRequest(request: RequestWithTeam) {
     const jobId = `job_${Date.now()}_${Math.random()
       .toString(36)
       .substr(2, 9)}`;
-
     const job: Job = {
       id: jobId,
       type: validatedData.type,
@@ -419,12 +439,31 @@ async function handlePostRequest(request: RequestWithTeam) {
 
     await jobStore.set(jobId, job);
 
-    // Handle different job types
-    if (validatedData.type === "fakejob") {
-      // For fakejob, use local simulation
+    console.log(`💾 Job ${jobId}: Stored in job store`);
+
+    // Verify job was stored correctly
+    const storedJob = await jobStore.get(jobId);
+    if (storedJob) {
+      console.log(
+        `✅ Job ${jobId}: Verification successful - job found in store`
+      );
+    } else {
+      console.error(
+        `❌ Job ${jobId}: Verification failed - job not found after storage!`
+      );
+    } // Handle different job types
+    if (
+      validatedData.type === "fakejob" &&
+      (validatedData.name === "FakeTool" || !validatedData.parameters?.external)
+    ) {
+      // For internal FakeTool, use local simulation
+      console.log(`Internal FakeJob detected: ${validatedData.name}`);
       setTimeout(() => simulateJobExecution(jobId), 100);
     } else {
-      // For other job types, trigger remote worker
+      // For all other job types (including FakeTool Ext), trigger remote worker
+      console.log(
+        `External job detected: ${validatedData.name} (type: ${validatedData.type})`
+      );
       setTimeout(() => triggerRemoteWorker(jobId, request.teamId!), 100);
     }
 

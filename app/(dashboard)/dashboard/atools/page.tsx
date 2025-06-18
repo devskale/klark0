@@ -11,7 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Clock, Play, Loader2 } from "lucide-react";
+import { CheckCircle2, Clock, Play, Loader2, RefreshCw } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,7 +34,17 @@ import {
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-const toolsList = [
+type Tool = {
+  id: number;
+  name: string;
+  type: string;
+  description: string;
+  status: string;
+  owner: string;
+  external?: boolean;
+};
+
+const toolsList: Tool[] = [
   {
     id: 0,
     name: "FakeTool",
@@ -46,6 +56,16 @@ const toolsList = [
   },
   {
     id: 1,
+    name: "FakeTool Ext",
+    type: "fakejob",
+    description:
+      "Externes FakeTool - macht Request an externe API und kann Status abfragen.",
+    status: "",
+    owner: "",
+    external: true, // Mark as external tool
+  },
+  {
+    id: 2,
     name: "StruktText",
     type: "parsing",
     description:
@@ -54,7 +74,7 @@ const toolsList = [
     owner: "",
   },
   {
-    id: 2,
+    id: 3,
     name: "Kategorisierung",
     type: "analysis",
     description:
@@ -63,7 +83,7 @@ const toolsList = [
     owner: "",
   },
   {
-    id: 3,
+    id: 4,
     name: "Kriterien Extraktion",
     type: "analysis",
     description:
@@ -72,7 +92,7 @@ const toolsList = [
     owner: "",
   },
   {
-    id: 4,
+    id: 5,
     name: "Kriterien Überprüfung",
     type: "analysis",
     description: "Überprüfung der extrahierten Kriterien",
@@ -80,7 +100,7 @@ const toolsList = [
     owner: "",
   },
   {
-    id: 5,
+    id: 6,
     name: "System Tools",
     type: "utility",
     description:
@@ -96,6 +116,21 @@ export default function AtoolsPage() {
   const [isListModalOpen, setIsListModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
+  // State for tracking external job status
+  const [externalJobStatus, setExternalJobStatus] = useState<
+    Map<
+      number,
+      {
+        jobId: string;
+        status: string;
+        result?: any;
+        error?: string;
+        progress?: number;
+      }
+    >
+  >(new Map());
+  const [refreshingJobs, setRefreshingJobs] = useState<Set<number>>(new Set());
+
   // State for fetched tools
   const [fetchedTools, setFetchedTools] = useState<{ id: string }[]>([]);
   const [fetching, setFetching] = useState(false);
@@ -108,7 +143,7 @@ export default function AtoolsPage() {
     { revalidateOnFocus: false }
   );
 
-  const startJob = async (tool: (typeof toolsList)[0]) => {
+  const startJob = async (tool: Tool) => {
     if (runningJobs.has(tool.id)) return;
 
     setRunningJobs((prev) => new Set([...prev, tool.id]));
@@ -123,20 +158,88 @@ export default function AtoolsPage() {
           type: tool.type,
           name: tool.name,
           project: selectedProject,
-          parameters: tool.type === "fakejob" ? { maxDuration: 10 } : {},
+          parameters:
+            tool.type === "fakejob"
+              ? {
+                  maxDuration: 2,
+                  external: tool.external || false, // Add external flag
+                }
+              : {}, // Reduced to 2 seconds max
         }),
       });
 
       const result = await response.json();
-
       if (result.success) {
         toast.success(`${tool.name} gestartet`, {
           description: `Job ID: ${result.data.id}`,
-        });
-
-        // For fakejob, poll for completion
+        }); // For fakejob, handle internal vs external differently
         if (tool.type === "fakejob") {
-          pollJobStatus(result.data.id, tool.id);
+          if (tool.external) {
+            // For external FakeTool, store job info for status tracking
+            setExternalJobStatus(
+              (prev) =>
+                new Map(
+                  prev.set(tool.id, {
+                    jobId: result.data.id,
+                    status: result.data.status || "pending",
+                    progress: result.data.progress || 0,
+                  })
+                )
+            );
+            toast.info("FakeTool Ext gestartet", {
+              description:
+                "Job läuft auf externem Parser-Service (5-15 Sekunden). Verwenden Sie 'Aktualisieren' zum Status-Check.",
+            });
+
+            // Remove from running jobs after submission
+            setTimeout(() => {
+              setRunningJobs((prev) => {
+                const newSet = new Set(prev);
+                newSet.delete(tool.id);
+                return newSet;
+              });
+            }, 1000);
+          } else {
+            // Internal fakejob - same as before
+            toast.info("FakeJob läuft...", {
+              description: "Wird in 1-2 Sekunden abgeschlossen",
+            });
+
+            setTimeout(() => {
+              setRunningJobs((prev) => {
+                const newSet = new Set(prev);
+                newSet.delete(tool.id);
+                return newSet;
+              });
+
+              // Simulate random success (95% success rate)
+              const success = Math.random() > 0.05;
+
+              if (success) {
+                toast.success("FakeJob erfolgreich abgeschlossen!", {
+                  description: `Simulierte Verarbeitung erfolgreich (Job: ${result.data.id})`,
+                });
+              } else {
+                toast.error("FakeJob fehlgeschlagen", {
+                  description: "Simulierter Fehler (5% Wahrscheinlichkeit)",
+                });
+              }
+            }, 1500); // Show completion after 1.5 seconds
+          }
+        } else {
+          // For other job types, inform user about remote processing
+          toast.info(`${tool.name} wird verarbeitet`, {
+            description: "Der Job läuft auf dem externen Parser-Service",
+          });
+
+          // Remove from running jobs after a short delay to show it was submitted
+          setTimeout(() => {
+            setRunningJobs((prev) => {
+              const newSet = new Set(prev);
+              newSet.delete(tool.id);
+              return newSet;
+            });
+          }, 2000);
         }
       } else {
         throw new Error(result.error || "Unbekannter Fehler");
@@ -153,61 +256,95 @@ export default function AtoolsPage() {
         return newSet;
       });
     }
-  };
+  }; // Function to refresh external job status
+  const refreshJobStatus = async (tool: Tool) => {
+    const jobInfo = externalJobStatus.get(tool.id);
+    if (!jobInfo) {
+      toast.error("Kein Job zum Aktualisieren gefunden");
+      return;
+    }
 
-  const pollJobStatus = (jobId: string, toolId: number) => {
-    const interval = setInterval(async () => {
-      try {
-        const response = await fetch(`/api/worker/jobs/${jobId}`);
-        const result = await response.json();
+    console.log(
+      `🔄 Refreshing job status for tool ${tool.name} (${tool.id}), jobId: ${jobInfo.jobId}`
+    );
+    setRefreshingJobs((prev) => new Set([...prev, tool.id]));
 
-        if (result.success) {
-          const job = result.data;
+    try {
+      const apiUrl = `/api/worker/jobs/${jobInfo.jobId}`;
+      console.log(`📡 Making request to: ${apiUrl}`);
 
-          if (job.status === "completed") {
-            clearInterval(interval);
-            setRunningJobs((prev) => {
-              const newSet = new Set(prev);
-              newSet.delete(toolId);
-              return newSet;
-            });
-            toast.success("FakeJob abgeschlossen!", {
-              description: `Ergebnis: ${job.result?.message || "Erfolgreich"}`,
-            });
-          } else if (job.status === "failed") {
-            clearInterval(interval);
-            setRunningJobs((prev) => {
-              const newSet = new Set(prev);
-              newSet.delete(toolId);
-              return newSet;
-            });
-            toast.error("FakeJob fehlgeschlagen", {
-              description: job.error || "Unbekannter Fehler",
-            });
-          } else if (job.status === "cancelled") {
-            clearInterval(interval);
-            setRunningJobs((prev) => {
-              const newSet = new Set(prev);
-              newSet.delete(toolId);
-              return newSet;
-            });
-            toast.info("FakeJob abgebrochen");
-          }
+      const response = await fetch(apiUrl);
+      const result = await response.json();
+
+      console.log(`📊 Response from API:`, result);
+
+      if (result.success) {
+        const job = result.data;
+
+        console.log(`✅ Job data received:`, {
+          jobId: job.id,
+          status: job.status,
+          progress: job.progress,
+          hasRemoteJobId: !!job.parameters?.remoteJobId,
+          remoteStatus: result.remoteStatus,
+        });
+
+        // Update job status
+        setExternalJobStatus(
+          (prev) =>
+            new Map(
+              prev.set(tool.id, {
+                jobId: jobInfo.jobId,
+                status: job.status,
+                result: job.result,
+                error: job.error,
+                progress: job.progress || 0,
+              })
+            )
+        );
+
+        // Show toast based on status
+        if (job.status === "completed") {
+          toast.success("Externe Job abgeschlossen!", {
+            description: `${tool.name}: ${
+              job.result?.message || "Erfolgreich"
+            }`,
+          });
+        } else if (job.status === "failed") {
+          toast.error("Externe Job fehlgeschlagen", {
+            description: job.error || "Unbekannter Fehler",
+          });
+        } else {
+          toast.info(`Job Status: ${job.status}`, {
+            description: `Fortschritt: ${job.progress || 0}%`,
+          });
         }
-      } catch (error) {
-        console.error("Error polling job status:", error);
+      } else {
+        console.error(`❌ API returned error:`, result.error);
+        throw new Error(result.error || "Fehler beim Abrufen des Job-Status");
       }
-    }, 1000); // Poll every second
-
-    // Cleanup after 2 minutes to prevent memory leaks
-    setTimeout(() => {
-      clearInterval(interval);
-      setRunningJobs((prev) => {
+    } catch (error) {
+      console.error("Error refreshing job status:", error);
+      toast.error("Fehler beim Aktualisieren", {
+        description:
+          error instanceof Error ? error.message : "Unbekannter Fehler",
+      });
+    } finally {
+      setRefreshingJobs((prev) => {
         const newSet = new Set(prev);
-        newSet.delete(toolId);
+        newSet.delete(tool.id);
         return newSet;
       });
-    }, 120000);
+    }
+  };
+
+  // Simplified polling function (only used for non-fakejob types if needed)
+  const pollJobStatus = (jobId: string, toolId: number) => {
+    // For fakejob, we don't need polling anymore as it's handled above
+    // For other job types, you could implement polling here if needed
+    console.log(
+      `Polling for job ${jobId} (tool ${toolId}) - not implemented for non-fakejob types`
+    );
   };
   // Fetch tools when modal opens
   useEffect(() => {
@@ -438,19 +575,68 @@ export default function AtoolsPage() {
                     {tool.name}
                   </span>
                 </TableCell>
-                <TableCell>{tool.owner || "-"}</TableCell>
+                <TableCell>{tool.owner || "-"}</TableCell>{" "}
                 <TableCell>
-                  {tool.status === "completed" ? (
-                    <Badge variant="default" className="gap-1">
-                      <CheckCircle2 className="h-4 w-4" />
-                      Abgeschlossen
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline" className="gap-1">
-                      <Clock className="h-4 w-4" />
-                      Ausstehend
-                    </Badge>
-                  )}
+                  {(() => {
+                    // Check for external job status first
+                    const jobInfo = externalJobStatus.get(tool.id);
+                    if (jobInfo) {
+                      switch (jobInfo.status) {
+                        case "completed":
+                          return (
+                            <Badge variant="default" className="gap-1">
+                              <CheckCircle2 className="h-4 w-4" />
+                              Abgeschlossen
+                            </Badge>
+                          );
+                        case "failed":
+                          return (
+                            <Badge variant="destructive" className="gap-1">
+                              <Clock className="h-4 w-4" />
+                              Fehlgeschlagen
+                            </Badge>
+                          );
+                        case "running":
+                          return (
+                            <Badge variant="secondary" className="gap-1">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              Läuft ({jobInfo.progress || 0}%)
+                            </Badge>
+                          );
+                        case "pending":
+                          return (
+                            <Badge variant="outline" className="gap-1">
+                              <Clock className="h-4 w-4" />
+                              Wartend
+                            </Badge>
+                          );
+                        default:
+                          return (
+                            <Badge variant="outline" className="gap-1">
+                              <Clock className="h-4 w-4" />
+                              {jobInfo.status}
+                            </Badge>
+                          );
+                      }
+                    }
+
+                    // Fallback to original status logic
+                    if (tool.status === "completed") {
+                      return (
+                        <Badge variant="default" className="gap-1">
+                          <CheckCircle2 className="h-4 w-4" />
+                          Abgeschlossen
+                        </Badge>
+                      );
+                    } else {
+                      return (
+                        <Badge variant="outline" className="gap-1">
+                          <Clock className="h-4 w-4" />
+                          Ausstehend
+                        </Badge>
+                      );
+                    }
+                  })()}
                 </TableCell>
                 <TableCell className="flex gap-2">
                   <DropdownMenu>
@@ -465,18 +651,37 @@ export default function AtoolsPage() {
                           <Play className="h-4 w-4" />
                         )}
                       </Button>
-                    </DropdownMenuTrigger>
+                    </DropdownMenuTrigger>{" "}
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem
                         onClick={() => startJob(tool)}
-                        disabled={runningJobs.has(tool.id) || tool.id === 5}>
+                        disabled={runningJobs.has(tool.id) || tool.id === 6}>
                         Starten
                       </DropdownMenuItem>
                       <DropdownMenuItem disabled>Zuweisen</DropdownMenuItem>
                       <DropdownMenuItem disabled>Bearbeiten</DropdownMenuItem>
                     </DropdownMenuContent>
-                  </DropdownMenu>{" "}
-                  {tool.id === 5 && (
+                  </DropdownMenu>
+                  {/* Refresh button for external tools */}
+                  {tool.external && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => refreshJobStatus(tool)}
+                      disabled={
+                        refreshingJobs.has(tool.id) ||
+                        !externalJobStatus.has(tool.id)
+                      }
+                      title="Job-Status aktualisieren">
+                      {refreshingJobs.has(tool.id) ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4" />
+                      )}
+                    </Button>
+                  )}
+                  {/* System Tools buttons */}
+                  {tool.id === 6 && (
                     <>
                       <Button
                         variant="ghost"
