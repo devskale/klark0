@@ -269,3 +269,171 @@ curl -X POST "http://localhost:3000/api/fs/upload?path=/klark0/neuer-ordner/" \
   -F "files=@/pfad/zur/lokalen/datei1.pdf" \
   -F "files=@/pfad/zur/lokalen/datei2.txt"
 ```
+
+## Frontend Integration Guide
+
+### Filesystem API Integration in React Components
+
+Klark0 verwendet ein sicheres, teambasiertes Dateisystem ohne Credential-Exposition im Frontend. Hier ist eine Anleitung zur Integration der FS-API in React-Komponenten:
+
+#### 1. SWR für Datei-Listing
+
+```tsx
+import useSWR from "swr";
+
+// Verzeichnis auflisten
+const {
+  data: fileList,
+  error,
+  mutate,
+} = useSWR(
+  "/klark0/projekt1", // Pfad als SWR-Key
+  async (path) => {
+    const params = new URLSearchParams({ path });
+    const res = await fetch(`/api/fs?${params.toString()}`);
+    if (!res.ok) throw new Error("Failed to fetch directory");
+    return res.json();
+  }
+);
+```
+
+#### 2. Dateien lesen
+
+```tsx
+// Dateiinhalt als Text/Binary (GET)
+const fetchFileContent = async (filePath: string) => {
+  const params = new URLSearchParams({ path: filePath });
+  const res = await fetch(`/api/fs/read?${params.toString()}`);
+  if (!res.ok) throw new Error("Failed to read file");
+  return res.text(); // oder res.blob() für Binary
+};
+
+// Dateiinhalt als JSON (POST)
+const fetchFileAsJSON = async (filePath: string) => {
+  const res = await fetch("/api/fs/read", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ path: filePath }),
+  });
+  if (!res.ok) throw new Error("Failed to read file");
+  return res.json();
+};
+```
+
+#### 3. Datei-Operationen
+
+```tsx
+// Verzeichnis erstellen
+const createDirectory = async (dirPath: string) => {
+  const res = await fetch("/api/fs/mkdir", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ path: dirPath }),
+  });
+  if (!res.ok) throw new Error("Failed to create directory");
+  return res.json();
+};
+
+// Datei löschen
+const deleteFile = async (filePath: string) => {
+  const res = await fetch("/api/fs/delete", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ path: filePath }),
+  });
+  if (!res.ok) throw new Error("Failed to delete file");
+  return res.json();
+};
+
+// Datei umbenennen
+const renameFile = async (oldPath: string, newPath: string) => {
+  const res = await fetch("/api/fs/rename", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ oldPath, newPath }),
+  });
+  if (!res.ok) throw new Error("Failed to rename file");
+  return res.json();
+};
+```
+
+#### 4. Datei-Upload
+
+```tsx
+const uploadFiles = async (targetPath: string, files: FileList) => {
+  const formData = new FormData();
+  Array.from(files).forEach((file) => {
+    formData.append("files", file);
+  });
+
+  const params = new URLSearchParams({ path: targetPath });
+  const res = await fetch(`/api/fs/upload?${params.toString()}`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!res.ok) throw new Error("Failed to upload files");
+  return res.json();
+};
+```
+
+#### 5. Metadaten verwalten
+
+```tsx
+// Metadaten lesen
+const readMetadata = async (filePath: string) => {
+  const metadataPath = filePath.replace(/\.[^/.]+$/, ".json"); // .pdf -> .json
+  const params = new URLSearchParams({ path: metadataPath });
+  const res = await fetch(`/api/fs/metadata?${params.toString()}`);
+  if (!res.ok) return null;
+  return res.json();
+};
+
+// Metadaten schreiben
+const writeMetadata = async (filePath: string, metadata: object) => {
+  const metadataPath = filePath.replace(/\.[^/.]+$/, ".json");
+  const res = await fetch("/api/fs/metadata", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ path: metadataPath, metadata }),
+  });
+  if (!res.ok) throw new Error("Failed to write metadata");
+  return res.json();
+};
+```
+
+#### 6. Vollständiges Komponenten-Beispiel
+
+```tsx
+import React, { useState } from 'react';
+import useSWR from 'swr';
+
+export default function FileManager({ basePath }: { basePath: string }) {
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
+
+  // Verzeichnis-Listing mit SWR
+  const { data: files, error, mutate } = useSWR(
+    basePath,
+    async (path) => {
+      const params = new URLSearchParams({ path });
+      const res = await fetch(`/api/fs?${params.toString()}`);
+      if (!res.ok) throw new Error('Failed to fetch directory');
+      return res.json();
+    }
+  );
+
+  const handleDelete = async (filePath: string) => {
+    try {
+      await fetch('/api/fs/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: filePath })
+      });
+      mutate(); // SWR cache invalidieren
+    } catch (error) {
+      console.error('Delete failed:', error);
+    }
+  };
+
+  if
+```

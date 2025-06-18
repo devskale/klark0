@@ -9,9 +9,8 @@ import useSWR from "swr";
 import {
   fileTreeFetcher,
   normalizePath,
-  FileSystemSettings,
   PDF2MD_INDEX_FILE_NAME,
-} from "@/lib/fs/fileTreeUtils";
+} from "@/lib/fs/fileTreeUtils-new";
 import { EditableText } from "@/components/ui/editable-text";
 import { AI_QUERIES } from "@/app/api/ai/config";
 
@@ -32,20 +31,12 @@ export default function Info() {
     ? decodeURIComponent(selectedBieter.replace(/\/$/, "").split("/").pop()!)
     : "N/A";
 
-  // fetch filesystem settings
-  const { data: fsSettings } = useSWR<FileSystemSettings>(
-    "/api/settings?key=fileSystem",
-    (url: string) => fetch(url).then((res) => res.json())
-  );
-
   // fetch directory listing (includes parser info)
   const parentDir = selectedDok
     ? normalizePath(selectedDok.replace(/\/[^\/]+$/, ""))
     : null;
   const { data: entries } = useSWR(
-    fsSettings && parentDir
-      ? [parentDir, fsSettings, { fileSystemType: fsSettings.type }]
-      : null,
+    parentDir ? parentDir : null,
     fileTreeFetcher
   );
   const fileBaseName = selectedDok
@@ -61,15 +52,9 @@ export default function Info() {
   const metadataFileName = `${fileBaseName}.meta.json`;
   const metadataPath = parentDir ? parentDir + metadataFileName : null;
   const { data: docMeta, mutate: mutateMeta } = useSWR(
-    fsSettings && metadataPath ? [metadataPath, fsSettings] : null,
-    async ([path, settings]) => {
-      const params = new URLSearchParams({
-        type: settings.type || "webdav",
-        path,
-        host: settings.host || "",
-        username: settings.username || "",
-        password: settings.password || "",
-      });
+    metadataPath,
+    async (path) => {
+      const params = new URLSearchParams({ path });
       const res = await fetch(`/api/fs/metadata?${params.toString()}`);
       if (!res.ok) return null;
       return res.json();
@@ -79,17 +64,9 @@ export default function Info() {
 
   // fetch index JSON
   const { data: idxJson, mutate: mutateIndex } = useSWR(
-    fsSettings && parentDir
-      ? [parentDir + PDF2MD_INDEX_FILE_NAME, fsSettings]
-      : null,
-    async ([path, settings]) => {
-      const params = new URLSearchParams({
-        type: settings.type || "webdav",
-        path,
-        host: settings.host || "",
-        username: settings.username || "",
-        password: settings.password || "",
-      });
+    parentDir ? parentDir + PDF2MD_INDEX_FILE_NAME : null,
+    async (path) => {
+      const params = new URLSearchParams({ path });
       const res = await fetch(`/api/fs?${params.toString()}`);
       if (!res.ok) return null;
       return res.json();
@@ -140,7 +117,7 @@ export default function Info() {
 
   // save handler uses existing upload endpoint
   const handleSaveMeta = async () => {
-    if (!fsSettings || !metadataPath) return;
+    if (!metadataPath) return;
     setIsSavingMeta(true);
     try {
       const metaObj = {
@@ -158,10 +135,6 @@ export default function Info() {
         body: JSON.stringify({
           path: metadataPath,
           metadata: metaObj,
-          type: fsSettings.type,
-          host: fsSettings.host,
-          username: fsSettings.username,
-          password: fsSettings.password,
         }),
       });
       const json = await res.json();
@@ -171,7 +144,7 @@ export default function Info() {
       }
 
       // update .pdf2md_index.json
-      if (fsSettings && parentDir) {
+      if (parentDir) {
         const idxPath = parentDir + PDF2MD_INDEX_FILE_NAME;
         await fetch("/api/fs/index", {
           method: "POST",
@@ -180,10 +153,6 @@ export default function Info() {
             indexPath: idxPath,
             fileName: fileBaseName,
             meta: { kategorie: category, name: title },
-            type: fsSettings.type,
-            host: fsSettings.host,
-            username: fsSettings.username,
-            password: fsSettings.password,
           }),
         });
         // re-fetch index to reflect saved category
@@ -199,7 +168,7 @@ export default function Info() {
 
   // new: fetch doc text + AI call
   const handleInit = async () => {
-    if (!fsSettings || !selectedDok || !parentDir || !parserDefault) {
+    if (!selectedDok || !parentDir || !parserDefault) {
       setAiError(
         "Erforderliche Informationen (FS-Einstellungen, Dokument, Standardparser) fehlen."
       );
@@ -234,11 +203,7 @@ export default function Info() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          type: fsSettings.type,
           path: defaultParserMdPath,
-          host: fsSettings.host,
-          username: fsSettings.username,
-          password: fsSettings.password,
         }),
       });
 
@@ -454,9 +419,6 @@ export default function Info() {
             <li>hasParser: {hasParser.toString()}</li>
             <li>parserDetList: {parserDetList.join(", ")}</li>
             <li>parserDefault: {parserDefault}</li>
-            <li>
-              fsSettings: {fsSettings ? JSON.stringify(fsSettings) : "N/A"}
-            </li>
             <li>entries count: {entries?.length ?? "N/A"}</li>
             <li>idxJson files: {idxJson?.files?.length ?? "N/A"}</li>
             <li>
