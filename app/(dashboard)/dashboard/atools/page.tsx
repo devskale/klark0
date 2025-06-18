@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { trimName } from "@/lib/trim";
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
 import {
@@ -381,9 +381,9 @@ export default function AtoolsPage() {
   };
 
   // Polling has been removed. Refresh button directly calls the proxy route.
-  // Fetch tools when modal opens
+  // Fetch tools when modal opens, only re-fetch if modal is opened anew
   useEffect(() => {
-    if (isListModalOpen) {
+    if (isListModalOpen && fetchedTools.length === 0 && !fetching) {
       setFetching(true);
       setFetchError(null);
       fetch("/api/worker/list")
@@ -410,7 +410,147 @@ export default function AtoolsPage() {
           setFetching(false);
         });
     }
-  }, [isListModalOpen]);
+  }, [isListModalOpen, fetchedTools.length, fetching]);
+
+  // Memoized Table Row component to prevent unnecessary re-renders
+  const ToolRow = memo(({ tool }: { tool: Tool }) => (
+    <TableRow key={tool.id}>
+      <TableCell className="font-medium">
+        <span className="hover:underline" title={tool.description}>
+          {tool.name}
+        </span>
+      </TableCell>
+      <TableCell>{tool.owner || "-"}</TableCell>
+      <TableCell className="text-center">
+        {Object.values(externalJobStatus).find(j => j.toolId === tool.id.toString())?.jobId || "-"}
+      </TableCell>
+      <TableCell>
+        {(() => {
+          // Check for external job status first
+          const jobInfo = Object.values(externalJobStatus).find(j => j.toolId === tool.id.toString());
+          if (jobInfo) {
+            switch (jobInfo.status) {
+              case "completed":
+                return (
+                  <Badge variant="default" className="gap-1">
+                    <CheckCircle2 className="h-4 w-4" />
+                    Abgeschlossen
+                  </Badge>
+                );
+              case "failed":
+                return (
+                  <Badge variant="destructive" className="gap-1">
+                    <Clock className="h-4 w-4" />
+                    Fehlgeschlagen
+                  </Badge>
+                );
+              case "in_progress":
+                return (
+                  <Badge variant="secondary" className="gap-1">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Läuft ({jobInfo.progress || 0}%)
+                  </Badge>
+                );
+              case "pending":
+                return (
+                  <Badge variant="outline" className="gap-1">
+                    <Clock className="h-4 w-4" />
+                    Wartend
+                  </Badge>
+                );
+              default:
+                return (
+                  <Badge variant="outline" className="gap-1">
+                    <Clock className="h-4 w-4" />
+                    {jobInfo.status}
+                  </Badge>
+                );
+            }
+          }
+
+          // Check if job is currently running
+          if (runningJobs.has(tool.id)) {
+            return (
+              <Badge variant="secondary" className="gap-1">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Läuft
+              </Badge>
+            );
+          }
+
+          // Default status
+          return (
+            <Badge variant="outline" className="gap-1">
+              <Clock className="h-4 w-4" />
+              Bereit
+            </Badge>
+          );
+        })()}
+      </TableCell>
+      <TableCell className="flex gap-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={runningJobs.has(tool.id)}>
+              {runningJobs.has(tool.id) ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Play className="h-4 w-4" />
+              )}
+            </Button>
+          </DropdownMenuTrigger>{" "}
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              onClick={() => startJob(tool)}
+              disabled={runningJobs.has(tool.id) || tool.id === 6}>
+              Starten
+            </DropdownMenuItem>
+            <DropdownMenuItem disabled>Zuweisen</DropdownMenuItem>
+            <DropdownMenuItem disabled>Bearbeiten</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        {/* Refresh button for external tools */}
+        {tool.external && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => refreshJobStatus(tool)}
+            disabled={
+              refreshingJobs.has(tool.id) ||
+              !externalJobStatus.has(tool.id.toString())
+            }
+            title="Job-Status aktualisieren">
+            {refreshingJobs.has(tool.id) ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+          </Button>
+        )}
+        {/* System Tools buttons */}
+        {tool.id === 6 && (
+          <>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsListModalOpen(true)}>
+              List
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsSettingsModalOpen(true)}>
+              Einstellungen
+            </Button>
+          </>
+        )}
+      </TableCell>
+    </TableRow>
+  ));
+
+  ToolRow.displayName = 'ToolRow';
 
   return (
     <section className="flex-1 p-4 lg:p-8">
@@ -609,140 +749,7 @@ export default function AtoolsPage() {
           </TableHeader>
           <TableBody>
             {toolsList.map((tool) => (
-              <TableRow key={tool.id}>
-                <TableCell className="font-medium">
-                  <span className="hover:underline" title={tool.description}>
-                    {tool.name}
-                  </span>
-                </TableCell>
-                <TableCell>{tool.owner || "-"}</TableCell>
-                <TableCell className="text-center">
-                  {Object.values(externalJobStatus).find(j => j.toolId === tool.id.toString())?.jobId || "-"}
-                </TableCell>
-                <TableCell>
-                  {(() => {
-                    // Check for external job status first
-                    const jobInfo = Object.values(externalJobStatus).find(j => j.toolId === tool.id.toString());
-                    if (jobInfo) {
-                      switch (jobInfo.status) {
-                        case "completed":
-                          return (
-                            <Badge variant="default" className="gap-1">
-                              <CheckCircle2 className="h-4 w-4" />
-                              Abgeschlossen
-                            </Badge>
-                          );
-                        case "failed":
-                          return (
-                            <Badge variant="destructive" className="gap-1">
-                              <Clock className="h-4 w-4" />
-                              Fehlgeschlagen
-                            </Badge>
-                          );
-                        case "in_progress":
-                          return (
-                            <Badge variant="secondary" className="gap-1">
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                              Läuft ({jobInfo.progress || 0}%)
-                            </Badge>
-                          );
-                        case "pending":
-                          return (
-                            <Badge variant="outline" className="gap-1">
-                              <Clock className="h-4 w-4" />
-                              Wartend
-                            </Badge>
-                          );
-                        default:
-                          return (
-                            <Badge variant="outline" className="gap-1">
-                              <Clock className="h-4 w-4" />
-                              {jobInfo.status}
-                            </Badge>
-                          );
-                      }
-                    }
-
-                    // Check if job is currently running
-                    if (runningJobs.has(tool.id)) {
-                      return (
-                        <Badge variant="secondary" className="gap-1">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          Läuft
-                        </Badge>
-                      );
-                    }
-
-                    // Default status
-                    return (
-                      <Badge variant="outline" className="gap-1">
-                        <Clock className="h-4 w-4" />
-                        Bereit
-                      </Badge>
-                    );
-                  })()}
-                </TableCell>
-                <TableCell className="flex gap-2">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        disabled={runningJobs.has(tool.id)}>
-                        {runningJobs.has(tool.id) ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Play className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </DropdownMenuTrigger>{" "}
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={() => startJob(tool)}
-                        disabled={runningJobs.has(tool.id) || tool.id === 6}>
-                        Starten
-                      </DropdownMenuItem>
-                      <DropdownMenuItem disabled>Zuweisen</DropdownMenuItem>
-                      <DropdownMenuItem disabled>Bearbeiten</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  {/* Refresh button for external tools */}
-                  {tool.external && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => refreshJobStatus(tool)}
-                      disabled={
-                        refreshingJobs.has(tool.id) ||
-                        !externalJobStatus.has(tool.id.toString())
-                      }
-                      title="Job-Status aktualisieren">
-                      {refreshingJobs.has(tool.id) ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <RefreshCw className="h-4 w-4" />
-                      )}
-                    </Button>
-                  )}
-                  {/* System Tools buttons */}
-                  {tool.id === 6 && (
-                    <>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setIsListModalOpen(true)}>
-                        List
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setIsSettingsModalOpen(true)}>
-                        Einstellungen
-                      </Button>
-                    </>
-                  )}
-                </TableCell>
-              </TableRow>
+              <ToolRow key={tool.id} tool={tool} />
             ))}
           </TableBody>
         </Table>
