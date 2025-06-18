@@ -122,6 +122,7 @@ export default function AtoolsPage() {
       string,
       {
         jobId: string;
+        toolId: string;
         status: string;
         result?: any;
         error?: string;
@@ -171,6 +172,8 @@ export default function AtoolsPage() {
       const result = await response.json();
       if (result.success) {
         const job = { id: result.data.id, ...result.data };
+        // Ensure job ID is stored correctly for display
+        setExternalJobStatus(prev => new Map(prev.set(tool.id, { jobId: job.id, toolId: tool.id, status: job.status || "pending" })));
         toast.success(`${tool.name} gestartet`, {
           description: `Job ID: ${job.id}`,
         });
@@ -182,6 +185,7 @@ export default function AtoolsPage() {
                 new Map(
                   prev.set(result.data.id, {
                     jobId: result.data.id,
+                    toolId: tool.id,
                     status: result.data.status || "pending",
                     progress: result.data.progress || 0,
                   })
@@ -277,28 +281,34 @@ export default function AtoolsPage() {
       console.log(`📡 Making request to: ${apiUrl}`);
 
       const response = await fetch(apiUrl);
-      const result = await response.json();
+      const result = await response.json(); // This is the raw API response
 
       console.log(`📊 Response from API:`, result);
 
-      if (result.success) {
-        const job = result.data;
+      // Assuming the API now directly returns the job object with job_id, status, and info
+      // And that result.success is no longer part of the direct /api/worker/jobs/{jobId} response
+      // but implied by a 200 OK status and the presence of job_id and status.
+      if (response.ok && result.job_id && result.status) {
+        // Construct the 'job' object based on the new API response structure
+        const job = {
+          id: result.job_id, // from top level
+          status: result.status, // from top level
+          result: result.info?.result, // from info object
+          error: result.info?.error, // from info object
+          progress: result.info?.progress, // from info object
+          parameters: result.info?.parameters, // from info object, if needed
+        };
 
-        console.log(`✅ Job data received:`, {
-          jobId: job.id,
-          status: job.status,
-          progress: job.progress,
-          hasRemoteJobId: !!job.parameters?.remoteJobId,
-          remoteStatus: result.remoteStatus,
-        });
+        console.log(`✅ Job data received and parsed:`, job);
 
-        // Update job status
+        // Update job status using tool.id as the key
         setExternalJobStatus(
           (prev) =>
             new Map(
-              prev.set(tool.id, {
-                jobId: jobInfo.jobId,
-                status: job.status,
+              prev.set(tool.id, { // Use tool.id as the key for consistency
+                jobId: job.id, // Store the job.id from the API response
+                toolId: tool.id, // Keep toolId for mapping in the table
+                status: job.status, // Use new status from API
                 result: job.result,
                 error: job.error,
                 progress: job.progress || 0,
@@ -306,25 +316,30 @@ export default function AtoolsPage() {
             )
         );
 
-        // Show toast based on status
-        if (job.status === "completed") {
-          toast.success("Externe Job abgeschlossen!", {
-            description: `${tool.name}: ${
-              job.result?.message || "Erfolgreich"
-            }`,
+        // Show toast based on NEW status from API (job.status)
+        if (job.status === "complete") {
+          toast.success("Job erfolgreich abgeschlossen!", {
+            description: `Job ID: ${job.id}. Status: ${job.status}. Ergebnis: ${job.result?.message || "Erfolgreich"}`,
           });
         } else if (job.status === "failed") {
           toast.error("Externe Job fehlgeschlagen", {
-            description: job.error || "Unbekannter Fehler",
+            description: `Job ID: ${job.id}. Status: ${job.status}. Fehler: ${job.error || "Unbekannter Fehler"}`,
+          });
+        } else if (job.status === "pending" || job.status === "in_progress") {
+          toast.info(`Job Status: ${job.status}`, {
+            description: `Job ID: ${job.id}. Fortschritt: ${job.progress || 0}%`,
           });
         } else {
-          toast.info(`Job Status: ${job.status}`, {
-            description: `Fortschritt: ${job.progress || 0}%`,
+          // Fallback for any other statuses
+          toast.info(`Unerwarteter Job Status: ${job.status}`, {
+            description: `Job ID: ${job.id}. Fortschritt: ${job.progress || 0}%. Details: ${job.result?.message || 'Keine spezifische Nachricht'}`,
           });
         }
       } else {
         console.error(`❌ API returned error:`, result.error);
-        throw new Error(result.error || "Fehler beim Abrufen des Job-Status");
+        // Provide a more specific error message if result.error is undefined
+        const errorMessage = result.error || result.message || "Fehler beim Abrufen des Job-Status, keine spezifische Fehlermeldung vom Server.";
+        throw new Error(errorMessage);
       }
     } catch (error) {
       console.error("Error refreshing job status:", error);
@@ -574,12 +589,12 @@ export default function AtoolsPage() {
                 </TableCell>
                 <TableCell>{tool.owner || "-"}</TableCell>
                 <TableCell className="text-center">
-                  {externalJobStatus && Object.values(externalJobStatus).find(j => j.toolId === tool.id)?.id || "-"}
+                  {Object.values(externalJobStatus).find(j => j.toolId === tool.id)?.jobId || "-"}
                 </TableCell>
                 <TableCell>
                   {(() => {
                     // Check for external job status first
-                    const jobInfo = externalJobStatus.get(tool.id);
+                    const jobInfo = Object.values(externalJobStatus).find(j => j.toolId === tool.id);
                     if (jobInfo) {
                       switch (jobInfo.status) {
                         case "completed":
@@ -596,7 +611,7 @@ export default function AtoolsPage() {
                               Fehlgeschlagen
                             </Badge>
                           );
-                        case "running":
+                        case "in_progress":
                           return (
                             <Badge variant="secondary" className="gap-1">
                               <Loader2 className="h-4 w-4 animate-spin" />
@@ -620,22 +635,23 @@ export default function AtoolsPage() {
                       }
                     }
 
-                    // Fallback to original status logic
-                    if (tool.status === "completed") {
+                    // Check if job is currently running
+                    if (runningJobs.has(tool.id)) {
                       return (
-                        <Badge variant="default" className="gap-1">
-                          <CheckCircle2 className="h-4 w-4" />
-                          Abgeschlossen
-                        </Badge>
-                      );
-                    } else {
-                      return (
-                        <Badge variant="outline" className="gap-1">
-                          <Clock className="h-4 w-4" />
-                          Ausstehend
+                        <Badge variant="secondary" className="gap-1">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Läuft
                         </Badge>
                       );
                     }
+
+                    // Default status
+                    return (
+                      <Badge variant="outline" className="gap-1">
+                        <Clock className="h-4 w-4" />
+                        Bereit
+                      </Badge>
+                    );
                   })()}
                 </TableCell>
                 <TableCell className="flex gap-2">
