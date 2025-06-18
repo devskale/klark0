@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { trimName } from "@/lib/trim";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -28,6 +28,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 
 const toolsList = [
@@ -79,7 +80,8 @@ const toolsList = [
     id: 5,
     name: "List Tool",
     type: "utility",
-    description: "Lists all available tools from a web API and displays them in a modal.",
+    description:
+      "Lists all available tools from a web API and displays them in a modal.",
     status: "",
     owner: "",
   },
@@ -88,23 +90,29 @@ const toolsList = [
 export default function AtoolsPage() {
   const { selectedProject, selectedBieter, selectedDok } = useProject();
   const [runningJobs, setRunningJobs] = useState<Set<number>>(new Set());
+  const [isListModalOpen, setIsListModalOpen] = useState(false);
 
-  const startJob = async (tool: typeof toolsList[0]) => {
+  // State for fetched tools
+  const [fetchedTools, setFetchedTools] = useState<{ id: string }[]>([]);
+  const [fetching, setFetching] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
+  const startJob = async (tool: (typeof toolsList)[0]) => {
     if (runningJobs.has(tool.id)) return;
 
-    setRunningJobs(prev => new Set([...prev, tool.id]));
+    setRunningJobs((prev) => new Set([...prev, tool.id]));
 
     try {
-      const response = await fetch('/api/worker/jobs', {
-        method: 'POST',
+      const response = await fetch("/api/worker/jobs", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           type: tool.type,
           name: tool.name,
           project: selectedProject,
-          parameters: tool.type === 'fakejob' ? { maxDuration: 10 } : {},
+          parameters: tool.type === "fakejob" ? { maxDuration: 10 } : {},
         }),
       });
 
@@ -114,20 +122,21 @@ export default function AtoolsPage() {
         toast.success(`${tool.name} gestartet`, {
           description: `Job ID: ${result.data.id}`,
         });
-        
+
         // For fakejob, poll for completion
-        if (tool.type === 'fakejob') {
+        if (tool.type === "fakejob") {
           pollJobStatus(result.data.id, tool.id);
         }
       } else {
-        throw new Error(result.error || 'Unbekannter Fehler');
+        throw new Error(result.error || "Unbekannter Fehler");
       }
     } catch (error) {
-      console.error('Error starting job:', error);
+      console.error("Error starting job:", error);
       toast.error(`Fehler beim Starten von ${tool.name}`, {
-        description: error instanceof Error ? error.message : 'Unbekannter Fehler',
+        description:
+          error instanceof Error ? error.message : "Unbekannter Fehler",
       });
-      setRunningJobs(prev => {
+      setRunningJobs((prev) => {
         const newSet = new Set(prev);
         newSet.delete(tool.id);
         return newSet;
@@ -143,46 +152,46 @@ export default function AtoolsPage() {
 
         if (result.success) {
           const job = result.data;
-          
-          if (job.status === 'completed') {
+
+          if (job.status === "completed") {
             clearInterval(interval);
-            setRunningJobs(prev => {
+            setRunningJobs((prev) => {
               const newSet = new Set(prev);
               newSet.delete(toolId);
               return newSet;
             });
-            toast.success('FakeJob abgeschlossen!', {
-              description: `Ergebnis: ${job.result?.message || 'Erfolgreich'}`,
+            toast.success("FakeJob abgeschlossen!", {
+              description: `Ergebnis: ${job.result?.message || "Erfolgreich"}`,
             });
-          } else if (job.status === 'failed') {
+          } else if (job.status === "failed") {
             clearInterval(interval);
-            setRunningJobs(prev => {
+            setRunningJobs((prev) => {
               const newSet = new Set(prev);
               newSet.delete(toolId);
               return newSet;
             });
-            toast.error('FakeJob fehlgeschlagen', {
-              description: job.error || 'Unbekannter Fehler',
+            toast.error("FakeJob fehlgeschlagen", {
+              description: job.error || "Unbekannter Fehler",
             });
-          } else if (job.status === 'cancelled') {
+          } else if (job.status === "cancelled") {
             clearInterval(interval);
-            setRunningJobs(prev => {
+            setRunningJobs((prev) => {
               const newSet = new Set(prev);
               newSet.delete(toolId);
               return newSet;
             });
-            toast.info('FakeJob abgebrochen');
+            toast.info("FakeJob abgebrochen");
           }
         }
       } catch (error) {
-        console.error('Error polling job status:', error);
+        console.error("Error polling job status:", error);
       }
     }, 1000); // Poll every second
 
     // Cleanup after 2 minutes to prevent memory leaks
     setTimeout(() => {
       clearInterval(interval);
-      setRunningJobs(prev => {
+      setRunningJobs((prev) => {
         const newSet = new Set(prev);
         newSet.delete(toolId);
         return newSet;
@@ -190,7 +199,26 @@ export default function AtoolsPage() {
     }, 120000);
   };
 
-  const [isListModalOpen, setIsListModalOpen] = useState(false);
+  // Fetch tools when modal opens
+  useEffect(() => {
+    if (isListModalOpen) {
+      setFetching(true);
+      setFetchError(null);
+      fetch("/api/worker/list")
+        .then(async (res) => {
+          if (!res.ok) throw new Error("Fehler beim Laden der Tools");
+          return res.json();
+        })
+        .then((data) => {
+          setFetchedTools(data.tasks || []);
+          setFetching(false);
+        })
+        .catch((err) => {
+          setFetchError(err.message || "Unbekannter Fehler");
+          setFetching(false);
+        });
+    }
+  }, [isListModalOpen]);
 
   return (
     <section className="flex-1 p-4 lg:p-8">
@@ -207,15 +235,32 @@ export default function AtoolsPage() {
         <Dialog open={isListModalOpen} onOpenChange={setIsListModalOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Available Tools</DialogTitle>
+              <DialogTitle>Verfügbare Tools (API)</DialogTitle>
+              <DialogDescription>
+                Die folgende Liste zeigt alle verfügbaren Worker-Typen, die vom
+                System unterstützt werden.
+              </DialogDescription>
             </DialogHeader>
             <div className="p-4">
-              {/* Placeholder for tools list from API */}
-              <p>Tools list will be fetched and displayed here.</p>
-              {/* Add logic here to fetch and render tools from web API */}
+              {fetching && <p>Lade Tools...</p>}
+              {fetchError && <p className="text-red-500">{fetchError}</p>}
+              {!fetching && !fetchError && (
+                <ul className="list-disc pl-5">
+                  {fetchedTools.length === 0 && <li>Keine Tools gefunden.</li>}
+                  {fetchedTools.map((tool) => (
+                    <li key={tool.id}>
+                      <span className="font-mono">{tool.id}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsListModalOpen(false)}>Close</Button>
+              <Button
+                variant="outline"
+                onClick={() => setIsListModalOpen(false)}>
+                Schließen
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -256,11 +301,10 @@ export default function AtoolsPage() {
                 <TableCell className="flex gap-2">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button 
-                        variant="ghost" 
+                      <Button
+                        variant="ghost"
                         size="sm"
-                        disabled={runningJobs.has(tool.id)}
-                      >
+                        disabled={runningJobs.has(tool.id)}>
                         {runningJobs.has(tool.id) ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
@@ -269,10 +313,9 @@ export default function AtoolsPage() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem 
+                      <DropdownMenuItem
                         onClick={() => startJob(tool)}
-                        disabled={runningJobs.has(tool.id) || tool.id === 5}
-                      >
+                        disabled={runningJobs.has(tool.id) || tool.id === 5}>
                         Starten
                       </DropdownMenuItem>
                       <DropdownMenuItem disabled>Zuweisen</DropdownMenuItem>
@@ -280,11 +323,10 @@ export default function AtoolsPage() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                   {tool.id === 5 && (
-                    <Button 
-                      variant="ghost" 
+                    <Button
+                      variant="ghost"
                       size="sm"
-                      onClick={() => setIsListModalOpen(true)}
-                    >
+                      onClick={() => setIsListModalOpen(true)}>
                       List
                     </Button>
                   )}
