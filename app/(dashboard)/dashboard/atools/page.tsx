@@ -173,7 +173,7 @@ export default function AtoolsPage() {
       if (result.success) {
         const job = { id: result.data.id, ...result.data };
         // Ensure job ID is stored correctly for display
-        setExternalJobStatus(prev => new Map(prev.set(tool.id, { jobId: job.id, toolId: tool.id, status: job.status || "pending" })));
+        setExternalJobStatus(prev => new Map(prev.set(tool.id.toString(), { jobId: job.id, toolId: tool.id.toString(), status: job.status || "pending" })));
         toast.success(`${tool.name} gestartet`, {
           description: `Job ID: ${job.id}`,
         });
@@ -185,7 +185,7 @@ export default function AtoolsPage() {
                 new Map(
                   prev.set(result.data.id, {
                     jobId: result.data.id,
-                    toolId: tool.id,
+                    toolId: tool.id.toString(),
                     status: result.data.status || "pending",
                     progress: result.data.progress || 0,
                   })
@@ -252,9 +252,21 @@ export default function AtoolsPage() {
       }
     } catch (error) {
       console.error("Error starting job:", error);
+      let errorMessage = "Unbekannter Fehler";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        if (error.message.includes("network")) {
+          errorMessage += " - Bitte überprüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.";
+        } else if (error.message.includes("permission") || error.message.includes("unauthorized")) {
+          errorMessage += " - Überprüfen Sie Ihre Berechtigungen oder melden Sie sich erneut an.";
+        }
+      }
       toast.error(`Fehler beim Starten von ${tool.name}`, {
-        description:
-          error instanceof Error ? error.message : "Unbekannter Fehler",
+        description: errorMessage,
+        action: {
+          label: "Erneut versuchen",
+          onClick: () => startJob(tool),
+        },
       });
       setRunningJobs((prev) => {
         const newSet = new Set(prev);
@@ -265,7 +277,7 @@ export default function AtoolsPage() {
   }; // Function to refresh external job status
   const refreshJobStatus = async (tool: Tool) => {
     // Use job.id instead of tool.id
-    const jobInfo = externalJobStatus.get(tool.external ? tool.id : tool.id);
+    const jobInfo = externalJobStatus.get(tool.external ? tool.id.toString() : tool.id.toString());
     if (!jobInfo) {
       toast.error("Kein Job zum Aktualisieren gefunden");
       return;
@@ -305,9 +317,9 @@ export default function AtoolsPage() {
         setExternalJobStatus(
           (prev) =>
             new Map(
-              prev.set(tool.id, { // Use tool.id as the key for consistency
+              prev.set(tool.id.toString(), { // Use tool.id as the key for consistency
                 jobId: job.id, // Store the job.id from the API response
-                toolId: tool.id, // Keep toolId for mapping in the table
+                toolId: tool.id.toString(), // Keep toolId for mapping in the table
                 status: job.status, // Use new status from API
                 result: job.result,
                 error: job.error,
@@ -343,9 +355,21 @@ export default function AtoolsPage() {
       }
     } catch (error) {
       console.error("Error refreshing job status:", error);
+      let errorMessage = "Unbekannter Fehler";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        if (error.message.includes("network") || error.message.includes("timeout")) {
+          errorMessage += " - Überprüfen Sie Ihre Internetverbindung.";
+        } else if (error.message.includes("404") || error.message.includes("not found")) {
+          errorMessage += " - Job-ID nicht gefunden. Möglicherweise wurde der Job gelöscht oder abgeschlossen.";
+        }
+      }
       toast.error("Fehler beim Aktualisieren", {
-        description:
-          error instanceof Error ? error.message : "Unbekannter Fehler",
+        description: errorMessage,
+        action: {
+          label: "Erneut versuchen",
+          onClick: () => refreshJobStatus(tool),
+        },
       });
     } finally {
       setRefreshingJobs((prev) => {
@@ -364,7 +388,7 @@ export default function AtoolsPage() {
       setFetchError(null);
       fetch("/api/worker/list")
         .then(async (res) => {
-          if (!res.ok) throw new Error("Fehler beim Laden der Tools");
+          if (!res.ok) throw new Error(`Fehler beim Laden der Tools: Status ${res.status}`);
           return res.json();
         })
         .then((data) => {
@@ -378,7 +402,11 @@ export default function AtoolsPage() {
           setFetching(false);
         })
         .catch((err) => {
-          setFetchError(err.message || "Unbekannter Fehler");
+          let errorMessage = err.message || "Unbekannter Fehler";
+          if (errorMessage.includes("network") || errorMessage.includes("timeout")) {
+            errorMessage += " - Bitte überprüfen Sie Ihre Internetverbindung.";
+          }
+          setFetchError(errorMessage);
           setFetching(false);
         });
     }
@@ -589,12 +617,12 @@ export default function AtoolsPage() {
                 </TableCell>
                 <TableCell>{tool.owner || "-"}</TableCell>
                 <TableCell className="text-center">
-                  {Object.values(externalJobStatus).find(j => j.toolId === tool.id)?.jobId || "-"}
+                  {Object.values(externalJobStatus).find(j => j.toolId === tool.id.toString())?.jobId || "-"}
                 </TableCell>
                 <TableCell>
                   {(() => {
                     // Check for external job status first
-                    const jobInfo = Object.values(externalJobStatus).find(j => j.toolId === tool.id);
+                    const jobInfo = Object.values(externalJobStatus).find(j => j.toolId === tool.id.toString());
                     if (jobInfo) {
                       switch (jobInfo.status) {
                         case "completed":
@@ -686,7 +714,7 @@ export default function AtoolsPage() {
                       onClick={() => refreshJobStatus(tool)}
                       disabled={
                         refreshingJobs.has(tool.id) ||
-                        !externalJobStatus.has(tool.id)
+                        !externalJobStatus.has(tool.id.toString())
                       }
                       title="Job-Status aktualisieren">
                       {refreshingJobs.has(tool.id) ? (
