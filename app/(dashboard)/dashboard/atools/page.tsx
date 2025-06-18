@@ -451,7 +451,7 @@ export default function AtoolsPage() {
       </TableCell>
       <TableCell>{tool.owner || "-"}</TableCell>
       <TableCell className="text-center">
-        {Object.values(externalJobStatus).find(j => j.toolId === tool.id.toString())?.jobId || "-"}
+        {externalJobStatus.get(tool.id.toString())?.jobId || "-"}
       </TableCell>
       <TableCell>
         {(() => {
