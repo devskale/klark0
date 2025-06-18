@@ -575,7 +575,7 @@ export default function AtoolsPage() {
                     {tool.name}
                   </span>
                 </TableCell>
-                <TableCell>{tool.owner || "-"}</TableCell>{" "}
+                <TableCell>{tool.owner || "-"}</TableCell>
                 <TableCell>
                   {(() => {
                     // Check for external job status first
