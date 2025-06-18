@@ -22,7 +22,9 @@ function renderFileTree(
           ) : (
             <div className="px-2 py-1 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md transition-colors">
               {node.name}
-              {node.size && <span className="ml-1 text-xs">({node.size} bytes)</span>}
+              {node.size && (
+                <span className="ml-1 text-xs">({node.size} bytes)</span>
+              )}
             </div>
           )}
         </li>
@@ -39,15 +41,17 @@ const FolderNode = ({
   parentPath: string;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  // (If you need to fetch children here, reintroduce SWR/mutate logic.)
+  // Note: If lazy loading of folder contents is needed, use SWR with the new
+  // credential-free pattern: useSWR(path, (path) => fetch(`/api/fs?path=${path}`))
 
   return (
     <div>
       <div
         className="flex items-center cursor-pointer px-2 py-1 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md transition-colors"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <span className="mr-1">{isOpen ? <ChevronDown /> : <ChevronRight />}</span>
+        onClick={() => setIsOpen(!isOpen)}>
+        <span className="mr-1">
+          {isOpen ? <ChevronDown /> : <ChevronRight />}
+        </span>
         <span>{node.name}</span>
       </div>
       {isOpen && renderFileTree(node.children || [], node.path, false)}
@@ -67,9 +71,7 @@ export default function DateibrowserModule({
       <CardHeader>
         <h2 className="text-md font-medium">Dateibrowser</h2>
       </CardHeader>
-      <CardContent>
-        {renderFileTree(fileTree, basePath, false)}
-      </CardContent>
+      <CardContent>{renderFileTree(fileTree, basePath, false)}</CardContent>
     </Card>
   );
 }

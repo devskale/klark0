@@ -1,33 +1,66 @@
 import { NextResponse } from "next/server";
+import { getFileSystemSettings } from "@/lib/db/settings";
+import { withTeamContext, RequestWithTeam } from "@/lib/auth/team-context";
 
-export async function POST(request: Request) {
+async function handleMkdirRequest(request: RequestWithTeam) {
+  if (!request.teamId) {
+    return NextResponse.json(
+      { error: "Team context required." },
+      { status: 401 }
+    );
+  }
+
   const url = new URL(request.url);
   const path = url.searchParams.get("path") || "/";
-  const type = url.searchParams.get("type") || "webdav";
-  const host = url.searchParams.get("host");
-  const username = url.searchParams.get("username");
-  const password = url.searchParams.get("password");
 
-  if (type !== "webdav") {
-    return NextResponse.json({ error: "Unsupported filesystem type." }, { status: 400 });
-  }
-  if (!host || !username || !password) {
-    return NextResponse.json({ error: "Missing WebDAV credentials." }, { status: 400 });
-  }
+  try {
+    // Get filesystem configuration from database
+    const fsSettings = await getFileSystemSettings(request.teamId);
 
-  const webdavUrl = new URL(path, host.endsWith("/") ? host : host + "/").toString();
-  const resp = await fetch(webdavUrl, {
-    method: "MKCOL",
-    headers: {
-      Authorization: `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`,
-    },
-  });
+    if (fsSettings.type !== "webdav") {
+      return NextResponse.json(
+        { error: "Unsupported filesystem type." },
+        { status: 400 }
+      );
+    }
 
-  if (resp.ok) {
-    // MKCOL returns 201 if created, 405 if exists
-    return NextResponse.json({ success: true }, { status: resp.status });
-  } else {
-    const text = await resp.text();
-    return NextResponse.json({ error: text || resp.statusText }, { status: resp.status });
+    if (!fsSettings.host || !fsSettings.username || !fsSettings.password) {
+      return NextResponse.json(
+        { error: "Incomplete WebDAV configuration." },
+        { status: 400 }
+      );
+    }
+
+    const webdavUrl = new URL(
+      path,
+      fsSettings.host.endsWith("/") ? fsSettings.host : fsSettings.host + "/"
+    ).toString();
+    const resp = await fetch(webdavUrl, {
+      method: "MKCOL",
+      headers: {
+        Authorization: `Basic ${Buffer.from(
+          `${fsSettings.username}:${fsSettings.password}`
+        ).toString("base64")}`,
+      },
+    });
+
+    if (resp.ok) {
+      // MKCOL returns 201 if created, 405 if exists
+      return NextResponse.json({ success: true }, { status: resp.status });
+    } else {
+      const text = await resp.text();
+      return NextResponse.json(
+        { error: text || resp.statusText },
+        { status: resp.status }
+      );
+    }
+  } catch (error) {
+    console.error("Error creating directory:", error);
+    return NextResponse.json(
+      { error: "Failed to create directory" },
+      { status: 500 }
+    );
   }
 }
+
+export const POST = withTeamContext(handleMkdirRequest);

@@ -14,13 +14,9 @@ import {
   fileTreeFetcher,
   FileTreeEntry,
   FileSystemSettings,
-} from "@/lib/fs/fileTreeUtils";
+} from "@/lib/fs/fileTreeUtils-new";
 
-export default function DoksModule({
-  webdavSettings,
-}: {
-  webdavSettings: FileSystemSettings | null;
-}) {
+export default function DoksModule() {
   const {
     selectedProject: projectPath,
     selectedBieter: bieterPath,
@@ -35,10 +31,9 @@ export default function DoksModule({
     : null;
 
   const { data: docs, error } = useSWR<FileTreeEntry[]>(
-    docsPath && webdavSettings
+    docsPath
       ? [
           docsPath,
-          webdavSettings,
           { noshowList: ["archive", ".archive"], fileSystemType: "webdav" },
         ]
       : null,
@@ -55,10 +50,9 @@ export default function DoksModule({
     // Only clear selectedDok when switching project or bieter
     setSelectedDok(null);
   }, [projectPath, bieterPath, setSelectedDok]);
-
-  // clear and fetch index metadata when docs or settings change
+  // clear and fetch index metadata when docs change
   useEffect(() => {
-    if (docs && webdavSettings && docsPath) {
+    if (docs && docsPath) {
       const fetchIndexMeta = async () => {
         // build index side-car path
         const indexSidecar = `${docsPath.replace(
@@ -67,10 +61,6 @@ export default function DoksModule({
         )}/.pdf2md_index.json`;
         const params = new URLSearchParams({
           path: indexSidecar,
-          type: "webdav",
-          host: webdavSettings.host ?? "",
-          username: webdavSettings.username ?? "",
-          password: webdavSettings.password ?? "",
         });
         const res = await fetch(`/api/fs/metadata?${params.toString()}`);
         if (!res.ok) {
@@ -94,7 +84,7 @@ export default function DoksModule({
     } else {
       setMetadataMap({});
     }
-  }, [docs, webdavSettings, docsPath]);
+  }, [docs, docsPath]);
 
   const toggleSelect = (path: string) => {
     setSelectedDocs((prev) =>

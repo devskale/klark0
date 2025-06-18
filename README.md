@@ -183,7 +183,7 @@ Diese Abstraktion ermöglicht eine einheitliche API und eine flexible Darstellun
 
 ## API Routes
 
-Klark0 stellt REST-Endpunkte unter `/api/fs/*` zur Verfügung, um Dateien per WebDAV zu verwalten. Alle Endpunkte erwarten die Query-Parameter `host`, `username`, `password` und optional `type` (Standard: `webdav`).
+Klark0 stellt REST-Endpunkte unter `/api/fs/*` zur Verfügung, um Dateien per WebDAV zu verwalten. Alle Endpunkte verwenden die WebDAV-Konfiguration aus der Datenbank (Einstellungen-Seite) und sind team-aware. Authentifizierung erfolgt über die Session des angemeldeten Benutzers.
 
 The metadata endpoints (`/api/fs/metadata`) provide functionality to manage JSON sidecar files that store additional information about documents:
 
@@ -240,26 +240,32 @@ Available Worker Types:
 
 ```bash
 # Verzeichnis auflisten
-curl -X GET "http://localhost:3000/api/fs?host=...&username=...&password=...&path=/klark0"
+curl -X GET "http://localhost:3000/api/fs?path=/klark0" \
+  -H "Cookie: session=your_session_cookie"
 
 # Datei direkt holen
-curl -X GET "http://localhost:3000/api/fs/read?host=...&username=...&password=...&path=/klark0/dokument.md"
+curl -X GET "http://localhost:3000/api/fs/read?path=/klark0/dokument.md" \
+  -H "Cookie: session=your_session_cookie"
 
 # Datei als JSON
 curl -X POST "http://localhost:3000/api/fs/read" \
   -H "Content-Type: application/json" \
-  -d '{"type":"webdav","host":"...","username":"...","password":"...","path":"/klark0/dokument.md"}'
+  -H "Cookie: session=your_session_cookie" \
+  -d '{"path":"/klark0/dokument.md"}'
 
 # Metadaten lesen
-curl -X GET "http://localhost:3000/api/fs/metadata?host=...&username=...&password=...&path=/klark0/dokument.json"
+curl -X GET "http://localhost:3000/api/fs/metadata?path=/klark0/dokument.json" \
+  -H "Cookie: session=your_session_cookie"
 
 # Metadaten schreiben
 curl -X POST "http://localhost:3000/api/fs/metadata" \
   -H "Content-Type: application/json" \
-  -d '{"type":"webdav","host":"...","username":"...","password":"...","path":"/klark0/dokument.json","metadata":{"titel":"Dokument"}}'
+  -H "Cookie: session=your_session_cookie" \
+  -d '{"path":"/klark0/dokument.json","metadata":{"titel":"Dokument"}}'
 
 # Datei(en) hochladen
-curl -X POST "http://localhost:3000/api/fs/upload?host=...&username=...&password=...&path=/klark0/neuer-ordner/" \
+curl -X POST "http://localhost:3000/api/fs/upload?path=/klark0/neuer-ordner/" \
+  -H "Cookie: session=your_session_cookie" \
   -F "files=@/pfad/zur/lokalen/datei1.pdf" \
   -F "files=@/pfad/zur/lokalen/datei2.txt"
 ```

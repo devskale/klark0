@@ -1,66 +1,83 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getTeamForUser, getAppSetting, updateAppSetting } from '@/lib/db/queries';
-import { FileSystemSettings } from '@/app/(dashboard)/dashboard/einstellungen/page'; // Assuming types are exported or can be defined here
+import { NextResponse } from "next/server";
+import { withTeamContext, RequestWithTeam } from "@/lib/auth/team-context";
+import {
+  getFileSystemSettings,
+  saveFileSystemSettings,
+  getAISettings,
+  saveAppSetting,
+  getAppSetting,
+} from "@/lib/db/settings";
 
-// Define FileSystemSettings type locally if not easily importable or to avoid client components in server code
-// For this example, we assume it can be imported or is defined in a shared types file.
-// If FileSystemSettings is in a "use client" file, you'd redefine it here or move it to a shared types file.
-
-export async function GET(request: NextRequest) {
-  try {
-    const team = await getTeamForUser();
-    if (!team) {
-      return NextResponse.json({ error: 'Team not found or user not authenticated' }, { status: 404 });
-    }
-
-    const { searchParams } = new URL(request.url);
-    const settingKey = searchParams.get('key');
-
-    if (!settingKey) {
-      return NextResponse.json({ error: 'Setting key is required' }, { status: 400 });
-    }
-
-    const setting = await getAppSetting(team.id, settingKey);
-
-    if (!setting) {
-      return NextResponse.json({ error: 'Setting not found' }, { status: 404 });
-    }
-
-    return NextResponse.json(setting.value);
-  } catch (error: any) {
-    console.error('Error fetching settings:', error);
-    if (error.code === '42P01') { // PostgreSQL error code for undefined_table
-      return NextResponse.json({ error: 'Database schema error: A required table is missing. Please ensure migrations are up to date.' }, { status: 500 });
-    }
-    return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 });
+async function handleSettingsRequest(request: RequestWithTeam) {
+  if (!request.teamId) {
+    return NextResponse.json(
+      { error: "Team context required." },
+      { status: 401 }
+    );
   }
+
+  const url = new URL(request.url);
+  const key = url.searchParams.get("key");
+
+  if (request.method === "GET") {
+    try {
+      if (key === "fileSystem") {
+        const settings = await getFileSystemSettings(request.teamId);
+        return NextResponse.json(settings);
+      }
+
+      if (key === "aiServices") {
+        const settings = await getAISettings(request.teamId);
+        return NextResponse.json(settings || {});
+      }
+
+      if (key) {
+        const settings = await getAppSetting(request.teamId, key);
+        return NextResponse.json(settings || {});
+      }
+
+      return NextResponse.json(
+        { error: "Setting key required" },
+        { status: 400 }
+      );
+    } catch (error) {
+      console.error("Error fetching settings:", error);
+      return NextResponse.json(
+        { error: "Failed to fetch settings" },
+        { status: 500 }
+      );
+    }
+  }
+
+  if (request.method === "POST") {
+    try {
+      const body = await request.json();
+
+      if (key === "fileSystem") {
+        await saveFileSystemSettings(request.teamId, body);
+        return NextResponse.json({ success: true });
+      }
+
+      if (key) {
+        await saveAppSetting(request.teamId, key, body);
+        return NextResponse.json({ success: true });
+      }
+
+      return NextResponse.json(
+        { error: "Setting key required" },
+        { status: 400 }
+      );
+    } catch (error) {
+      console.error("Error saving settings:", error);
+      return NextResponse.json(
+        { error: "Failed to save settings" },
+        { status: 500 }
+      );
+    }
+  }
+
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }
 
-export async function POST(request: NextRequest) {
-  try {
-    const team = await getTeamForUser();
-    if (!team) {
-      return NextResponse.json({ error: 'Team not found or user not authenticated' }, { status: 404 });
-    }
-
-    const body = await request.json();
-    const { settingKey, value } = body;
-
-    if (!settingKey || value === undefined) {
-      return NextResponse.json({ error: 'Setting key and value are required' }, { status: 400 });
-    }
-
-    // Optional: Add validation for the 'value' structure based on 'settingKey'
-    // For example, if settingKey is 'fileSystem', validate 'value' against FileSystemSettings structure
-
-    const updatedSetting = await updateAppSetting(team.id, settingKey, value);
-
-    return NextResponse.json(updatedSetting);
-  } catch (error: any) {
-    console.error('Error updating settings:', error);
-    if (error.code === '42P01') { // PostgreSQL error code for undefined_table
-      return NextResponse.json({ error: 'Database schema error: A required table is missing. Please ensure migrations are up to date.' }, { status: 500 });
-    }
-    return NextResponse.json({ error: 'Failed to update settings' }, { status: 500 });
-  }
-}
+export const GET = withTeamContext(handleSettingsRequest);
+export const POST = withTeamContext(handleSettingsRequest);

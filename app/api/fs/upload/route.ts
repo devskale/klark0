@@ -1,27 +1,41 @@
 import { NextResponse } from "next/server";
+import { getTeamIdFromRequest } from "@/lib/auth/team-context";
+import { getFileSystemSettings } from "@/lib/db/settings";
 
 export const runtime = "edge"; // for formData()
 
 export async function POST(request: Request) {
+  // Extract team context from request
+  const teamId = await getTeamIdFromRequest(request as any);
+  if (!teamId) {
+    return NextResponse.json(
+      { error: "Team context not found. Please ensure you are logged in." },
+      { status: 401 }
+    );
+  }
+
   const url = new URL(request.url);
   const path = url.searchParams.get("path") || "/";
-  const type = url.searchParams.get("type") || "webdav";
-  const host = url.searchParams.get("host");
-  const username = url.searchParams.get("username");
-  const password = url.searchParams.get("password");
 
-  if (type !== "webdav") {
+  // Get FS settings from database
+  const fsSettings = await getFileSystemSettings(teamId);
+  if (
+    !fsSettings ||
+    fsSettings.type !== "webdav" ||
+    !fsSettings.host ||
+    !fsSettings.username ||
+    !fsSettings.password
+  ) {
     return NextResponse.json(
-      { error: "Unsupported filesystem type." },
+      {
+        error:
+          "WebDAV configuration not found or incomplete. Please configure in Einstellungen.",
+      },
       { status: 400 }
     );
   }
-  if (!host || !username || !password) {
-    return NextResponse.json(
-      { error: "Missing WebDAV credentials." },
-      { status: 400 }
-    );
-  }
+
+  const { host, username, password } = fsSettings;
 
   const form = await request.formData();
   const files = form.getAll("files");

@@ -10,9 +10,8 @@ import useSWR from "swr";
 import {
   fileTreeFetcher,
   normalizePath,
-  FileSystemSettings,
   PDF2MD_INDEX_FILE_NAME,
-} from "@/lib/fs/fileTreeUtils";
+} from "@/lib/fs/fileTreeUtils-new";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AlertCircle, Loader2, Eye, Edit3 } from "lucide-react";
@@ -30,31 +29,17 @@ export default function Strukt() {
   const [availableVariants, setAvailableVariants] = useState<
     Array<{ key: string; label: string; path: string }>
   >([]);
-  const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [selectedVariant, setSelectedVariant] = useState<string | null>(null);  const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isEditingView, setIsEditingView] = useState<boolean>(false);
-
-  const { data: fsSettings } = useSWR<FileSystemSettings>(
-    "/api/settings?key=fileSystem",
-    (url: string) => fetch(url).then((res) => res.json())
-  );
 
   const parentDir = selectedDok
     ? normalizePath(selectedDok.replace(/\/[^\/]+$/, ""))
     : null;
 
   const { data: indexData, mutate: mutateIndex } = useSWR(
-    fsSettings && parentDir
-      ? [parentDir + PDF2MD_INDEX_FILE_NAME, fsSettings]
-      : null,
-    async ([path, settings]) => {
-      const params = new URLSearchParams({
-        type: settings.type || "webdav",
-        path,
-        host: settings.host || "",
-        username: settings.username || "",
-        password: settings.password || "",
-      });
+    parentDir ? parentDir + PDF2MD_INDEX_FILE_NAME : null,
+    async (path) => {
+      const params = new URLSearchParams({ path });
       const res = await fetch(`/api/fs?${params.toString()}`);
       if (!res.ok) return null;
       return res.json();

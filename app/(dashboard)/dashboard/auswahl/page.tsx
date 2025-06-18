@@ -43,7 +43,7 @@ import {
   fileTreeFetcher,
   FileTreeEntry,
   FileSystemSettings,
-} from "@/lib/fs/fileTreeUtils";
+} from "@/lib/fs/fileTreeUtils-new";
 
 type FileTreeNode = FileTreeEntry;
 
@@ -71,23 +71,24 @@ const resetSelectionsOnPathAction = (
     // If the project itself is acted upon, bieter and dok under it are also implicitly deselected.
     setCurrentSelectedBieter(null);
     setCurrentSelectedDok(null);
-  } else if (currentSelectedProject && itemPath.startsWith(currentSelectedProject)) {
+  } else if (
+    currentSelectedProject &&
+    itemPath.startsWith(currentSelectedProject)
+  ) {
     // This case handles actions on items within the selected project (e.g., a Bieter)
     // No need to reset selectedProject here, only potentially bieter/dok
   }
 };
 
 export default function VaultPage() {
-  const { 
-    selectedProject, 
-    setSelectedProject, 
-    selectedBieter, 
+  const {
+    selectedProject,
+    setSelectedProject,
+    selectedBieter,
     setSelectedBieter,
     selectedDok, // Assuming selectedDok is part of the context
-    setSelectedDok  // Assuming setSelectedDok is part of the context
+    setSelectedDok, // Assuming setSelectedDok is part of the context
   } = useProject();
-
-  const [webdavSettings, setWebdavSettings] = useState<FileSystemSettings | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showRefreshMessage, setShowRefreshMessage] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -114,17 +115,11 @@ export default function VaultPage() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isDraggingProject, setIsDraggingProject] = useState(false);
   const [isDraggingBieter, setIsDraggingBieter] = useState(false);
-
   const handleCreateBieter = async () => {
-    if (!newBieterName.trim() || !webdavSettings || !selectedProject)
-      return;
+    if (!newBieterName.trim() || !selectedProject) return;
     try {
       const params = new URLSearchParams({
-        type: fileSystemConfig.type,
         path: `${selectedProject}/B/${newBieterName}`,
-        host: webdavSettings.host || "",
-        username: webdavSettings.username || "",
-        password: webdavSettings.password || "",
       });
       const res = await fetch(`/api/fs/mkdir?${params.toString()}`, {
         method: "POST",
@@ -141,20 +136,15 @@ export default function VaultPage() {
     setNewBieterName("");
     setIsAddBieterDialogOpen(false);
   };
-
   // Neuer Handler: Bieter archivieren via WebDAV-Rename
   const handleArchiveBieter = async (bieterPath: string) => {
-    if (!webdavSettings || !selectedProject) return; // Added !selectedProject check
+    if (!selectedProject) return; // Added !selectedProject check
     const bieterName = decodeURIComponent(
       bieterPath.replace(/\/$/, "").split("/").pop() || ""
     );
     const params = new URLSearchParams({
-      type: fileSystemConfig.type,
       path: bieterPath,
       destination: `${selectedProject}/B/archive/${bieterName}`, // Ensure selectedProject is used
-      host: webdavSettings.host || "",
-      username: webdavSettings.username || "",
-      password: webdavSettings.password || "",
     });
     const res = await fetch(`/api/fs/rename?${params.toString()}`, {
       method: "POST",
@@ -177,16 +167,10 @@ export default function VaultPage() {
       );
     }
   };
-
   // Neuer Handler: Bieter löschen via WebDAV-Delete
   const handleDeleteBieter = async (bieterPath: string) => {
-    if (!webdavSettings) return;
     const params = new URLSearchParams({
-      type: fileSystemConfig.type,
       path: bieterPath,
-      host: webdavSettings.host || "",
-      username: webdavSettings.username || "",
-      password: webdavSettings.password || "",
     });
     const res = await fetch(`/api/fs/delete?${params.toString()}`, {
       method: "POST",
@@ -206,33 +190,11 @@ export default function VaultPage() {
       console.error("Löschen des Bieters fehlgeschlagen:", await res.text());
     }
   };
-
   const fileSystemConfig = {
     type: "webdav",
     basePath: "/klark0",
     noshowList: ["archive", ".archive"],
   };
-
-  const fetchWebdavSettings = async () => {
-    try {
-      const response = await fetch(`/api/settings?key=fileSystem`);
-      const data = await response.json();
-      console.log("Fetched filesystem settings:", data);
-      if (data.type === fileSystemConfig.type) {
-        setWebdavSettings(data);
-      } else {
-        console.error("Configured filesystem type mismatch:", data);
-        setWebdavSettings(null);
-      }
-    } catch (error) {
-      console.error("Error fetching filesystem settings:", error);
-      setWebdavSettings(null);
-    }
-  };
-
-  useEffect(() => {
-    fetchWebdavSettings();
-  }, []);
 
   const {
     data: fileTree,
@@ -240,16 +202,13 @@ export default function VaultPage() {
     mutate,
     isValidating,
   } = useSWR<FileTreeEntry[]>(
-    webdavSettings
-      ? [
-          fileSystemConfig.basePath,
-          webdavSettings,
-          {
-            noshowList: fileSystemConfig.noshowList,
-            fileSystemType: fileSystemConfig.type,
-          },
-        ]
-      : null,
+    [
+      fileSystemConfig.basePath,
+      {
+        noshowList: fileSystemConfig.noshowList,
+        fileSystemType: fileSystemConfig.type,
+      },
+    ],
     fileTreeFetcher,
     { revalidateOnFocus: false }
   );
@@ -261,10 +220,9 @@ export default function VaultPage() {
     error: bieterError,
     mutate: mutateBieter,
   } = useSWR<FileTreeEntry[]>(
-    webdavSettings && selectedProject
+    selectedProject
       ? [
           `${selectedProject}/B`,
-          webdavSettings,
           {
             noshowList: fileSystemConfig.noshowList,
             fileSystemType: fileSystemConfig.type,
@@ -281,23 +239,18 @@ export default function VaultPage() {
           child.type === "directory" && !reservedDirs.includes(child.name)
       )
     : [];
-
   const handleCreateProject = async () => {
-    if (!newProjectName.trim() || !webdavSettings) return;
+    if (!newProjectName.trim()) return;
     try {
       const params = new URLSearchParams({
-        type: fileSystemConfig.type,
         path: `${fileSystemConfig.basePath}/${newProjectName}`,
-        host: webdavSettings.host || "",
-        username: webdavSettings.username || "",
-        password: webdavSettings.password || "",
       });
       const res = await fetch(`/api/fs/mkdir?${params.toString()}`, {
         method: "POST",
       });
       if (res.ok) {
         mutate(); // File-Tree neu laden
-        await initdir(newProjectName, fileSystemConfig.basePath, webdavSettings);
+        await initdir(newProjectName, fileSystemConfig.basePath);
         setNewProjectName("");
         setIsAddProjectDialogOpen(false);
       } else {
@@ -307,20 +260,14 @@ export default function VaultPage() {
       console.error("Fehler beim Erstellen des Projekts:", error);
     }
   };
-
   // Neuer Handler: Projekt archivieren via WebDAV-Rename
   const handleArchiveProject = async (projectPath: string) => {
-    if (!webdavSettings) return;
     const projectName = decodeURIComponent(
       projectPath.replace(/^\/klark0\//, "").split("/")[0]
     );
     const params = new URLSearchParams({
-      type: fileSystemConfig.type,
       path: projectPath,
       destination: `${fileSystemConfig.basePath}/archive/${projectName}`,
-      host: webdavSettings.host || "",
-      username: webdavSettings.username || "",
-      password: webdavSettings.password || "",
     });
     const res = await fetch(`/api/fs/rename?${params.toString()}`, {
       method: "POST",
@@ -340,16 +287,10 @@ export default function VaultPage() {
       console.error("Archivieren fehlgeschlagen:", await res.text());
     }
   };
-
   // Neuer Handler: Projekt löschen via WebDAV-Delete
   const handleDeleteProject = async (projectPath: string) => {
-    if (!webdavSettings) return;
     const params = new URLSearchParams({
-      type: fileSystemConfig.type,
       path: projectPath,
-      host: webdavSettings.host || "",
-      username: webdavSettings.username || "",
-      password: webdavSettings.password || "",
     });
     const res = await fetch(`/api/fs/delete?${params.toString()}`, {
       method: "POST",
@@ -412,10 +353,8 @@ export default function VaultPage() {
       setBieterUploadFiles(Array.from(e.dataTransfer.files));
     }
   };
-
   const handleProjectUpload = async () => {
-    if (!projectUploadFiles.length || !webdavSettings || !selectedProject)
-      return;
+    if (!projectUploadFiles.length || !selectedProject) return;
 
     setUploadingProject(true);
     setUploadError(null);
@@ -428,13 +367,8 @@ export default function VaultPage() {
 
       // Modifiziert, um in den A-Unterordner hochzuladen (für Projekt/Ausschreibungsdaten)
       const uploadPath = `${selectedProject}/A`;
-
       const queryParams = new URLSearchParams({
-        type: fileSystemConfig.type,
         path: uploadPath,
-        host: webdavSettings.host || "",
-        username: webdavSettings.username || "",
-        password: webdavSettings.password || "",
       });
 
       const response = await fetch(`/api/fs/upload?${queryParams.toString()}`, {
@@ -465,10 +399,8 @@ export default function VaultPage() {
       setUploadingProject(false);
     }
   };
-
   const handleBieterUpload = async () => {
-    if (!bieterUploadFiles.length || !webdavSettings || !selectedBieter)
-      return;
+    if (!bieterUploadFiles.length || !selectedBieter) return;
 
     setUploadingBieter(true);
     setUploadError(null);
@@ -480,11 +412,7 @@ export default function VaultPage() {
       });
 
       const queryParams = new URLSearchParams({
-        type: fileSystemConfig.type,
         path: selectedBieter,
-        host: webdavSettings.host || "",
-        username: webdavSettings.username || "",
-        password: webdavSettings.password || "",
       });
 
       const response = await fetch(`/api/fs/upload?${queryParams.toString()}`, {
@@ -627,18 +555,9 @@ export default function VaultPage() {
                 </DialogContent>
               </Dialog>
             </DropdownMenuContent>
-          </DropdownMenu>
+          </DropdownMenu>{" "}
         </div>
       </div>
-
-      {showSettings && webdavSettings && (
-        <div className="mb-4 p-4 border rounded bg-gray-100">
-          <h2 className="text-md font-medium mb-2">Filesystem Settings</h2>
-          <pre className="text-sm text-gray-700">
-            {JSON.stringify(webdavSettings, null, 2)}
-          </pre>
-        </div>
-      )}
 
       {uploadSuccess && (
         <div className="fixed top-4 right-4 bg-green-100 text-green-800 p-3 rounded-md shadow-md z-50">
@@ -691,12 +610,10 @@ export default function VaultPage() {
                         <DialogFooter>
                           <DialogClose asChild>
                             <Button variant="outline">Abbrechen</Button>
-                          </DialogClose>
+                          </DialogClose>{" "}
                           <Button
                             onClick={handleCreateProject}
-                            disabled={
-                              !newProjectName.trim() || !webdavSettings
-                            }>
+                            disabled={!newProjectName.trim()}>
                             Erstellen
                           </Button>
                         </DialogFooter>
@@ -843,19 +760,14 @@ export default function VaultPage() {
                       <li
                         key={project.path}
                         className={`py-2 px-3 border-b hover:bg-gray-50 flex justify-between items-center ${
-                          selectedProject === project.path
-                            ? "bg-gray-100"
-                            : ""
+                          selectedProject === project.path ? "bg-gray-100" : ""
                         }`}>
                         <span
                           className={`cursor-pointer flex-grow ${
-                            selectedProject === project.path
-                              ? "font-bold"
-                              : ""
+                            selectedProject === project.path ? "font-bold" : ""
                           }`}
                           onClick={() => {
-                            const isSame =
-                              selectedProject === project.path;
+                            const isSame = selectedProject === project.path;
                             const raw = project.path
                               .replace(/^\/klark0\//, "")
                               .split("/")[0];
@@ -880,9 +792,7 @@ export default function VaultPage() {
                               className="ml-2 h-8 w-8 p-0"
                               onClick={(e) => e.stopPropagation()}>
                               <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">
-                                Projektoptionen
-                              </span>
+                              <span className="sr-only">Projektoptionen</span>
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent
@@ -956,9 +866,7 @@ export default function VaultPage() {
                               type="text"
                               placeholder="Bietername"
                               value={newBieterName}
-                              onChange={(e) =>
-                                setNewBieterName(e.target.value)
-                              }
+                              onChange={(e) => setNewBieterName(e.target.value)}
                             />
                           </div>
                           <DialogFooter>
@@ -1119,19 +1027,14 @@ export default function VaultPage() {
                         <li
                           key={bieter.path}
                           className={`py-2 px-3 border-b hover:bg-gray-50 flex justify-between items-center ${
-                            selectedBieter === bieter.path
-                              ? "bg-gray-100"
-                              : ""
+                            selectedBieter === bieter.path ? "bg-gray-100" : ""
                           }`}>
                           <span
                             className={`cursor-pointer flex-grow ${
-                              selectedBieter === bieter.path
-                                ? "font-bold"
-                                : ""
+                              selectedBieter === bieter.path ? "font-bold" : ""
                             }`}
                             onClick={() => {
-                              const isSame =
-                                selectedBieter === bieter.path;
+                              const isSame = selectedBieter === bieter.path;
                               if (isSame) {
                                 setSelectedBieter(null);
                                 setSelectedDok(null); // Clear selectedDok
@@ -1150,9 +1053,7 @@ export default function VaultPage() {
                                 className="ml-2 h-8 w-8 p-0"
                                 onClick={(e) => e.stopPropagation()}>
                                 <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">
-                                  Bieteroptionen
-                                </span>
+                                <span className="sr-only">Bieteroptionen</span>
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent
@@ -1197,7 +1098,7 @@ export default function VaultPage() {
           </div>
         </>
       ) : (
-        <DoksModule webdavSettings={webdavSettings} />
+        <DoksModule />
       )}
     </section>
   );
