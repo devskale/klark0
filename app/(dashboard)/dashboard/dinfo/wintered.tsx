@@ -103,11 +103,7 @@ export default function Wintered() {
         );
         try {
           const mdBaseParams = new URLSearchParams({
-            type: fsSettings.type || "webdav",
             path: `${parentDir}md/${baseName}/`,
-            host: fsSettings.host || "",
-            username: fsSettings.username || "",
-            password: fsSettings.password || "",
           });
 
           const mdBaseResponse = await fetch(
@@ -222,11 +218,7 @@ export default function Wintered() {
 
         try {
           const params = new URLSearchParams({
-            type: fsSettings.type || "webdav",
             path: `${parentDir}md/`,
-            host: fsSettings.host || "",
-            username: fsSettings.username || "",
-            password: fsSettings.password || "",
           });
 
           const dirResponse = await fetch(`/api/fs?${params.toString()}`);
@@ -313,11 +305,7 @@ export default function Wintered() {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              type: fsSettings.type || "webdav",
               path: variantToLoad.path,
-              host: fsSettings.host || "",
-              username: fsSettings.username || "",
-              password: fsSettings.password || "",
             }),
           });
 
@@ -340,11 +328,7 @@ export default function Wintered() {
 
               try {
                 const mdDirParams = new URLSearchParams({
-                  type: fsSettings.type || "webdav",
                   path: `${parentDir}md/`,
-                  host: fsSettings.host || "",
-                  username: fsSettings.username || "",
-                  password: fsSettings.password || "",
                 });
 
                 const mdDirResponse = await fetch(
@@ -367,11 +351,7 @@ export default function Wintered() {
                     );
 
                     const baseNameDirParams = new URLSearchParams({
-                      type: fsSettings.type || "webdav",
                       path: `${parentDir}md/${baseName}/`,
-                      host: fsSettings.host || "",
-                      username: fsSettings.username || "",
-                      password: fsSettings.password || "",
                     });
 
                     const baseNameDirResponse = await fetch(
@@ -468,11 +448,7 @@ export default function Wintered() {
                   "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                  type: fsSettings.type || "webdav",
                   path: variant.path,
-                  host: fsSettings.host || "",
-                  username: fsSettings.username || "",
-                  password: fsSettings.password || "",
                 }),
               });
 
@@ -528,7 +504,7 @@ export default function Wintered() {
     };
 
     loadMarkdown();
-  }, [selectedDok, fsSettings, indexData, parentDir, selectedVariant]);
+  }, [selectedDok, indexData, parentDir, selectedVariant]);
 
   const handleVariantChange = async (variantLabel: string) => {
     if (variantLabel === selectedVariant) return;
@@ -536,7 +512,7 @@ export default function Wintered() {
   };
 
   const handleSaveDefaultParser = async () => {
-    if (!fsSettings || !parentDir || !selectedDok || !selectedVariant) return;
+    if (!parentDir || !selectedDok || !selectedVariant) return;
     const fileBase = decodeURIComponent(selectedDok.split("/").pop()!);
     const idxPath = parentDir + PDF2MD_INDEX_FILE_NAME;
 
@@ -550,10 +526,6 @@ export default function Wintered() {
         indexPath: idxPath,
         fileName: fileBase,
         parserDefault: parserKey,
-        type: fsSettings.type,
-        host: fsSettings.host,
-        username: fsSettings.username,
-        password: fsSettings.password,
       }),
     });
     mutateIndex();
@@ -607,11 +579,7 @@ export default function Wintered() {
       // build WebDAV path under md/<baseName>/
       const imagePath = `${parentDir}md/${baseName}/${src}`;
       const params = new URLSearchParams({
-        type: fsSettings?.type || "",
         path: imagePath,
-        host: fsSettings?.host || "",
-        username: fsSettings?.username || "",
-        password: fsSettings?.password || "",
       });
       return <img src={`/api/fs?${params.toString()}`} alt={alt} {...props} />;
     },
