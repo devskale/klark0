@@ -270,7 +270,7 @@ const infoConfig = {
 
 // Configuration for Markdown Conversion
 const markdownConversionConfig = {
-  displayName: "Markdown Konversion",
+  displayName: "Dokument Parser",
   fields: [
     {
       id: "parserUrl",

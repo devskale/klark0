@@ -24,6 +24,17 @@ export type WorkerSettings = {
   retryAttempts?: number;
 };
 
+export type DocumentParserSettings = {
+  parserUrl?: string;
+  ocr?: boolean;
+  marker?: boolean;
+  llamaparse?: boolean;
+  docling?: boolean;
+  pdfplumber?: boolean;
+  molmo?: boolean;
+  ocrforced?: boolean;
+};
+
 /**
  * Get filesystem configuration from database
  * Falls back to local filesystem if not configured
@@ -131,6 +142,33 @@ export async function getWorkerSettings(
     return settings.length > 0 ? (settings[0].value as WorkerSettings) : null;
   } catch (error) {
     console.error("Failed to get worker settings:", error);
+    return null;
+  }
+}
+
+/**
+ * Get document parser settings
+ */
+export async function getDocumentParserSettings(
+  teamId: number
+): Promise<DocumentParserSettings | null> {
+  try {
+    const settings = await db
+      .select()
+      .from(appSettings)
+      .where(
+        and(
+          eq(appSettings.teamId, teamId),
+          eq(appSettings.settingKey, "markdownKonversion")
+        )
+      )
+      .limit(1);
+
+    return settings.length > 0
+      ? (settings[0].value as DocumentParserSettings)
+      : null;
+  } catch (error) {
+    console.error("Failed to get document parser settings:", error);
     return null;
   }
 }

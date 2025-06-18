@@ -6,6 +6,7 @@ import {
   getAISettings,
   saveAppSetting,
   getAppSetting,
+  getDocumentParserSettings,
 } from "@/lib/db/settings";
 import { getKiSettings } from "@/lib/ai/settings";
 
@@ -29,6 +30,10 @@ async function handleSettingsRequest(request: RequestWithTeam) {
       }
       if (key === "aiServices") {
         const settings = await getAISettings(request.teamId);
+        return NextResponse.json(settings || {});
+      }
+      if (key === "documentParser") {
+        const settings = await getDocumentParserSettings(request.teamId);
         return NextResponse.json(settings || {});
       } // New dedicated endpoint for KI Einstellungen for AI features
       if (key === "kiEinstellungen") {

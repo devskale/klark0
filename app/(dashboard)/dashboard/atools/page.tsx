@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { trimName } from "@/lib/trim";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import useSWR from "swr";
 import {
   Dialog,
   DialogContent,
@@ -30,6 +31,8 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 const toolsList = [
   {
@@ -75,13 +78,12 @@ const toolsList = [
     description: "Überprüfung der extrahierten Kriterien",
     status: "pending",
     owner: "",
-  },
-  {
+  },  {
     id: 5,
-    name: "List Tool",
+    name: "System Tools",
     type: "utility",
     description:
-      "Lists all available tools from a web API and displays them in a modal.",
+      "Zeigt verfügbare Worker-Tools und Dokument-Parser Einstellungen an.",
     status: "",
     owner: "",
   },
@@ -91,11 +93,19 @@ export default function AtoolsPage() {
   const { selectedProject, selectedBieter, selectedDok } = useProject();
   const [runningJobs, setRunningJobs] = useState<Set<number>>(new Set());
   const [isListModalOpen, setIsListModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
   // State for fetched tools
   const [fetchedTools, setFetchedTools] = useState<{ id: string }[]>([]);
   const [fetching, setFetching] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
+
+  // Fetch worker settings including document parser configuration
+  const { data: workerSettings, error: workerSettingsError } = useSWR(
+    "/api/worker/settings",
+    fetcher,
+    { revalidateOnFocus: false }
+  );
 
   const startJob = async (tool: (typeof toolsList)[0]) => {
     if (runningJobs.has(tool.id)) return;
@@ -266,6 +276,90 @@ export default function AtoolsPage() {
         </Dialog>
       )}
 
+      {/* Modal for Document Parser Settings */}
+      {isSettingsModalOpen && (
+        <Dialog open={isSettingsModalOpen} onOpenChange={setIsSettingsModalOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Dokument Parser Einstellungen</DialogTitle>
+              <DialogDescription>
+                Diese Einstellungen steuern, wie der externe Parser mit
+                Dokumenten arbeitet und welche Optionen verfügbar sind.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="p-4 space-y-4">
+              {workerSettingsError && (
+                <p className="text-red-500">
+                  Fehler beim Laden der Einstellungen: {workerSettingsError.message}
+                </p>
+              )}
+              {!workerSettings?.success && !workerSettingsError && (
+                <p>Lade Einstellungen...</p>
+              )}
+              {workerSettings?.success && (
+                <div className="space-y-4">
+                  {/* Parser URL */}
+                  <div className="grid grid-cols-1 gap-2">
+                    <label className="text-sm font-medium">Parser URL</label>
+                    <div className="p-3 bg-gray-50 rounded border font-mono text-sm">
+                      {workerSettings.data.documentParser?.parserUrl || 
+                        <span className="text-gray-500">Nicht konfiguriert</span>
+                      }
+                    </div>
+                  </div>
+
+                  {/* Parser Options */}
+                  <div className="grid grid-cols-1 gap-2">
+                    <label className="text-sm font-medium">Aktivierte Parser</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {Object.entries(workerSettings.data.documentParser || {})
+                        .filter(([key, value]) => 
+                          key !== 'parserUrl' && typeof value === 'boolean' && value
+                        )
+                        .map(([key]) => (
+                          <div key={key} className="flex items-center space-x-2">
+                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                            <span className="text-sm">{key}</span>
+                          </div>
+                        ))
+                      }
+                    </div>
+                    {Object.entries(workerSettings.data.documentParser || {})
+                      .filter(([key, value]) => 
+                        key !== 'parserUrl' && typeof value === 'boolean' && value
+                      ).length === 0 && (
+                        <p className="text-gray-500 text-sm">Keine Parser aktiviert</p>
+                      )}
+                  </div>
+
+                  {/* Status Information */}
+                  <div className="p-3 bg-blue-50 rounded border">
+                    <p className="text-sm text-blue-800">
+                      <strong>Status:</strong> {
+                        workerSettings.data.documentParser?.parserUrl 
+                          ? "Konfiguriert" 
+                          : "Nicht konfiguriert"
+                      }
+                    </p>
+                    <p className="text-sm text-blue-600 mt-1">
+                      Einstellungen können unter "Einstellungen" → "Dokument Parser" 
+                      verwaltet werden.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setIsSettingsModalOpen(false)}>
+                Schließen
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -321,14 +415,21 @@ export default function AtoolsPage() {
                       <DropdownMenuItem disabled>Zuweisen</DropdownMenuItem>
                       <DropdownMenuItem disabled>Bearbeiten</DropdownMenuItem>
                     </DropdownMenuContent>
-                  </DropdownMenu>
-                  {tool.id === 5 && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setIsListModalOpen(true)}>
-                      List
-                    </Button>
+                  </DropdownMenu>                  {tool.id === 5 && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsListModalOpen(true)}>
+                        List
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsSettingsModalOpen(true)}>
+                        Einstellungen
+                      </Button>
+                    </>
                   )}
                 </TableCell>
               </TableRow>
