@@ -22,6 +22,13 @@ import { Button } from "@/components/ui/button";
 import { trimName } from "@/lib/trim";
 import { useState } from "react";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 const toolsList = [
   {
@@ -66,6 +73,14 @@ const toolsList = [
     type: "analysis",
     description: "Überprüfung der extrahierten Kriterien",
     status: "pending",
+    owner: "",
+  },
+  {
+    id: 5,
+    name: "List Tool",
+    type: "utility",
+    description: "Lists all available tools from a web API and displays them in a modal.",
+    status: "",
     owner: "",
   },
 ];
@@ -175,6 +190,8 @@ export default function AtoolsPage() {
     }, 120000);
   };
 
+  const [isListModalOpen, setIsListModalOpen] = useState(false);
+
   return (
     <section className="flex-1 p-4 lg:p-8">
       <h1 className="text-lg lg:text-2xl font-medium bold text-gray-900 mb-6">
@@ -184,6 +201,25 @@ export default function AtoolsPage() {
         Für das Ausschreibungsprojekt <b>{trimName(selectedProject ?? "")}</b>{" "}
         sind die folgenden Aktionen und Tools anwendbar.
       </p>
+
+      {/* Modal for List Tool - Ensure it doesn't interfere with dropdown focus */}
+      {isListModalOpen && (
+        <Dialog open={isListModalOpen} onOpenChange={setIsListModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Available Tools</DialogTitle>
+            </DialogHeader>
+            <div className="p-4">
+              {/* Placeholder for tools list from API */}
+              <p>Tools list will be fetched and displayed here.</p>
+              {/* Add logic here to fetch and render tools from web API */}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsListModalOpen(false)}>Close</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
 
       <div className="rounded-md border">
         <Table>
@@ -217,7 +253,7 @@ export default function AtoolsPage() {
                     </Badge>
                   )}
                 </TableCell>
-                <TableCell>
+                <TableCell className="flex gap-2">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button 
@@ -235,7 +271,7 @@ export default function AtoolsPage() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem 
                         onClick={() => startJob(tool)}
-                        disabled={runningJobs.has(tool.id)}
+                        disabled={runningJobs.has(tool.id) || tool.id === 5}
                       >
                         Starten
                       </DropdownMenuItem>
@@ -243,6 +279,15 @@ export default function AtoolsPage() {
                       <DropdownMenuItem disabled>Bearbeiten</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
+                  {tool.id === 5 && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => setIsListModalOpen(true)}
+                    >
+                      List
+                    </Button>
+                  )}
                 </TableCell>
               </TableRow>
             ))}
