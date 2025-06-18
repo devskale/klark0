@@ -78,7 +78,8 @@ const toolsList = [
     description: "Überprüfung der extrahierten Kriterien",
     status: "pending",
     owner: "",
-  },  {
+  },
+  {
     id: 5,
     name: "System Tools",
     type: "utility",
@@ -208,7 +209,6 @@ export default function AtoolsPage() {
       });
     }, 120000);
   };
-
   // Fetch tools when modal opens
   useEffect(() => {
     if (isListModalOpen) {
@@ -221,6 +221,12 @@ export default function AtoolsPage() {
         })
         .then((data) => {
           setFetchedTools(data.tasks || []);
+          // Handle API errors returned in response
+          if (data.error) {
+            setFetchError(
+              data.error + (data.fallback ? " (Fallback-Daten angezeigt)" : "")
+            );
+          }
           setFetching(false);
         })
         .catch((err) => {
@@ -244,22 +250,40 @@ export default function AtoolsPage() {
       {isListModalOpen && (
         <Dialog open={isListModalOpen} onOpenChange={setIsListModalOpen}>
           <DialogContent>
+            {" "}
             <DialogHeader>
               <DialogTitle>Verfügbare Tools (API)</DialogTitle>
               <DialogDescription>
-                Die folgende Liste zeigt alle verfügbaren Worker-Typen, die vom
-                System unterstützt werden.
+                Diese Liste wird von der konfigurierten Parser-URL abgerufen und
+                zeigt alle verfügbaren Worker-Typen des externen Systems.
               </DialogDescription>
             </DialogHeader>
             <div className="p-4">
-              {fetching && <p>Lade Tools...</p>}
-              {fetchError && <p className="text-red-500">{fetchError}</p>}
-              {!fetching && !fetchError && (
-                <ul className="list-disc pl-5">
-                  {fetchedTools.length === 0 && <li>Keine Tools gefunden.</li>}
+              {fetching && (
+                <div className="flex items-center space-x-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
+                  <p>Lade Tools von externer API...</p>
+                </div>
+              )}
+              {fetchError && (
+                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded">
+                  <p className="text-yellow-800 text-sm">
+                    <strong>Warnung:</strong> {fetchError}
+                  </p>
+                </div>
+              )}
+              {!fetching && (
+                <ul className="list-disc pl-5 space-y-1">
+                  {fetchedTools.length === 0 && (
+                    <li className="text-gray-500">
+                      Keine Tools verfügbar oder Parser nicht konfiguriert.
+                    </li>
+                  )}
                   {fetchedTools.map((tool) => (
                     <li key={tool.id}>
-                      <span className="font-mono">{tool.id}</span>
+                      <span className="font-mono bg-gray-100 px-1 rounded">
+                        {tool.id}
+                      </span>
                     </li>
                   ))}
                 </ul>
@@ -278,7 +302,9 @@ export default function AtoolsPage() {
 
       {/* Modal for Document Parser Settings */}
       {isSettingsModalOpen && (
-        <Dialog open={isSettingsModalOpen} onOpenChange={setIsSettingsModalOpen}>
+        <Dialog
+          open={isSettingsModalOpen}
+          onOpenChange={setIsSettingsModalOpen}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Dokument Parser Einstellungen</DialogTitle>
@@ -290,60 +316,94 @@ export default function AtoolsPage() {
             <div className="p-4 space-y-4">
               {workerSettingsError && (
                 <p className="text-red-500">
-                  Fehler beim Laden der Einstellungen: {workerSettingsError.message}
+                  Fehler beim Laden der Einstellungen:{" "}
+                  {workerSettingsError.message}
                 </p>
               )}
               {!workerSettings?.success && !workerSettingsError && (
                 <p>Lade Einstellungen...</p>
-              )}
+              )}{" "}
               {workerSettings?.success && (
                 <div className="space-y-4">
-                  {/* Parser URL */}
+                  {/* Parser URL Status */}
                   <div className="grid grid-cols-1 gap-2">
-                    <label className="text-sm font-medium">Parser URL</label>
-                    <div className="p-3 bg-gray-50 rounded border font-mono text-sm">
-                      {workerSettings.data.documentParser?.parserUrl || 
-                        <span className="text-gray-500">Nicht konfiguriert</span>
-                      }
-                    </div>
+                    <label className="text-sm font-medium">
+                      Parser URL Status
+                    </label>
+                    {workerSettings.data.documentParser?.parserUrl ? (
+                      <div className="p-3 bg-green-50 border border-green-200 rounded">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span className="text-green-800 text-sm font-medium">
+                            Konfiguriert
+                          </span>
+                        </div>
+                        <div className="mt-2 font-mono text-sm bg-white p-2 rounded border">
+                          {workerSettings.data.documentParser.parserUrl}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-3 bg-red-50 border border-red-200 rounded">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                          <span className="text-red-800 text-sm font-medium">
+                            Nicht konfiguriert
+                          </span>
+                        </div>
+                        <p className="text-red-600 text-sm mt-1">
+                          Remote Worker-API kann nicht erreicht werden.
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Parser Options */}
                   <div className="grid grid-cols-1 gap-2">
-                    <label className="text-sm font-medium">Aktivierte Parser</label>
+                    <label className="text-sm font-medium">
+                      Aktivierte Parser
+                    </label>
                     <div className="grid grid-cols-2 gap-2">
                       {Object.entries(workerSettings.data.documentParser || {})
-                        .filter(([key, value]) => 
-                          key !== 'parserUrl' && typeof value === 'boolean' && value
+                        .filter(
+                          ([key, value]) =>
+                            key !== "parserUrl" &&
+                            typeof value === "boolean" &&
+                            value
                         )
                         .map(([key]) => (
-                          <div key={key} className="flex items-center space-x-2">
+                          <div
+                            key={key}
+                            className="flex items-center space-x-2">
                             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                             <span className="text-sm">{key}</span>
                           </div>
-                        ))
-                      }
+                        ))}
                     </div>
-                    {Object.entries(workerSettings.data.documentParser || {})
-                      .filter(([key, value]) => 
-                        key !== 'parserUrl' && typeof value === 'boolean' && value
-                      ).length === 0 && (
-                        <p className="text-gray-500 text-sm">Keine Parser aktiviert</p>
-                      )}
+                    {Object.entries(
+                      workerSettings.data.documentParser || {}
+                    ).filter(
+                      ([key, value]) =>
+                        key !== "parserUrl" &&
+                        typeof value === "boolean" &&
+                        value
+                    ).length === 0 && (
+                      <p className="text-gray-500 text-sm">
+                        Keine Parser aktiviert
+                      </p>
+                    )}
                   </div>
 
                   {/* Status Information */}
                   <div className="p-3 bg-blue-50 rounded border">
                     <p className="text-sm text-blue-800">
-                      <strong>Status:</strong> {
-                        workerSettings.data.documentParser?.parserUrl 
-                          ? "Konfiguriert" 
-                          : "Nicht konfiguriert"
-                      }
+                      <strong>Status:</strong>{" "}
+                      {workerSettings.data.documentParser?.parserUrl
+                        ? "Konfiguriert"
+                        : "Nicht konfiguriert"}
                     </p>
                     <p className="text-sm text-blue-600 mt-1">
-                      Einstellungen können unter "Einstellungen" → "Dokument Parser" 
-                      verwaltet werden.
+                      Einstellungen können unter "Einstellungen" → "Dokument
+                      Parser" verwaltet werden.
                     </p>
                   </div>
                 </div>
@@ -415,7 +475,8 @@ export default function AtoolsPage() {
                       <DropdownMenuItem disabled>Zuweisen</DropdownMenuItem>
                       <DropdownMenuItem disabled>Bearbeiten</DropdownMenuItem>
                     </DropdownMenuContent>
-                  </DropdownMenu>                  {tool.id === 5 && (
+                  </DropdownMenu>{" "}
+                  {tool.id === 5 && (
                     <>
                       <Button
                         variant="ghost"

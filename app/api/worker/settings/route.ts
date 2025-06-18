@@ -16,20 +16,19 @@ async function handleWorkerSettingsRequest(request: RequestWithTeam) {
 
       // Get document parser settings
       const parserSettings = await getDocumentParserSettings(request.teamId);
-      
+
       return NextResponse.json({
         success: true,
         data: {
           documentParser: parserSettings || {},
-        }
+        },
       });
-
     } catch (error) {
       console.error("Error fetching worker settings:", error);
       return NextResponse.json(
-        { 
+        {
           success: false,
-          error: "Failed to fetch worker settings" 
+          error: "Failed to fetch worker settings",
         },
         { status: 500 }
       );
