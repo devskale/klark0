@@ -188,7 +188,7 @@ export default function AtoolsPage() {
   // Utility function to handle job success response
   const handleJobSuccess = (tool: Tool, result: any) => {
     const job = { id: result.data.id, ...result.data };
-    setExternalJobStatus(prev => new Map(prev.set(tool.id.toString(), { jobId: job.id, toolId: tool.id.toString(), status: "initiated" })));
+    setExternalJobStatus(prev => new Map(prev.set(tool.id.toString(), { jobId: job.id, toolId: tool.id.toString(), status: "initiated", progress: 0 })));
     toast.success(`${tool.name} gestartet`, {
       description: `Job ID: ${job.id}`,
     });
@@ -197,7 +197,7 @@ export default function AtoolsPage() {
         setExternalJobStatus(
           (prev) =>
             new Map(
-              prev.set(result.data.id, {
+              prev.set(tool.id.toString(), {
                 jobId: result.data.id,
                 toolId: tool.id.toString(),
                 status: "initiated",
@@ -454,10 +454,52 @@ export default function AtoolsPage() {
         {Object.values(externalJobStatus).find(j => j.toolId === tool.id.toString())?.jobId || "-"}
       </TableCell>
       <TableCell>
-        <Badge variant="outline" className="gap-1">
-          <Clock className="h-4 w-4" />
-          Bereit
-        </Badge>
+        {(() => {
+          const jobInfo = externalJobStatus.get(tool.id.toString());
+          let statusText = "Bereit";
+          let variant: "default" | "destructive" | "outline" | "secondary" = "outline";
+          let Icon = Clock;
+
+          if (jobInfo) {
+            switch (jobInfo.status) {
+              case "complete":
+                statusText = "Abgeschlossen";
+                variant = "default";
+                Icon = CheckCircle2;
+                break;
+              case "failed":
+                statusText = "Fehlgeschlagen";
+                variant = "destructive";
+                Icon = Play; // Using Play as a placeholder for an error icon if needed
+                break;
+              case "in_progress":
+                statusText = `In Bearbeitung${jobInfo.progress ? ` (${jobInfo.progress}%)` : ""}`;
+                variant = "secondary";
+                Icon = Loader2;
+                break;
+              case "initiated":
+                statusText = "Initialisiert";
+                variant = "secondary";
+                Icon = Loader2;
+                break;
+              default:
+                statusText = jobInfo.status || "Bereit";
+                variant = "outline";
+                Icon = Clock;
+            }
+          }
+
+          return (
+            <Badge variant={variant} className="gap-1">
+              {Icon === Loader2 ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Icon className="h-4 w-4" />
+              )}
+              {statusText}
+            </Badge>
+          );
+        })()}
       </TableCell>
         <TableCell className="flex gap-2">
         <DropdownMenu>
