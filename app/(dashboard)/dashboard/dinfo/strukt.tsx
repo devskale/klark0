@@ -29,7 +29,8 @@ export default function Strukt() {
   const [availableVariants, setAvailableVariants] = useState<
     Array<{ key: string; label: string; path: string }>
   >([]);
-  const [selectedVariant, setSelectedVariant] = useState<string | null>(null);  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isEditingView, setIsEditingView] = useState<boolean>(false);
 
   const parentDir = selectedDok
@@ -71,7 +72,7 @@ export default function Strukt() {
 
   useEffect(() => {
     const loadMarkdown = async () => {
-      if (!selectedDok || !fsSettings || !indexData) {
+      if (!selectedDok || !indexData) {
         setLoading(false);
         return;
       }
@@ -110,11 +111,7 @@ export default function Strukt() {
         );
         try {
           const mdBaseParams = new URLSearchParams({
-            type: fsSettings.type || "webdav",
             path: `${parentDir}md/${baseName}/`,
-            host: fsSettings.host || "",
-            username: fsSettings.username || "",
-            password: fsSettings.password || "",
           });
 
           const mdBaseResponse = await fetch(
@@ -229,11 +226,7 @@ export default function Strukt() {
 
         try {
           const params = new URLSearchParams({
-            type: fsSettings.type || "webdav",
             path: `${parentDir}md/`,
-            host: fsSettings.host || "",
-            username: fsSettings.username || "",
-            password: fsSettings.password || "",
           });
 
           const dirResponse = await fetch(`/api/fs?${params.toString()}`);
@@ -320,11 +313,7 @@ export default function Strukt() {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              type: fsSettings.type || "webdav",
               path: variantToLoad.path,
-              host: fsSettings.host || "",
-              username: fsSettings.username || "",
-              password: fsSettings.password || "",
             }),
           });
 
@@ -347,11 +336,7 @@ export default function Strukt() {
 
               try {
                 const mdDirParams = new URLSearchParams({
-                  type: fsSettings.type || "webdav",
                   path: `${parentDir}md/`,
-                  host: fsSettings.host || "",
-                  username: fsSettings.username || "",
-                  password: fsSettings.password || "",
                 });
 
                 const mdDirResponse = await fetch(
@@ -374,11 +359,7 @@ export default function Strukt() {
                     );
 
                     const baseNameDirParams = new URLSearchParams({
-                      type: fsSettings.type || "webdav",
                       path: `${parentDir}md/${baseName}/`,
-                      host: fsSettings.host || "",
-                      username: fsSettings.username || "",
-                      password: fsSettings.password || "",
                     });
 
                     const baseNameDirResponse = await fetch(
@@ -475,11 +456,7 @@ export default function Strukt() {
                   "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                  type: fsSettings.type || "webdav",
                   path: variant.path,
-                  host: fsSettings.host || "",
-                  username: fsSettings.username || "",
-                  password: fsSettings.password || "",
                 }),
               });
 
@@ -535,7 +512,7 @@ export default function Strukt() {
     };
 
     loadMarkdown();
-  }, [selectedDok, fsSettings, indexData, parentDir, selectedVariant]);
+  }, [selectedDok, indexData, parentDir, selectedVariant]);
 
   const handleVariantChange = async (variantLabel: string) => {
     if (variantLabel === selectedVariant) return;
@@ -543,7 +520,7 @@ export default function Strukt() {
   };
 
   const handleSaveDefaultParser = async () => {
-    if (!fsSettings || !parentDir || !selectedDok || !selectedVariant) return;
+    if (!parentDir || !selectedDok || !selectedVariant) return;
     const fileBase = decodeURIComponent(selectedDok.split("/").pop()!);
     const idxPath = parentDir + PDF2MD_INDEX_FILE_NAME;
 
@@ -556,17 +533,13 @@ export default function Strukt() {
         indexPath: idxPath,
         fileName: fileBase,
         parserDefault: parserKey,
-        type: fsSettings.type,
-        host: fsSettings.host,
-        username: fsSettings.username,
-        password: fsSettings.password,
       }),
     });
     mutateIndex();
   };
 
   const handleSaveMarkdown = async () => {
-    if (!selectedVariant || !fsSettings || !parentDir) {
+    if (!selectedVariant || !parentDir) {
       setError("Speichern nicht möglich: Fehlende Konfiguration.");
       return;
     }
@@ -602,11 +575,7 @@ export default function Strukt() {
       formData.append("files", file);
 
       const params = new URLSearchParams({
-        type: fsSettings.type || "webdav",
         path: directoryPath,
-        host: fsSettings.host || "",
-        username: fsSettings.username || "",
-        password: fsSettings.password || "",
       });
 
       const response = await fetch(`/api/fs/upload?${params.toString()}`, {
@@ -708,11 +677,7 @@ export default function Strukt() {
       }
       const imagePath = `${parentDir}md/${baseName}/${src}`;
       const params = new URLSearchParams({
-        type: fsSettings?.type || "",
         path: imagePath,
-        host: fsSettings?.host || "",
-        username: fsSettings?.username || "",
-        password: fsSettings?.password || "",
       });
       return <img src={`/api/fs?${params.toString()}`} alt={alt} {...props} />;
     },
