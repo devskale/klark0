@@ -46,15 +46,6 @@ type Tool = {
 
 const toolsList: Tool[] = [
   {
-    id: 0,
-    name: "FakeTool",
-    type: "fakejob",
-    description:
-      "Dauert einige Sekunden und gibt ein zufälliges Ergebnis zurück.",
-    status: "",
-    owner: "",
-  },
-  {
     id: 1,
     name: "FakeTool Ext",
     type: "fake_task",
@@ -165,12 +156,7 @@ export default function AtoolsPage() {
 
   // Utility function to handle job API request
   const submitJobRequest = async (tool: Tool) => {
-    return await fetch("/api/worker/jobs", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    const payload = {
         type: tool.type,
         name: tool.name,
         project: selectedProject,
@@ -180,8 +166,23 @@ export default function AtoolsPage() {
                 maxDuration: 2,
                 external: tool.external || false, // Add external flag
               }
-            : {}, // Reduced to 2 seconds max
-      }),
+            : tool.type === "fake_task"
+            ? (() => {
+                const duration = Math.floor(Math.random() * (15 - 5 + 1)) + 5;
+                return {
+                  duration: duration, // Random duration between 5 and 15 seconds inclusive
+                  task_name: `Custom ${duration}s FakeTask`
+                };
+              })()
+            : {}, // Reduced to 2 seconds max for fakejob, random duration for fake_task
+      };
+    console.log("Submitting job request with payload:", JSON.stringify(payload, null, 2));
+    return await fetch("/api/worker/jobs", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
     });
   };
 

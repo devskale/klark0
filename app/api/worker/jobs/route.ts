@@ -132,6 +132,9 @@ async function handlePostRequest(request: RequestWithTeam) {
       JSON.stringify(payloadToForward, null, 2)
     );
 
+    // Log the payload being sent to the external parser for debugging
+    console.log("Sending payload to external parser:", JSON.stringify(payloadToForward, null, 2));
+
     const response = await fetch(externalParserUrl, {
       method: "POST",
       headers: {
