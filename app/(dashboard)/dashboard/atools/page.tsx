@@ -144,140 +144,194 @@ export default function AtoolsPage() {
     { revalidateOnFocus: false }
   );
 
-  const startJob = async (tool: Tool) => {
-    if (runningJobs.has(tool.id)) return;
+  // Constants for timeouts
+  const JOB_SUBMISSION_DELAY = 1000; // Delay before removing from running jobs for external fake jobs
+  const INTERNAL_FAKEJOB_COMPLETION_DELAY = 1500; // Delay for internal fake job completion simulation
+  const OTHER_JOB_SUBMISSION_DELAY = 2000; // Delay for other job types submission
 
-    setRunningJobs((prev) => new Set([...prev, tool.id]));
+  // Utility function to add a tool to running jobs
+  const addToRunningJobs = (toolId: number) => {
+    setRunningJobs((prev) => new Set([...prev, toolId]));
+  };
 
-    try {
-      const response = await fetch("/api/worker/jobs", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          type: tool.type,
-          name: tool.name,
-          project: selectedProject,
-          parameters:
-            tool.type === "fakejob"
-              ? {
-                  maxDuration: 2,
-                  external: tool.external || false, // Add external flag
-                }
-              : {}, // Reduced to 2 seconds max
-        }),
-      });
+  // Utility function to remove a tool from running jobs
+  const removeFromRunningJobs = (toolId: number) => {
+    setRunningJobs((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(toolId);
+      return newSet;
+    });
+  };
 
-      const result = await response.json();
-      if (result.success) {
-        const job = { id: result.data.id, ...result.data };
-        // Ensure job ID is stored correctly for display
-        setExternalJobStatus(prev => new Map(prev.set(tool.id.toString(), { jobId: job.id, toolId: tool.id.toString(), status: job.status || "pending" })));
-        toast.success(`${tool.name} gestartet`, {
-          description: `Job ID: ${job.id}`,
-        });
-        if (tool.type === "fakejob") {
-          if (tool.external) {
-            // For external FakeTool, store job info for status tracking
-            setExternalJobStatus(
-              (prev) =>
-                new Map(
-                  prev.set(result.data.id, {
-                    jobId: result.data.id,
-                    toolId: tool.id.toString(),
-                    status: result.data.status || "pending",
-                    progress: result.data.progress || 0,
-                  })
-                )
-            );
-            toast.info("FakeTool Ext gestartet", {
-              description:
-                "Job läuft auf externem Parser-Service. Verwenden Sie 'Aktualisieren' zum Status-Check.",
-            });
-
-            // Remove from running jobs after submission
-            // No automatic polling, user will refresh manually
-            setTimeout(() => {
-              setRunningJobs((prev) => {
-                const newSet = new Set(prev);
-                newSet.delete(tool.id);
-                return newSet;
-              });
-            }, 1000);
-          } else {
-            // Internal fakejob - same as before
-            toast.info("FakeJob läuft...", {
-              description: "Wird in 1-2 Sekunden abgeschlossen",
-            });
-
-            setTimeout(() => {
-              setRunningJobs((prev) => {
-                const newSet = new Set(prev);
-                newSet.delete(tool.id);
-                return newSet;
-              });
-
-              // Simulate random success (95% success rate)
-              const success = Math.random() > 0.05;
-
-              if (success) {
-                toast.success("FakeJob erfolgreich abgeschlossen!", {
-                  description: `Simulierte Verarbeitung erfolgreich (Job: ${result.data.id})`,
-                });
-              } else {
-                toast.error("FakeJob fehlgeschlagen", {
-                  description: "Simulierter Fehler (5% Wahrscheinlichkeit)",
-                });
+  // Utility function to handle job API request
+  const submitJobRequest = async (tool: Tool) => {
+    return await fetch("/api/worker/jobs", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        type: tool.type,
+        name: tool.name,
+        project: selectedProject,
+        parameters:
+          tool.type === "fakejob"
+            ? {
+                maxDuration: 2,
+                external: tool.external || false, // Add external flag
               }
-            }, 1500); // Show completion after 1.5 seconds
-          }
-        } else {
-          // For other job types, inform user about remote processing
-          toast.info(`${tool.name} wird verarbeitet`, {
-            description: "Der Job läuft auf dem externen Parser-Service",
-          });
+            : {}, // Reduced to 2 seconds max
+      }),
+    });
+  };
 
-          // Remove from running jobs after a short delay to show it was submitted
-          setTimeout(() => {
-            setRunningJobs((prev) => {
-              const newSet = new Set(prev);
-              newSet.delete(tool.id);
-              return newSet;
-            });
-          }, 2000);
-        }
+  // Utility function to handle job success response
+  const handleJobSuccess = (tool: Tool, result: any) => {
+    const job = { id: result.data.id, ...result.data };
+    setExternalJobStatus(prev => new Map(prev.set(tool.id.toString(), { jobId: job.id, toolId: tool.id.toString(), status: "initiated" })));
+    toast.success(`${tool.name} gestartet`, {
+      description: `Job ID: ${job.id}`,
+    });
+    if (tool.type === "fakejob") {
+      if (tool.external) {
+        setExternalJobStatus(
+          (prev) =>
+            new Map(
+              prev.set(result.data.id, {
+                jobId: result.data.id,
+                toolId: tool.id.toString(),
+                status: "initiated",
+                progress: 0,
+              })
+            )
+        );
+        toast.info("FakeTool Ext gestartet", {
+          description:
+            "Job läuft auf externem Parser-Service. Verwenden Sie 'Aktualisieren' zum Status-Check.",
+        });
+        setTimeout(() => removeFromRunningJobs(tool.id), JOB_SUBMISSION_DELAY);
       } else {
-        throw new Error(result.error || "Unbekannter Fehler");
+        toast.info("FakeJob läuft...", {
+          description: "Wird in 1-2 Sekunden abgeschlossen",
+        });
+        setTimeout(() => {
+          removeFromRunningJobs(tool.id);
+          const success = Math.random() > 0.05;
+          if (success) {
+            toast.success("FakeJob erfolgreich abgeschlossen!", {
+              description: `Simulierte Verarbeitung erfolgreich (Job: ${result.data.id})`,
+            });
+          } else {
+            toast.error("FakeJob fehlgeschlagen", {
+              description: "Simulierter Fehler (5% Wahrscheinlichkeit)",
+            });
+          }
+        }, INTERNAL_FAKEJOB_COMPLETION_DELAY);
       }
-    } catch (error) {
-      console.error("Error starting job:", error);
-      let errorMessage = "Unbekannter Fehler";
-      if (error instanceof Error) {
-        errorMessage = error.message;
-        if (error.message.includes("network")) {
-          errorMessage += " - Bitte überprüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.";
-        } else if (error.message.includes("permission") || error.message.includes("unauthorized")) {
-          errorMessage += " - Überprüfen Sie Ihre Berechtigungen oder melden Sie sich erneut an.";
-        }
-      }
-      toast.error(`Fehler beim Starten von ${tool.name}`, {
-        description: errorMessage,
-        action: {
-          label: "Erneut versuchen",
-          onClick: () => startJob(tool),
-        },
+    } else {
+      toast.info(`${tool.name} wird verarbeitet`, {
+        description: "Der Job läuft auf dem externen Parser-Service",
       });
-      setRunningJobs((prev) => {
+      setTimeout(() => removeFromRunningJobs(tool.id), OTHER_JOB_SUBMISSION_DELAY);
+    }
+    // Enable refresh button after 250ms delay
+    setTimeout(() => {
+      setRefreshingJobs((prev) => {
         const newSet = new Set(prev);
         newSet.delete(tool.id);
         return newSet;
       });
+    }, 250);
+  };
+
+  // Utility function to handle job error
+  const handleJobError = (tool: Tool, error: unknown) => {
+    console.error("Error starting job:", error);
+    let errorMessage = "Unbekannter Fehler";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      if (error.message.includes("network")) {
+        errorMessage += " - Bitte überprüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.";
+      } else if (error.message.includes("permission") || error.message.includes("unauthorized")) {
+        errorMessage += " - Überprüfen Sie Ihre Berechtigungen oder melden Sie sich erneut an.";
+      }
     }
-  }; // Function to refresh external job status
+    toast.error(`Fehler beim Starten von ${tool.name}`, {
+      description: errorMessage,
+      action: {
+        label: "Erneut versuchen",
+        onClick: () => startJob(tool),
+      },
+    });
+    removeFromRunningJobs(tool.id);
+  };
+
+  const startJob = async (tool: Tool) => {
+    if (runningJobs.has(tool.id)) return;
+    addToRunningJobs(tool.id);
+    try {
+      const response = await submitJobRequest(tool);
+      const result = await response.json();
+      if (result.success) {
+        handleJobSuccess(tool, result);
+      } else {
+        throw new Error(result.error || "Unbekannter Fehler");
+      }
+    } catch (error) {
+      handleJobError(tool, error);
+    }
+  };
+
+  // Utility function to get job info from external status
+  const getJobInfo = (tool: Tool) => {
+    return externalJobStatus.get(tool.external ? tool.id.toString() : tool.id.toString());
+  };
+
+  // Utility function to handle job status toast notifications
+  const showJobStatusToast = (job: any, jobId: string) => {
+    if (job.status === "complete") {
+      toast.success("Job erfolgreich abgeschlossen!", {
+        description: `Job ID: ${jobId}. Status: ${job.status}. Ergebnis: ${job.result?.message || "Erfolgreich"}`,
+      });
+    } else if (job.status === "failed") {
+      toast.error("Externe Job fehlgeschlagen", {
+        description: `Job ID: ${jobId}. Status: ${job.status}. Fehler: ${job.error || "Unbekannter Fehler"}`,
+      });
+    } else if (job.status === "pending" || job.status === "in_progress") {
+      toast.info(`Job Status: ${job.status}`, {
+        description: `Job ID: ${jobId}. Fortschritt: ${job.progress || 0}%`,
+      });
+    } else {
+      toast.info(`Unerwarteter Job Status: ${job.status}`, {
+        description: `Job ID: ${jobId}. Fortschritt: ${job.progress || 0}%. Details: ${job.result?.message || 'Keine spezifische Nachricht'}`,
+      });
+    }
+  };
+
+  // Utility function to handle job status error
+  const handleStatusError = (tool: Tool, error: unknown) => {
+    console.error("Error refreshing job status:", error);
+    let errorMessage = "Unbekannter Fehler";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      if (error.message.includes("network") || error.message.includes("timeout")) {
+        errorMessage += " - Überprüfen Sie Ihre Internetverbindung.";
+      } else if (error.message.includes("404") || error.message.includes("not found")) {
+        errorMessage += " - Job-ID nicht gefunden. Möglicherweise wurde der Job gelöscht oder abgeschlossen.";
+      }
+    }
+    toast.error("Fehler beim Aktualisieren", {
+      description: errorMessage,
+      action: {
+        label: "Erneut versuchen",
+        onClick: () => refreshJobStatus(tool),
+      },
+    });
+  };
+
+  // Function to refresh external job status
   const refreshJobStatus = async (tool: Tool) => {
-    // Use job.id instead of tool.id
-    const jobInfo = externalJobStatus.get(tool.external ? tool.id.toString() : tool.id.toString());
+    const jobInfo = getJobInfo(tool);
     if (!jobInfo) {
       toast.error("Kein Job zum Aktualisieren gefunden");
       return;
@@ -288,6 +342,21 @@ export default function AtoolsPage() {
     );
     setRefreshingJobs((prev) => new Set([...prev, tool.id]));
 
+    // Update status to indicate refresh has started
+    const currentJobInfo = externalJobStatus.get(tool.id.toString());
+    if (currentJobInfo) {
+      setExternalJobStatus(
+        (prev) =>
+          new Map(
+            prev.set(tool.id.toString(), {
+              ...currentJobInfo,
+              status: "in_progress",
+              progress: 0,
+            })
+          )
+      );
+    }
+
     try {
       const apiUrl = `/api/worker/jobs/${jobInfo.jobId}`;
       console.log(`📡 Making request to: ${apiUrl}`);
@@ -297,30 +366,25 @@ export default function AtoolsPage() {
 
       console.log(`📊 Response from API:`, result);
 
-      // Assuming the API now directly returns the job object with job_id, status, and info
-      // And that result.success is no longer part of the direct /api/worker/jobs/{jobId} response
-      // but implied by a 200 OK status and the presence of job_id and status.
       if (response.ok && result.job_id && result.status) {
-        // Construct the 'job' object based on the new API response structure
         const job = {
-          id: result.job_id, // from top level
-          status: result.status, // from top level
-          result: result.info?.result, // from info object
-          error: result.info?.error, // from info object
-          progress: result.info?.progress, // from info object
-          parameters: result.info?.parameters, // from info object, if needed
+          id: result.job_id,
+          status: result.status,
+          result: result.info?.result,
+          error: result.info?.error,
+          progress: result.info?.progress,
+          parameters: result.info?.parameters,
         };
 
         console.log(`✅ Job data received and parsed:`, job);
 
-        // Update job status using tool.id as the key
         setExternalJobStatus(
           (prev) =>
             new Map(
-              prev.set(tool.id.toString(), { // Use tool.id as the key for consistency
-                jobId: job.id, // Store the job.id from the API response
-                toolId: tool.id.toString(), // Keep toolId for mapping in the table
-                status: job.status, // Use new status from API
+              prev.set(tool.id.toString(), {
+                jobId: job.id,
+                toolId: tool.id.toString(),
+                status: job.status,
                 result: job.result,
                 error: job.error,
                 progress: job.progress || 0,
@@ -328,49 +392,14 @@ export default function AtoolsPage() {
             )
         );
 
-        // Show toast based on NEW status from API (job.status)
-        if (job.status === "complete") {
-          toast.success("Job erfolgreich abgeschlossen!", {
-            description: `Job ID: ${job.id}. Status: ${job.status}. Ergebnis: ${job.result?.message || "Erfolgreich"}`,
-          });
-        } else if (job.status === "failed") {
-          toast.error("Externe Job fehlgeschlagen", {
-            description: `Job ID: ${job.id}. Status: ${job.status}. Fehler: ${job.error || "Unbekannter Fehler"}`,
-          });
-        } else if (job.status === "pending" || job.status === "in_progress") {
-          toast.info(`Job Status: ${job.status}`, {
-            description: `Job ID: ${job.id}. Fortschritt: ${job.progress || 0}%`,
-          });
-        } else {
-          // Fallback for any other statuses
-          toast.info(`Unerwarteter Job Status: ${job.status}`, {
-            description: `Job ID: ${job.id}. Fortschritt: ${job.progress || 0}%. Details: ${job.result?.message || 'Keine spezifische Nachricht'}`,
-          });
-        }
+        showJobStatusToast(job, job.id);
       } else {
         console.error(`❌ API returned error:`, result.error);
-        // Provide a more specific error message if result.error is undefined
         const errorMessage = result.error || result.message || "Fehler beim Abrufen des Job-Status, keine spezifische Fehlermeldung vom Server.";
         throw new Error(errorMessage);
       }
     } catch (error) {
-      console.error("Error refreshing job status:", error);
-      let errorMessage = "Unbekannter Fehler";
-      if (error instanceof Error) {
-        errorMessage = error.message;
-        if (error.message.includes("network") || error.message.includes("timeout")) {
-          errorMessage += " - Überprüfen Sie Ihre Internetverbindung.";
-        } else if (error.message.includes("404") || error.message.includes("not found")) {
-          errorMessage += " - Job-ID nicht gefunden. Möglicherweise wurde der Job gelöscht oder abgeschlossen.";
-        }
-      }
-      toast.error("Fehler beim Aktualisieren", {
-        description: errorMessage,
-        action: {
-          label: "Erneut versuchen",
-          onClick: () => refreshJobStatus(tool),
-        },
-      });
+      handleStatusError(tool, error);
     } finally {
       setRefreshingJobs((prev) => {
         const newSet = new Set(prev);
@@ -425,123 +454,69 @@ export default function AtoolsPage() {
         {Object.values(externalJobStatus).find(j => j.toolId === tool.id.toString())?.jobId || "-"}
       </TableCell>
       <TableCell>
-        {(() => {
-          // Check for external job status first
-          const jobInfo = Object.values(externalJobStatus).find(j => j.toolId === tool.id.toString());
-          if (jobInfo) {
-            switch (jobInfo.status) {
-              case "completed":
-                return (
-                  <Badge variant="default" className="gap-1">
-                    <CheckCircle2 className="h-4 w-4" />
-                    Abgeschlossen
-                  </Badge>
-                );
-              case "failed":
-                return (
-                  <Badge variant="destructive" className="gap-1">
-                    <Clock className="h-4 w-4" />
-                    Fehlgeschlagen
-                  </Badge>
-                );
-              case "in_progress":
-                return (
-                  <Badge variant="secondary" className="gap-1">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Läuft ({jobInfo.progress || 0}%)
-                  </Badge>
-                );
-              case "pending":
-                return (
-                  <Badge variant="outline" className="gap-1">
-                    <Clock className="h-4 w-4" />
-                    Wartend
-                  </Badge>
-                );
-              default:
-                return (
-                  <Badge variant="outline" className="gap-1">
-                    <Clock className="h-4 w-4" />
-                    {jobInfo.status}
-                  </Badge>
-                );
-            }
-          }
-
-          // Check if job is currently running
-          if (runningJobs.has(tool.id)) {
-            return (
-              <Badge variant="secondary" className="gap-1">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Läuft
-              </Badge>
-            );
-          }
-
-          // Default status
-          return (
-            <Badge variant="outline" className="gap-1">
-              <Clock className="h-4 w-4" />
-              Bereit
-            </Badge>
-          );
-        })()}
+        <Badge variant="outline" className="gap-1">
+          <Clock className="h-4 w-4" />
+          Bereit
+        </Badge>
       </TableCell>
-      <TableCell className="flex gap-2">
+        <TableCell className="flex gap-2">
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={runningJobs.has(tool.id)}>
-              {runningJobs.has(tool.id) ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Play className="h-4 w-4" />
-              )}
-            </Button>
-          </DropdownMenuTrigger>{" "}
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem
-              onClick={() => startJob(tool)}
-              disabled={runningJobs.has(tool.id) || tool.id === 6}>
-              Starten
-            </DropdownMenuItem>
-            <DropdownMenuItem disabled>Zuweisen</DropdownMenuItem>
-            <DropdownMenuItem disabled>Bearbeiten</DropdownMenuItem>
-          </DropdownMenuContent>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={runningJobs.has(tool.id)}
+                        aria-label={runningJobs.has(tool.id) ? "Job läuft" : "Aktionen für " + tool.name}>
+                        {runningJobs.has(tool.id) ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Play className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </DropdownMenuTrigger>{" "}
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={() => startJob(tool)}
+                        disabled={runningJobs.has(tool.id) || tool.id === 6}
+                        aria-label={`Starten von ${tool.name}`}>
+                        Starten
+                      </DropdownMenuItem>
+                      <DropdownMenuItem disabled aria-label="Zuweisen (nicht verfügbar)">Zuweisen</DropdownMenuItem>
+                      <DropdownMenuItem disabled aria-label="Bearbeiten (nicht verfügbar)">Bearbeiten</DropdownMenuItem>
+                    </DropdownMenuContent>
         </DropdownMenu>
-        {/* Refresh button for external tools */}
-        {tool.external && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => refreshJobStatus(tool)}
-            disabled={
-              refreshingJobs.has(tool.id) ||
-              !externalJobStatus.has(tool.id.toString())
-            }
-            title="Job-Status aktualisieren">
-            {refreshingJobs.has(tool.id) ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <RefreshCw className="h-4 w-4" />
-            )}
-          </Button>
-        )}
+        {/* Refresh button for all tools */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => refreshJobStatus(tool)}
+          disabled={
+            refreshingJobs.has(tool.id) ||
+            !externalJobStatus.has(tool.id.toString())
+          }
+          title="Job-Status aktualisieren"
+          aria-label={`Aktualisieren des Job-Status für ${tool.name}`}>
+          {refreshingJobs.has(tool.id) ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <RefreshCw className="h-4 w-4" />
+          )}
+        </Button>
         {/* System Tools buttons */}
         {tool.id === 6 && (
           <>
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setIsListModalOpen(true)}>
+              onClick={() => setIsListModalOpen(true)}
+              aria-label="Liste der verfügbaren Tools anzeigen">
               List
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setIsSettingsModalOpen(true)}>
+              onClick={() => setIsSettingsModalOpen(true)}
+              aria-label="Dokument-Parser-Einstellungen anzeigen">
               Einstellungen
             </Button>
           </>
@@ -564,12 +539,12 @@ export default function AtoolsPage() {
 
       {/* Modal for List Tool - Ensure it doesn't interfere with dropdown focus */}
       {isListModalOpen && (
-        <Dialog open={isListModalOpen} onOpenChange={setIsListModalOpen}>
-          <DialogContent>
+        <Dialog open={isListModalOpen} onOpenChange={setIsListModalOpen} aria-labelledby="list-modal-title">
+          <DialogContent aria-describedby="list-modal-description">
             {" "}
             <DialogHeader>
-              <DialogTitle>Verfügbare Tools (API)</DialogTitle>
-              <DialogDescription>
+              <DialogTitle id="list-modal-title">Verfügbare Tools (API)</DialogTitle>
+              <DialogDescription id="list-modal-description">
                 Diese Liste wird von der konfigurierten Parser-URL abgerufen und
                 zeigt alle verfügbaren Worker-Typen des externen Systems.
               </DialogDescription>
@@ -589,14 +564,14 @@ export default function AtoolsPage() {
                 </div>
               )}
               {!fetching && (
-                <ul className="list-disc pl-5 space-y-1">
+                <ul className="list-disc pl-5 space-y-1" role="list" aria-label="Liste der verfügbaren Tools">
                   {fetchedTools.length === 0 && (
                     <li className="text-gray-500">
                       Keine Tools verfügbar oder Parser nicht konfiguriert.
                     </li>
                   )}
                   {fetchedTools.map((tool) => (
-                    <li key={tool.id}>
+                    <li key={tool.id} role="listitem">
                       <span className="font-mono bg-gray-100 px-1 rounded">
                         {tool.id}
                       </span>
@@ -608,7 +583,8 @@ export default function AtoolsPage() {
             <DialogFooter>
               <Button
                 variant="outline"
-                onClick={() => setIsListModalOpen(false)}>
+                onClick={() => setIsListModalOpen(false)}
+                aria-label="Modal schließen">
                 Schließen
               </Button>
             </DialogFooter>
@@ -620,11 +596,12 @@ export default function AtoolsPage() {
       {isSettingsModalOpen && (
         <Dialog
           open={isSettingsModalOpen}
-          onOpenChange={setIsSettingsModalOpen}>
-          <DialogContent className="max-w-2xl">
+          onOpenChange={setIsSettingsModalOpen}
+          aria-labelledby="settings-modal-title">
+          <DialogContent className="max-w-2xl" aria-describedby="settings-modal-description">
             <DialogHeader>
-              <DialogTitle>Dokument Parser Einstellungen</DialogTitle>
-              <DialogDescription>
+              <DialogTitle id="settings-modal-title">Dokument Parser Einstellungen</DialogTitle>
+              <DialogDescription id="settings-modal-description">
                 Diese Einstellungen steuern, wie der externe Parser mit
                 Dokumenten arbeitet und welche Optionen verfügbar sind.
               </DialogDescription>
@@ -643,11 +620,11 @@ export default function AtoolsPage() {
                 <div className="space-y-4">
                   {/* Parser URL Status */}
                   <div className="grid grid-cols-1 gap-2">
-                    <label className="text-sm font-medium">
+                    <label className="text-sm font-medium" htmlFor="parser-url-status">
                       Parser URL Status
                     </label>
                     {workerSettings.data.documentParser?.parserUrl ? (
-                      <div className="p-3 bg-green-50 border border-green-200 rounded">
+                      <div className="p-3 bg-green-50 border border-green-200 rounded" id="parser-url-status">
                         <div className="flex items-center space-x-2">
                           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                           <span className="text-green-800 text-sm font-medium">
@@ -659,7 +636,7 @@ export default function AtoolsPage() {
                         </div>
                       </div>
                     ) : (
-                      <div className="p-3 bg-red-50 border border-red-200 rounded">
+                      <div className="p-3 bg-red-50 border border-red-200 rounded" id="parser-url-status">
                         <div className="flex items-center space-x-2">
                           <div className="w-2 h-2 bg-red-500 rounded-full"></div>
                           <span className="text-red-800 text-sm font-medium">
@@ -675,10 +652,10 @@ export default function AtoolsPage() {
 
                   {/* Parser Options */}
                   <div className="grid grid-cols-1 gap-2">
-                    <label className="text-sm font-medium">
+                    <label className="text-sm font-medium" htmlFor="active-parsers">
                       Aktivierte Parser
                     </label>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-2" id="active-parsers">
                       {Object.entries(workerSettings.data.documentParser || {})
                         .filter(
                           ([key, value]) =>
@@ -728,7 +705,8 @@ export default function AtoolsPage() {
             <DialogFooter>
               <Button
                 variant="outline"
-                onClick={() => setIsSettingsModalOpen(false)}>
+                onClick={() => setIsSettingsModalOpen(false)}
+                aria-label="Einstellungen-Modal schließen">
                 Schließen
               </Button>
             </DialogFooter>
