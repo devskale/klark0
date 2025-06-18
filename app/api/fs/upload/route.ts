@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getTeamIdFromRequest } from "@/lib/auth/team-context";
 import { getFileSystemSettings } from "@/lib/db/settings";
 
-export const runtime = "edge"; // for formData()
+ // for formData()
 
 export async function POST(request: Request) {
   // Extract team context from request
@@ -55,9 +55,7 @@ export async function POST(request: Request) {
       ).toString();
 
       const headers: HeadersInit = {
-        Authorization: `Basic ${Buffer.from(`${username}:${password}`).toString(
-          "base64"
-        )}`,
+        Authorization: `Basic ${btoa(`${username}:${password}`)}`,
       };
 
       // Add Content-Type header if the blob/file has a type specified
