@@ -611,7 +611,7 @@ export default function Aidok() {
     try {
       console.log("Starting AI analysis with queryType:", selectedAiQuery);
       console.log("Context length:", markdown.length);
-      
+
       const response = await fetch("/api/ai/gem/stream", {
         method: "POST",
         headers: {
@@ -651,28 +651,34 @@ export default function Aidok() {
           result += chunk;
           setAiResponse((prev) => prev + chunk);
         }
-        
-        console.log("AI analysis completed, total response length:", result.length);
+
+        console.log(
+          "AI analysis completed, total response length:",
+          result.length
+        );
       } else {
         throw new Error("Antwort des Servers enthält keinen Body.");
       }
     } catch (err: any) {
       console.error("AI query error:", err);
       let errorMessage = "Ein unbekannter Fehler ist aufgetreten.";
-      
+
       if (err.message) {
         errorMessage = err.message;
       }
-      
+
       // Add specific error handling for common AI configuration issues
       if (err.message?.includes("Bearer token not configured")) {
-        errorMessage = "KI-API-Token nicht konfiguriert. Bitte prüfen Sie die KI-Einstellungen.";
+        errorMessage =
+          "KI-API-Token nicht konfiguriert. Bitte prüfen Sie die KI-Einstellungen.";
       } else if (err.message?.includes("User not authenticated")) {
-        errorMessage = "Benutzer nicht authentifiziert. Bitte melden Sie sich erneut an.";
+        errorMessage =
+          "Benutzer nicht authentifiziert. Bitte melden Sie sich erneut an.";
       } else if (err.message?.includes("KI-Einstellungen nicht gefunden")) {
-        errorMessage = "KI-Einstellungen nicht gefunden. Bitte konfigurieren Sie die KI-Einstellungen in den Systemeinstellungen.";
+        errorMessage =
+          "KI-Einstellungen nicht gefunden. Bitte konfigurieren Sie die KI-Einstellungen in den Systemeinstellungen.";
       }
-      
+
       setAiError(errorMessage);
     } finally {
       setIsAiLoading(false);
@@ -848,7 +854,9 @@ export default function Aidok() {
         )}
 
       {markdown && selectedVariant && (
-        <Card>          <CardHeader>
+        <Card>
+          {" "}
+          <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <div className="flex items-center">
                 <Wand2 className="h-5 w-5 mr-2" />
@@ -857,18 +865,17 @@ export default function Aidok() {
               <div className="flex items-center space-x-2">
                 {kiConfigStatus && (
                   <div className="flex items-center space-x-1 text-sm">
-                    <div 
+                    <div
                       className={`w-2 h-2 rounded-full ${
-                        kiConfigStatus.configured 
-                          ? 'bg-green-500' 
-                          : 'bg-red-500'
+                        kiConfigStatus.configured
+                          ? "bg-green-500"
+                          : "bg-red-500"
                       }`}
                     />
                     <span className="text-muted-foreground">
-                      {kiConfigStatus.configured 
-                        ? `KI: ${kiConfigStatus.framework || 'OK'}` 
-                        : 'KI: Nicht konfiguriert'
-                      }
+                      {kiConfigStatus.configured
+                        ? `KI: ${kiConfigStatus.framework || "OK"}`
+                        : "KI: Nicht konfiguriert"}
                     </span>
                   </div>
                 )}
@@ -892,52 +899,58 @@ export default function Aidok() {
                     </SelectItem>
                   ))}
                 </SelectContent>
-              </Select>            </div>
-            
+              </Select>{" "}
+            </div>
+
             {kiConfigStatus && !kiConfigStatus.configured && (
               <Alert>
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>KI nicht konfiguriert</AlertTitle>
                 <AlertDescription className="space-y-2">
-                  <div>Die KI-Einstellungen sind noch nicht konfiguriert. Bitte richten Sie zunächst Ihren API-Token ein.</div>
                   <div>
-                    <Button 
-                      variant="outline" 
+                    Die KI-Einstellungen sind noch nicht konfiguriert. Bitte
+                    richten Sie zunächst Ihren API-Token ein.
+                  </div>
+                  <div>
+                    <Button
+                      variant="outline"
                       size="sm"
-                      onClick={() => window.open('/dashboard/einstellungen', '_blank')}
-                    >
+                      onClick={() =>
+                        window.open("/dashboard/einstellungen", "_blank")
+                      }>
                       KI-Einstellungen öffnen
                     </Button>
                   </div>
                 </AlertDescription>
               </Alert>
             )}
-              <Button
+            <Button
               onClick={handleAiQuerySubmit}
               disabled={
-                isAiLoading || 
-                !selectedAiQuery || 
+                isAiLoading ||
+                !selectedAiQuery ||
                 (kiConfigStatus !== null && !kiConfigStatus.configured)
               }>
               {isAiLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {kiConfigStatus && !kiConfigStatus.configured 
-                ? "KI nicht konfiguriert" 
-                : "Analyse starten"
-              }
-            </Button>{aiError && (
+              {kiConfigStatus && !kiConfigStatus.configured
+                ? "KI nicht konfiguriert"
+                : "Analyse starten"}
+            </Button>
+            {aiError && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Analysefehler</AlertTitle>
                 <AlertDescription className="space-y-2">
                   <div>{aiError}</div>
-                  {(aiError.includes("KI-API-Token nicht konfiguriert") || 
+                  {(aiError.includes("KI-API-Token nicht konfiguriert") ||
                     aiError.includes("KI-Einstellungen nicht gefunden")) && (
                     <div className="mt-2">
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="sm"
-                        onClick={() => window.open('/dashboard/einstellungen', '_blank')}
-                      >
+                        onClick={() =>
+                          window.open("/dashboard/einstellungen", "_blank")
+                        }>
                         KI-Einstellungen öffnen
                       </Button>
                     </div>
