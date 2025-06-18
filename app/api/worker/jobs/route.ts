@@ -31,6 +31,26 @@ const CreateJobSchema = z.object({
   parameters: z.record(z.any()).optional(),
 });
 
+// Response schemas to match FastAPI backend
+const JobBaseSchema = z.object({
+  id: z.string(),
+  type: z.string(),
+  name: z.string(),
+  status: z.enum(["pending", "running", "completed", "failed", "cancelled"]),
+  project: z.string().optional(),
+  createdAt: z.string().datetime(),
+  progress: z.number().min(0).max(100),
+  parameters: z.record(z.any()),
+});
+
+const JobDetailsSchema = JobBaseSchema.extend({
+  startedAt: z.string().datetime().optional(),
+  completedAt: z.string().datetime().optional(),
+  duration: z.number().optional(), // in seconds
+  result: z.any().optional(),
+  error: z.string().optional(),
+});
+
 // Function to trigger a job on the remote parser service
 async function triggerRemoteWorker(jobId: string, teamId: number) {
   const job = await jobStore.get(jobId);
@@ -61,16 +81,14 @@ async function triggerRemoteWorker(jobId: string, teamId: number) {
       /\/$/,
       ""
     )}/api/worker/jobs`;
-    console.log(`Job ${jobId}: Triggering remote worker at ${externalApiUrl}`);
-
-    // Prepare job payload for the remote service
+    console.log(`Job ${jobId}: Triggering remote worker at ${externalApiUrl}`); // Prepare job payload for the remote service (matching FastAPI backend format)
     const remoteJobPayload = {
       type: job.type,
       name: job.name,
-      project: job.project,
+      project: job.project || null,
       parameters: {
         ...job.parameters,
-        // Add parser-specific settings
+        // Add parser-specific settings as they would be expected by the backend
         ocr: parserSettings.ocr,
         marker: parserSettings.marker,
         llamaparse: parserSettings.llamaparse,
@@ -78,11 +96,13 @@ async function triggerRemoteWorker(jobId: string, teamId: number) {
         pdfplumber: parserSettings.pdfplumber,
         molmo: parserSettings.molmo,
         ocrforced: parserSettings.ocrforced,
+        // Add metadata for tracking
+        originalJobId: jobId,
+        teamId: teamId,
+        callbackUrl: `${
+          process.env.NEXTAUTH_URL || "http://localhost:3000"
+        }/api/worker/jobs/${jobId}/callback`,
       },
-      // Add callback URL for status updates (optional)
-      callbackUrl: `${
-        process.env.NEXTAUTH_URL || "http://localhost:3000"
-      }/api/worker/jobs/${jobId}/callback`,
     };
 
     // Trigger the remote job
@@ -101,16 +121,24 @@ async function triggerRemoteWorker(jobId: string, teamId: number) {
         `Remote API returned ${response.status}: ${response.statusText}`
       );
     }
-
     const remoteJobData = await response.json();
     console.log(`Job ${jobId}: Remote job created:`, remoteJobData);
+
+    // Handle both FastAPI backend response formats
+    const remoteJobInfo = remoteJobData.data || remoteJobData;
+    const remoteJobId = remoteJobInfo.id;
+
+    if (!remoteJobId) {
+      throw new Error("Remote job ID not found in response");
+    }
 
     // Update job with remote job information
     job.progress = 10;
     job.parameters = {
       ...job.parameters,
-      remoteJobId: remoteJobData.id || remoteJobData.data?.id,
+      remoteJobId: remoteJobId,
       remoteJobUrl: externalApiUrl,
+      remoteJobStatus: remoteJobInfo.status || "pending",
     };
     await jobStore.set(jobId, job);
 
@@ -158,23 +186,60 @@ async function pollRemoteJobStatus(jobId: string, teamId: number) {
         `Status check failed: ${response.status} ${response.statusText}`
       );
     }
-
     const remoteJobStatus = await response.json();
     const remoteJob = remoteJobStatus.data || remoteJobStatus;
 
+    console.log(`Job ${jobId}: Remote job status:`, remoteJob);
+
     // Update local job with remote status
     if (remoteJob.status) {
+      const oldStatus = job.status;
       job.status = remoteJob.status;
-      job.progress = remoteJob.progress || job.progress;
+
+      // Update progress, handling both number and percentage formats
+      if (typeof remoteJob.progress === "number") {
+        job.progress = Math.min(Math.max(remoteJob.progress, 0), 100);
+      }
+
+      // Update timestamps based on status changes
+      if (
+        remoteJob.status === "running" &&
+        oldStatus !== "running" &&
+        !job.startedAt
+      ) {
+        job.startedAt = new Date().toISOString();
+      }
 
       if (remoteJob.status === "completed") {
-        job.completedAt = new Date().toISOString();
+        job.completedAt = remoteJob.completedAt || new Date().toISOString();
         job.progress = 100;
         job.result = remoteJob.result;
+        // Calculate duration if we have start time
+        if (job.startedAt && remoteJob.duration) {
+          job.duration = remoteJob.duration;
+        } else if (job.startedAt && job.completedAt) {
+          const startTime = new Date(job.startedAt).getTime();
+          const endTime = new Date(job.completedAt).getTime();
+          job.duration = Math.round((endTime - startTime) / 1000);
+        }
       } else if (remoteJob.status === "failed") {
-        job.completedAt = new Date().toISOString();
-        job.error = remoteJob.error || "Remote job failed";
+        job.completedAt = remoteJob.completedAt || new Date().toISOString();
+        job.error =
+          remoteJob.error || "Remote job failed without error message";
+        // Calculate duration for failed jobs too
+        if (job.startedAt && job.completedAt) {
+          const startTime = new Date(job.startedAt).getTime();
+          const endTime = new Date(job.completedAt).getTime();
+          job.duration = Math.round((endTime - startTime) / 1000);
+        }
       }
+
+      // Store additional remote job metadata
+      job.parameters = {
+        ...job.parameters,
+        remoteJobStatus: remoteJob.status,
+        lastStatusUpdate: new Date().toISOString(),
+      };
 
       await jobStore.set(jobId, job);
     }
