@@ -11,13 +11,6 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 // PDF.js worker configuration
 pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
 
-interface FileSystemSettings {
-  type?: string;
-  host?: string;
-  username?: string;
-  password?: string;
-}
-
 export default function Dok() {
   const { selectedDok } = useProject();
   const [numPages, setNumPages] = useState<number | null>(null);
@@ -25,13 +18,8 @@ export default function Dok() {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const { data: fsSettings } = useSWR<FileSystemSettings>(
-    "/api/settings?key=fileSystem",
-    (url: string) => fetch(url).then((res) => res.json())
-  );
-
   useEffect(() => {
-    if (selectedDok && fsSettings) {
+    if (selectedDok) {
       // Construct the URL to fetch the PDF file
       // Ensure the path is not normalized if it's a file, as normalizePath adds a trailing slash
       const pathIsFile = selectedDok.includes("."); // Basic check if it's a file
@@ -40,11 +28,7 @@ export default function Dok() {
         : normalizePath(selectedDok);
 
       const params = new URLSearchParams({
-        type: fsSettings.type || "webdav",
         path: documentPath,
-        host: fsSettings.host || "",
-        username: fsSettings.username || "",
-        password: fsSettings.password || "",
       });
       setPdfUrl(`/api/fs/read?${params.toString()}`);
       setPageNumber(1); // Reset to first page when document changes
@@ -52,8 +36,7 @@ export default function Dok() {
     } else {
       setPdfUrl(null);
     }
-  }, [selectedDok, fsSettings]);
-
+  }, [selectedDok]);
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
     setNumPages(numPages);
   }
