@@ -57,7 +57,7 @@ const toolsList: Tool[] = [
   {
     id: 1,
     name: "FakeTool Ext",
-    type: "fakejob",
+    type: "fake_task",
     description:
       "Externes FakeTool - macht Request an externe API und kann Status abfragen.",
     status: "",
@@ -119,7 +119,7 @@ export default function AtoolsPage() {
   // State for tracking external job status
   const [externalJobStatus, setExternalJobStatus] = useState<
     Map<
-      number,
+      string,
       {
         jobId: string;
         status: string;
@@ -170,16 +170,17 @@ export default function AtoolsPage() {
 
       const result = await response.json();
       if (result.success) {
+        const job = { id: result.data.id, ...result.data };
         toast.success(`${tool.name} gestartet`, {
-          description: `Job ID: ${result.data.id}`,
-        }); // For fakejob, handle internal vs external differently
+          description: `Job ID: ${job.id}`,
+        });
         if (tool.type === "fakejob") {
           if (tool.external) {
             // For external FakeTool, store job info for status tracking
             setExternalJobStatus(
               (prev) =>
                 new Map(
-                  prev.set(tool.id, {
+                  prev.set(result.data.id, {
                     jobId: result.data.id,
                     status: result.data.status || "pending",
                     progress: result.data.progress || 0,
@@ -188,10 +189,11 @@ export default function AtoolsPage() {
             );
             toast.info("FakeTool Ext gestartet", {
               description:
-                "Job läuft auf externem Parser-Service (5-15 Sekunden). Verwenden Sie 'Aktualisieren' zum Status-Check.",
+                "Job läuft auf externem Parser-Service. Verwenden Sie 'Aktualisieren' zum Status-Check.",
             });
 
             // Remove from running jobs after submission
+            // No automatic polling, user will refresh manually
             setTimeout(() => {
               setRunningJobs((prev) => {
                 const newSet = new Set(prev);
@@ -258,7 +260,8 @@ export default function AtoolsPage() {
     }
   }; // Function to refresh external job status
   const refreshJobStatus = async (tool: Tool) => {
-    const jobInfo = externalJobStatus.get(tool.id);
+    // Use job.id instead of tool.id
+    const jobInfo = externalJobStatus.get(tool.external ? tool.id : tool.id);
     if (!jobInfo) {
       toast.error("Kein Job zum Aktualisieren gefunden");
       return;
@@ -338,14 +341,7 @@ export default function AtoolsPage() {
     }
   };
 
-  // Simplified polling function (only used for non-fakejob types if needed)
-  const pollJobStatus = (jobId: string, toolId: number) => {
-    // For fakejob, we don't need polling anymore as it's handled above
-    // For other job types, you could implement polling here if needed
-    console.log(
-      `Polling for job ${jobId} (tool ${toolId}) - not implemented for non-fakejob types`
-    );
-  };
+  // Polling has been removed. Refresh button directly calls the proxy route.
   // Fetch tools when modal opens
   useEffect(() => {
     if (isListModalOpen) {
@@ -563,6 +559,7 @@ export default function AtoolsPage() {
             <TableRow>
               <TableHead>Tool</TableHead>
               <TableHead>Owner</TableHead>
+              <TableHead>Job ID</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Aktionen</TableHead>
             </TableRow>
@@ -576,6 +573,9 @@ export default function AtoolsPage() {
                   </span>
                 </TableCell>
                 <TableCell>{tool.owner || "-"}</TableCell>
+                <TableCell className="text-center">
+                  {externalJobStatus && Object.values(externalJobStatus).find(j => j.toolId === tool.id)?.id || "-"}
+                </TableCell>
                 <TableCell>
                   {(() => {
                     // Check for external job status first
