@@ -451,7 +451,12 @@ export default function AtoolsPage() {
       </TableCell>
       <TableCell>{tool.owner || "-"}</TableCell>
       <TableCell className="text-center">
-        {externalJobStatus.get(tool.id.toString())?.jobId || "-"}
+        {(() => {
+          const jobId = externalJobStatus.get(tool.id.toString())?.jobId;
+          if (!jobId) return "-";
+          if (jobId.length <= 13) return jobId;
+          return `${jobId.slice(0, 5)}...${jobId.slice(-5)}`;
+        })()}
       </TableCell>
       <TableCell>
         {(() => {
