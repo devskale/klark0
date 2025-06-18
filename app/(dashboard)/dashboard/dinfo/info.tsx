@@ -29,16 +29,24 @@ export default function Info() {
     : "N/A";
   const bieterName = selectedBieter
     ? decodeURIComponent(selectedBieter.replace(/\/$/, "").split("/").pop()!)
-    : "N/A";
-
-  // fetch directory listing (includes parser info)
+    : "N/A"; // fetch directory listing (includes parser info)
   const parentDir = selectedDok
     ? normalizePath(selectedDok.replace(/\/[^\/]+$/, ""))
     : null;
-  const { data: entries } = useSWR(
-    parentDir ? parentDir : null,
+  const { data: entries, error: entriesError } = useSWR(
+    parentDir ? [parentDir, { fileSystemType: "webdav" }] : null,
     fileTreeFetcher
   );
+
+  // Debug logging
+  console.log("Debug Info Component:", {
+    selectedDok,
+    parentDir,
+    entries,
+    entriesError,
+    hasData: !!entries,
+    entriesLength: entries?.length,
+  });
   const fileBaseName = selectedDok
     ? decodeURIComponent(selectedDok.split("/").pop()!)
     : "";
@@ -225,9 +233,7 @@ export default function Info() {
       // 3) prepare & store prompt
       const queryPrompt = AI_QUERIES.DOKUMENTTYP_JSON;
       const fullPrompt = `${queryPrompt}\n\nContext:\n${parserMdContent}`;
-      setAiPrompt(fullPrompt);
-
-      // 4) stream AI JSON
+      setAiPrompt(fullPrompt); // 4) stream AI JSON
       const aiRes = await fetch("/api/ai/gem/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -236,7 +242,19 @@ export default function Info() {
           context: parserMdContent, // Use parser's markdown content
         }),
       });
-      if (!aiRes.ok) throw new Error(`AI Error ${aiRes.status}`);
+
+      if (!aiRes.ok) {
+        let errorMessage = `AI Error ${aiRes.status}: ${aiRes.statusText}`;
+        try {
+          const errorText = await aiRes.text();
+          if (errorText) {
+            errorMessage += ` - ${errorText}`;
+          }
+        } catch (e) {
+          // Could not read error response
+        }
+        throw new Error(errorMessage);
+      }
 
       // 5) accumulate stream
       const reader = aiRes.body!.getReader();

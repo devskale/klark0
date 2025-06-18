@@ -37,18 +37,27 @@ export const fileTreeFetcher = async ([path, options]: [
 ]): Promise<FileTreeEntry[]> => {
   const noshowList = options?.noshowList || ["archive", ".archive"];
 
+  console.log("fileTreeFetcher called with:", { path, options });
+
   // Simplified API call - no WebDAV credentials needed
   const queryParams = new URLSearchParams({
     path: path,
   });
 
+  console.log("Making fetch request to:", `/api/fs?${queryParams.toString()}`);
+
   const response = await fetch(`/api/fs?${queryParams.toString()}`);
+  console.log("Response status:", response.status, response.statusText);
+
   if (!response.ok) {
+    const errorText = await response.text();
+    console.error("Fetch failed:", errorText);
     throw new Error(
       `Failed to fetch directory ${path}: ${response.statusText}`
     );
   }
   const dirData = await response.json();
+  console.log("Received dirData:", dirData);
 
   // Handle parser info from index file
   let parserInfoMap: Record<

@@ -7,6 +7,7 @@ import {
   saveAppSetting,
   getAppSetting,
 } from "@/lib/db/settings";
+import { getKiSettings } from "@/lib/ai/settings";
 
 async function handleSettingsRequest(request: RequestWithTeam) {
   if (!request.teamId) {
@@ -18,21 +19,30 @@ async function handleSettingsRequest(request: RequestWithTeam) {
 
   const url = new URL(request.url);
   const key = url.searchParams.get("key");
-
   if (request.method === "GET") {
     try {
+      console.log("GET /api/settings - key:", key, "teamId:", request.teamId);
+
       if (key === "fileSystem") {
         const settings = await getFileSystemSettings(request.teamId);
         return NextResponse.json(settings);
       }
-
       if (key === "aiServices") {
         const settings = await getAISettings(request.teamId);
+        return NextResponse.json(settings || {});
+      } // New dedicated endpoint for KI Einstellungen for AI features
+      if (key === "kiEinstellungen") {
+        const settings = await getKiSettings(request.teamId);
+        console.log(
+          `GET KI settings:`,
+          settings ? { ...settings, bearer: "[REDACTED]" } : null
+        );
         return NextResponse.json(settings || {});
       }
 
       if (key) {
         const settings = await getAppSetting(request.teamId, key);
+        console.log(`GET settings for key ${key}:`, settings);
         return NextResponse.json(settings || {});
       }
 
@@ -48,10 +58,10 @@ async function handleSettingsRequest(request: RequestWithTeam) {
       );
     }
   }
-
   if (request.method === "POST") {
     try {
       const body = await request.json();
+      console.log("POST /api/settings - key:", key, "body:", body);
 
       if (key === "fileSystem") {
         await saveFileSystemSettings(request.teamId, body);

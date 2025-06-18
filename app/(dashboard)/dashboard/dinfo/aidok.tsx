@@ -9,9 +9,8 @@ import useSWR from "swr";
 import {
   fileTreeFetcher,
   normalizePath,
-  FileSystemSettings,
   PDF2MD_INDEX_FILE_NAME,
-} from "@/lib/fs/fileTreeUtils";
+} from "@/lib/fs/fileTreeUtils-new";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AlertCircle, Loader2, Eye, Check, Wand2 } from "lucide-react";
@@ -52,27 +51,14 @@ export default function Aidok() {
   const [isAiLoading, setIsAiLoading] = useState<boolean>(false);
   const [aiError, setAiError] = useState<string | null>(null);
 
-  const { data: fsSettings } = useSWR<FileSystemSettings>(
-    "/api/settings?key=fileSystem",
-    (url: string) => fetch(url).then((res) => res.json())
-  );
-
   const parentDir = selectedDok
     ? normalizePath(selectedDok.replace(/\/[^\/]+$/, ""))
     : null;
 
   const { data: indexData, mutate: mutateIndex } = useSWR(
-    fsSettings && parentDir
-      ? [parentDir + PDF2MD_INDEX_FILE_NAME, fsSettings]
-      : null,
-    async ([path, settings]) => {
-      const params = new URLSearchParams({
-        type: settings.type || "webdav",
-        path,
-        host: settings.host || "",
-        username: settings.username || "",
-        password: settings.password || "",
-      });
+    parentDir ? parentDir + PDF2MD_INDEX_FILE_NAME : null,
+    async (path) => {
+      const params = new URLSearchParams({ path });
       const res = await fetch(`/api/fs?${params.toString()}`);
       if (!res.ok) return null;
       return res.json();
@@ -108,7 +94,7 @@ export default function Aidok() {
         return;
       }
 
-      if (!selectedDok || !fsSettings || !indexData) {
+      if (!selectedDok || !indexData) {
         setLoading(false);
         return;
       }
@@ -147,11 +133,7 @@ export default function Aidok() {
         );
         try {
           const mdBaseParams = new URLSearchParams({
-            type: fsSettings.type || "webdav",
             path: `${parentDir}md/${baseName}/`,
-            host: fsSettings.host || "",
-            username: fsSettings.username || "",
-            password: fsSettings.password || "",
           });
 
           const mdBaseResponse = await fetch(
@@ -266,11 +248,7 @@ export default function Aidok() {
 
         try {
           const params = new URLSearchParams({
-            type: fsSettings.type || "webdav",
             path: `${parentDir}md/`,
-            host: fsSettings.host || "",
-            username: fsSettings.username || "",
-            password: fsSettings.password || "",
           });
 
           const dirResponse = await fetch(`/api/fs?${params.toString()}`);
@@ -358,11 +336,7 @@ export default function Aidok() {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              type: fsSettings.type || "webdav",
               path: variantToLoad.path,
-              host: fsSettings.host || "",
-              username: fsSettings.username || "",
-              password: fsSettings.password || "",
             }),
           });
 
@@ -385,11 +359,7 @@ export default function Aidok() {
 
               try {
                 const mdDirParams = new URLSearchParams({
-                  type: fsSettings.type || "webdav",
                   path: `${parentDir}md/`,
-                  host: fsSettings.host || "",
-                  username: fsSettings.username || "",
-                  password: fsSettings.password || "",
                 });
 
                 const mdDirResponse = await fetch(
@@ -412,11 +382,7 @@ export default function Aidok() {
                     );
 
                     const baseNameDirParams = new URLSearchParams({
-                      type: fsSettings.type || "webdav",
                       path: `${parentDir}md/${baseName}/`,
-                      host: fsSettings.host || "",
-                      username: fsSettings.username || "",
-                      password: fsSettings.password || "",
                     });
 
                     const baseNameDirResponse = await fetch(
@@ -513,11 +479,7 @@ export default function Aidok() {
                   "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                  type: fsSettings.type || "webdav",
                   path: variant.path,
-                  host: fsSettings.host || "",
-                  username: fsSettings.username || "",
-                  password: fsSettings.password || "",
                 }),
               });
 
@@ -573,7 +535,7 @@ export default function Aidok() {
     };
 
     loadMarkdown();
-  }, [selectedDok, fsSettings, indexData, parentDir, selectedVariant]);
+  }, [selectedDok, indexData, parentDir, selectedVariant]);
 
   const handleVariantChange = async (variantLabel: string) => {
     if (variantLabel === selectedVariant) return;
@@ -581,7 +543,7 @@ export default function Aidok() {
   };
 
   const handleSaveDefaultParser = async () => {
-    if (!fsSettings || !parentDir || !selectedDok || !selectedVariant) return;
+    if (!parentDir || !selectedDok || !selectedVariant) return;
     const fileBase = decodeURIComponent(selectedDok.split("/").pop()!);
     const idxPath = parentDir + PDF2MD_INDEX_FILE_NAME;
 
@@ -594,10 +556,6 @@ export default function Aidok() {
         indexPath: idxPath,
         fileName: fileBase,
         parserDefault: parserKey,
-        type: fsSettings.type,
-        host: fsSettings.host,
-        username: fsSettings.username,
-        password: fsSettings.password,
       }),
     });
     mutateIndex();
@@ -703,11 +661,7 @@ export default function Aidok() {
       }
       const imagePath = `${parentDir}md/${baseName}/${src}`;
       const params = new URLSearchParams({
-        type: fsSettings?.type || "",
         path: imagePath,
-        host: fsSettings?.host || "",
-        username: fsSettings?.username || "",
-        password: fsSettings?.password || "",
       });
       return <img src={`/api/fs?${params.toString()}`} alt={alt} {...props} />;
     },

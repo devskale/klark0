@@ -368,7 +368,8 @@ const personDataConfig = {
     { id: "glnb", label: "glnb" },
     { id: "glnc", label: "glnc" },
     { id: "gemma3_4b", label: "gemma3:4b" },
-    { id: "gemma3_12b", label: "gemma3:12b" },],
+    { id: "gemma3_12b", label: "gemma3:12b" },
+  ],
 };
 
 export default function GeneralPage() {
@@ -414,11 +415,9 @@ export default function GeneralPage() {
   const { data: externalWebsites, mutate: mutateExternalWebsites } = useSWR<
     Record<string, boolean>
   >("/api/settings?key=externalWebsites", fetcher);
-
-  const { data: infoSettings } = useSWR<Record<string, string>>(
-    "/api/settings?key=info",
-    fetcher
-  );
+  const { data: infoSettings, mutate: mutateInfoSettings } = useSWR<
+    Record<string, string>
+  >("/api/settings?key=info", fetcher);
 
   const { data: mdConvSettings, mutate: mutateMdConvSettings } = useSWR<
     Record<string, boolean>
@@ -460,9 +459,9 @@ export default function GeneralPage() {
       });
     }
   }, [state]);
-
   // Effect to initialize and update selectedKiFramework
   useEffect(() => {
+    console.log("KI settings loaded:", kiSettings);
     let initialFramework = "";
     const frameworkConfigEntry = kiEinstellungenConfig.fields.find(
       (f) => f.id === "kiFramework"
@@ -719,15 +718,12 @@ export default function GeneralPage() {
                   const formData = new FormData(e.currentTarget);
                   const newInfo = Object.fromEntries(formData.entries());
                   try {
-                    await fetch("/api/settings", {
+                    await fetch("/api/settings?key=info", {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        settingKey: "info",
-                        value: newInfo,
-                      }),
+                      body: JSON.stringify(newInfo),
                     });
-                    mutate();
+                    mutateInfoSettings();
                     toast.success("Einstellungen gespeichert", {
                       description:
                         "Die Info-Einstellungen wurden erfolgreich gespeichert.",
@@ -817,13 +813,10 @@ export default function GeneralPage() {
                     ])
                   );
                   try {
-                    await fetch("/api/settings", {
+                    await fetch("/api/settings?key=externalWebsites", {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        settingKey: "externalWebsites",
-                        value: newSettings,
-                      }),
+                      body: JSON.stringify(newSettings),
                     });
                     mutateExternalWebsites({
                       ...externalWebsites,
@@ -976,13 +969,10 @@ export default function GeneralPage() {
                     (newSettings as any).parserUrl = parserUrl;
                   }
                   try {
-                    await fetch("/api/settings", {
+                    await fetch("/api/settings?key=markdownKonversion", {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        settingKey: "markdownKonversion",
-                        value: newSettings,
-                      }),
+                      body: JSON.stringify(newSettings),
                     });
                     mutateMdConvSettings({
                       ...mdConvSettings,
@@ -1004,7 +994,6 @@ export default function GeneralPage() {
                     setMdSaving(false);
                   }
                 }}>
-                
                 {/* Parser URL Field */}
                 {markdownConversionConfig.fields.map((field) => (
                   <div key={field.id} className="space-y-2">
@@ -1014,7 +1003,11 @@ export default function GeneralPage() {
                       name={field.id}
                       type={field.type}
                       placeholder={field.placeholder}
-                      defaultValue={mdConvSettings?.[field.id] !== undefined ? String(mdConvSettings[field.id]) : field.defaultValue}
+                      defaultValue={
+                        mdConvSettings?.[field.id] !== undefined
+                          ? String(mdConvSettings[field.id])
+                          : field.defaultValue
+                      }
                     />
                   </div>
                 ))}
@@ -1166,13 +1159,10 @@ export default function GeneralPage() {
                     (newSettings as any).anonymizerUrl = anonymizerUrl;
                   }
                   try {
-                    await fetch("/api/settings", {
+                    await fetch("/api/settings?key=personendaten", {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        settingKey: "personendaten",
-                        value: newSettings,
-                      }),
+                      body: JSON.stringify(newSettings),
                     });
                     mutatePersonSettings({
                       ...personSettings,
@@ -1194,7 +1184,6 @@ export default function GeneralPage() {
                     setPersonSaving(false);
                   }
                 }}>
-                
                 {/* Anonymizer URL Field */}
                 {personDataConfig.fields.map((field) => (
                   <div key={field.id} className="space-y-2">
@@ -1204,7 +1193,11 @@ export default function GeneralPage() {
                       name={field.id}
                       type={field.type}
                       placeholder={field.placeholder}
-                      defaultValue={personSettings?.[field.id] !== undefined ? String(personSettings[field.id]) : field.defaultValue}
+                      defaultValue={
+                        personSettings?.[field.id] !== undefined
+                          ? String(personSettings[field.id])
+                          : field.defaultValue
+                      }
                     />
                   </div>
                 ))}
@@ -1412,7 +1405,6 @@ export default function GeneralPage() {
                         ) as any
                       )?.defaultValue,
                   };
-
                   kiEinstellungenConfig.fields.forEach((field) => {
                     if (field.id !== "kiFramework") {
                       const value = formData.get(field.id);
@@ -1424,16 +1416,23 @@ export default function GeneralPage() {
                     }
                   });
 
+                  console.log("Saving KI settings:", newKiSettings);
+
                   try {
-                    await fetch("/api/settings", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        settingKey: "kiEinstellungen",
-                        value: newKiSettings,
-                      }),
-                    });
-                    mutateKiSettings();
+                    const response = await fetch(
+                      "/api/settings?key=kiEinstellungen",
+                      {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(newKiSettings),
+                      }
+                    );
+
+                    if (!response.ok) {
+                      throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    await mutateKiSettings();
                     toast.success("KI Einstellungen gespeichert", {
                       description:
                         "Die KI-Einstellungen wurden erfolgreich gespeichert.",
@@ -1441,6 +1440,7 @@ export default function GeneralPage() {
                       duration: 3000,
                     });
                   } catch (error) {
+                    console.error("Error saving KI settings:", error);
                     toast.error("Fehler beim Speichern der KI Einstellungen", {
                       description:
                         "Die KI-Änderungen konnten nicht gespeichert werden.",
