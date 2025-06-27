@@ -28,7 +28,23 @@ async function handleFileSystemRequest(request: RequestWithTeam) {
     const fsSettings = await getFileSystemSettings(request.teamId);
     
     // Use requested path if provided, otherwise fall back to basePath from settings or root
-    const path = requestedPath || (fsSettings.basePath || "/");
+    let path = requestedPath || (fsSettings.basePath || "/");
+    
+    // Override path if it starts with "/klark0" to use basePath from settings
+    if (path.startsWith("/klark0")) {
+      console.log("Detected hardcoded path '/klark0' in request, overriding...");
+      if (fsSettings.basePath && fsSettings.basePath !== "/" && fsSettings.basePath !== "/klark0") {
+        // Extract the subdirectory after "/klark0" if any
+        const subPath = path.length > 7 ? path.substring(7) : "";
+        path = fsSettings.basePath + subPath;
+        console.log("Overridden with basePath from settings:", path);
+      } else {
+        // If no valid basePath in settings, strip "/klark0" and use the subdirectory or default to "/"
+        const subPath = path.length > 7 ? path.substring(7) : "";
+        path = subPath || "/";
+        console.log("Overridden with default root or subdirectory (no valid basePath in settings):", path);
+      }
+    }
 
     console.log("Using filesystem settings:", {
       type: fsSettings.type,
