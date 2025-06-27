@@ -105,7 +105,7 @@ function UserMenu() {
 }
 
 const sidebarData = {
-  versions: ["1.0.1", "1.1.0-alpha", "2.0.0-beta1"],
+  versions: ["0.0.1"],
   navMain: [
     {
       title: "Projekt",
@@ -160,6 +160,7 @@ const sidebarData = {
         },
         { title: "Aktivität", url: "/dashboard/activity", icon: Activity },
         { title: "Sicherheit", url: "/dashboard/security", icon: Shield },
+        { title: "Release Notes", url: "/dashboard/release-notes", icon: List },
       ],
     },
   ],
