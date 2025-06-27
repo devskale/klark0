@@ -39,9 +39,30 @@ export const fileTreeFetcher = async ([path, options]: [
 
   console.log("fileTreeFetcher called with:", { path, options });
 
+  // Fetch filesystem settings to get the base path if no path is provided or if path contains a potential hardcoded default
+  let finalPath = path;
+  if (!path || path === "/" || path.startsWith("/klark0")) {
+    try {
+      const settingsResponse = await fetch("/api/settings?key=fileSystem");
+      if (settingsResponse.ok) {
+        const settings = await settingsResponse.json();
+        if (settings.basePath) {
+          finalPath = settings.basePath;
+          console.log("Overriding path with basePath from settings:", finalPath);
+        } else {
+          console.log("No basePath in settings, using root as default");
+          finalPath = "/";
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch filesystem settings:", error);
+      finalPath = "/"; // Fallback to root if settings fetch fails
+    }
+  }
+
   // Simplified API call - no WebDAV credentials needed
   const queryParams = new URLSearchParams({
-    path: path,
+    path: finalPath,
   });
 
   console.log("Making fetch request to:", `/api/fs?${queryParams.toString()}`);

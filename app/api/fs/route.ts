@@ -7,11 +7,11 @@ const PDF2MD_INDEX_FILE_NAME = ".pdf2md_index.json";
 
 async function handleFileSystemRequest(request: RequestWithTeam) {
   const url = new URL(request.url);
-  const path = url.searchParams.get("path") || "/klark0"; // Default to /klark0 if empty
+  const requestedPath = url.searchParams.get("path");
 
   console.log(
     "Received filesystem request with path:",
-    path,
+    requestedPath || "not provided",
     "for team:",
     request.teamId
   );
@@ -26,6 +26,9 @@ async function handleFileSystemRequest(request: RequestWithTeam) {
   try {
     // Get filesystem configuration from database
     const fsSettings = await getFileSystemSettings(request.teamId);
+    
+    // Use requested path if provided, otherwise fall back to basePath from settings or root
+    const path = requestedPath || (fsSettings.basePath || "/");
 
     console.log("Using filesystem settings:", {
       type: fsSettings.type,

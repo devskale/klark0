@@ -58,7 +58,7 @@ export async function getFileSystemSettings(
       // Return default local config if none found
       return {
         type: "local",
-        basePath: "/klark0",
+        basePath: "/",
       };
     }
 
@@ -68,7 +68,7 @@ export async function getFileSystemSettings(
     // Fallback to local filesystem
     return {
       type: "local",
-      basePath: "/klark0",
+      basePath: "/",
     };
   }
 }

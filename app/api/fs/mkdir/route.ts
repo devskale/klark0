@@ -11,11 +11,27 @@ async function handleMkdirRequest(request: RequestWithTeam) {
   }
 
   const url = new URL(request.url);
-  const path = url.searchParams.get("path") || "/";
+  let path = url.searchParams.get("path") || "/";
 
   try {
     // Get filesystem configuration from database
     const fsSettings = await getFileSystemSettings(request.teamId);
+    
+    // Override path if it starts with "/klark0" to use basePath from settings
+    if (path.startsWith("/klark0")) {
+      console.log("Detected hardcoded path '/klark0' in request, overriding...");
+      if (fsSettings.basePath && fsSettings.basePath !== "/" && fsSettings.basePath !== "/klark0") {
+        // Extract the subdirectory after "/klark0" if any
+        const subPath = path.length > 7 ? path.substring(7) : "";
+        path = fsSettings.basePath + subPath;
+        console.log("Overridden with basePath from settings:", path);
+      } else {
+        // If no valid basePath in settings, strip "/klark0" and use the subdirectory or default to "/"
+        const subPath = path.length > 7 ? path.substring(7) : "";
+        path = subPath || "/";
+        console.log("Overridden with default root or subdirectory (no valid basePath in settings):", path);
+      }
+    }
 
     if (fsSettings.type !== "webdav") {
       return NextResponse.json(

@@ -386,10 +386,10 @@ export default function GeneralPage() {
         });
       }
 
-      const response = await fetch("/api/settings", {
+      const response = await fetch("/api/settings?key=fileSystem", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ settingKey: "fileSystem", value: newSettings }),
+        body: JSON.stringify(newSettings),
       });
 
       if (!response.ok) {
