@@ -7,7 +7,7 @@ export function Terminal() {
   const [terminalStep, setTerminalStep] = useState(0);
   const [copied, setCopied] = useState(false);
   const terminalSteps = [
-    "dok.so Audit : KFZ 🚚 Beschaffung.",
+    "Kontext1 Audit : KFZ 🚚 Beschaffung.",
     "Der Bieter-Audit für TransportPro GmbH wird durchgeführt...",
     "Prüfung auf Vollständigkeit der Unterlagen: ⏳ 95%.",
     "Es wird noch ein Dokument 📄 benötigt: Versicherungsnachweis.",

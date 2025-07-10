@@ -102,10 +102,10 @@ export function AppSidebar({ versions, navMain, ...props }: AppSidebarProps) {
             <div className="flex items-center font-bold text-xl">
               <img
                 src="/schild_orange.svg"
-                alt="dok.so Logo"
+                alt="kontext1 Logo"
                 className="h-6 w-6 mr-2"
               />
-              dok.so
+              KONTEXT1
             </div>
             <span className="text-xs text-gray-500 mt-1">
               Digitale Vergabeaudits Wien

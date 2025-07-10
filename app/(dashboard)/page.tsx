@@ -9,16 +9,16 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:grid lg:grid-cols-12 lg:gap-8">
             <div className="sm:text-center md:max-w-2xl md:mx-auto lg:col-span-6 lg:text-left flex flex-col h-full">
-              <h1 className="text-4xl font-bold text-gray-900 tracking-tight sm:text-4xl md:text-6xl">
+              <h1 className="text-4xl font-bold text-gray-900 tracking-tight sm:text-4xl md:text-5xl">
                 <div className="flex items-center gap-2">
                   <img
                     src="/android-chrome-192x192.png"
                     alt="Logo"
-                    className="h-12 w-auto"
+                    className="h-10 w-auto"
                   />
-                  dok.so
+                  KONTEXT1
                 </div>
-                <span className="text-2xl block text-orange-400 mt-2 sm:text-2xl md:text-4xl">
+                <span className="text-2xl block text-orange-400 mt-2 sm:text-2xl md:text-3xl">
                   Digitale Transparente Vergabeaudits
                 </span>
               </h1>

@@ -1,10 +1,10 @@
-# Klark0 - WebApp für sicheres digitales Vergabe Auditing
+# Kontext1 - WebApp für sicheres digitales Vergabe Auditing
 
-Klark0 ist eine moderne Webanwendung für sicheres digitales Vergabe Auditing, entwickelt mit **Next.js**. Die Anwendung bietet eine sichere Plattform für Vergabeverfahren mit integrierter Authentifizierung und Benutzerverwaltung.
+Kontext1 ist eine moderne Webanwendung für sicheres digitales Vergabe Auditing, entwickelt mit **Next.js**. Die Anwendung bietet eine sichere Plattform für Vergabeverfahren mit integrierter Authentifizierung und Benutzerverwaltung.
 
 ## Scope
 
-Build klark0, a webapp for tender document auditing. Webapp language is German.
+Build Kontext1, a webapp for tender document auditing. Webapp language is German.
 
 ## Features
 
@@ -40,17 +40,20 @@ OCI Bucket
 Klark0 implements a secure user authentication system with role-based access control to manage permissions effectively:
 
 - **Authentication System**:
+
   - Uses JSON Web Tokens (JWT) with session cookies for secure user authentication.
   - Session cookies are set with a 1-day expiration, containing encrypted user ID information.
   - Passwords are hashed using `bcryptjs` for secure storage.
   - Middleware protects routes by validating user sessions.
 
 - **Role System**:
+
   - Two primary roles are defined: 'member' (default for new users) and 'owner' (higher privilege).
   - Roles are managed at both global (user) and team-specific levels, allowing users to have different roles within different teams.
   - 'Owner' role typically has administrative privileges, such as inviting team members or managing settings.
 
 - **Team Structure**:
+
   - Users belong to teams, which are the primary unit for collaboration.
   - Team names are set during creation as `${email}'s Team` by default, based on the creator's email.
   - Team-specific roles enable nuanced permission management within team contexts.

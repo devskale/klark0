@@ -770,7 +770,8 @@ export default function VaultPage() {
                     .filter(
                       (node) =>
                         node.type === "directory" &&
-                        !reservedDirs.includes(node.name)
+                        !reservedDirs.includes(node.name) &&
+                        node.name !== fileSystemConfig?.basePath
                     )
                     .map((project) => (
                       <li

@@ -6,7 +6,7 @@ import { SWRConfig } from "swr";
 import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
-  title: "dok.so",
+  title: "kontext1",
   description: "Digitales Vergabeaudit",
 };
 

@@ -142,7 +142,7 @@ export const fileTreeFetcher = async ([path, options]: [
           parserDefault: pInfo?.default || "",
         };
       })
-      .filter((entry) => normalizePath(entry.path) !== normalizePath(path));
+      .filter((entry) => normalizePath(entry.path) !== normalizePath(finalPath));
     return entriesWithData;
   }
   throw new Error("Unexpected API response for directory listing");
