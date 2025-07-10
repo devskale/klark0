@@ -27,22 +27,29 @@ async function handleFileSystemRequest(request: RequestWithTeam) {
     // Get filesystem configuration from database
     const fsSettings = await getFileSystemSettings(request.teamId);
     
-    // Use requested path if provided, otherwise fall back to basePath from settings or root
-    let path = requestedPath || (fsSettings.basePath || "/");
+    // Use requested path if provided, otherwise fall back to path from settings or root
+    let path = requestedPath || (fsSettings.path || "/");
     
-    // Override path if it starts with "/klark0" to use basePath from settings
+    // Override path if it starts with "/klark0" to use path from settings
     if (path.startsWith("/klark0")) {
       console.log("Detected hardcoded path '/klark0' in request, overriding...");
-      if (fsSettings.basePath && fsSettings.basePath !== "/" && fsSettings.basePath !== "/klark0") {
-        // Extract the subdirectory after "/klark0" if any
-        const subPath = path.length > 7 ? path.substring(7) : "";
-        path = fsSettings.basePath + subPath;
-        console.log("Overridden with basePath from settings:", path);
+      // Extract the subdirectory after "/klark0" if any
+      const subPath = path.length > 7 ? path.substring(7) : "";
+      
+      if (fsSettings.path && fsSettings.path !== "/") {
+        // Use the path from settings, but avoid double klark0
+        if (fsSettings.path === "klark0" || fsSettings.path === "/klark0") {
+          // If settings path is 'klark0', use it as base and append subPath
+          path = "klark0" + subPath;
+        } else {
+          // For other paths, use them directly with subPath
+          path = fsSettings.path + subPath;
+        }
+        console.log("Overridden with path from settings:", path);
       } else {
-        // If no valid basePath in settings, strip "/klark0" and use the subdirectory or default to "/"
-        const subPath = path.length > 7 ? path.substring(7) : "";
+        // If no valid path in settings, strip "/klark0" and use the subdirectory or default to "/"
         path = subPath || "/";
-        console.log("Overridden with default root or subdirectory (no valid basePath in settings):", path);
+        console.log("Overridden with default root or subdirectory (no valid path in settings):", path);
       }
     }
 

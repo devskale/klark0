@@ -234,6 +234,7 @@ const fileSystemConfigurations: Record<
 // Generic FileSystemSettings type
 export type FileSystemSettings = {
   type: FileSystemType;
+  path?: string;
   [key: string]: any;
 };
 

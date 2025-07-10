@@ -10,10 +10,10 @@ export async function initializeDefaultKiSettings(teamId: number) {
     if (!existingSettings) {
       const defaultSettings = {
         kiFramework: "gemini",
-        baseUrl: "",
-        bearer: "",
+        baseUrl: "https://generativelanguage.googleapis.com/v1beta",
+        bearer: "AB***********",
         encryptionKey: "",
-        workModel: "gemini-pro",
+        workModel: "gemini-2.0-flash",
         elaborateModel: "gemini-pro",
         classifierModel: "gemini-pro",
       };

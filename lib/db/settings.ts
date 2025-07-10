@@ -8,6 +8,7 @@ export type FileSystemSettings = {
   username?: string;
   password?: string;
   basePath?: string;
+  path?: string;
   port?: number;
   ssl?: boolean;
 };

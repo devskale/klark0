@@ -13,10 +13,10 @@ export default function HomePage() {
                 <div className="flex items-center gap-2">
                   <img
                     src="/android-chrome-192x192.png"
-                    alt="FAIrgabe Wien Logo"
+                    alt="Logo"
                     className="h-12 w-auto"
                   />
-                  FAIrgabe Wien
+                  dok.so
                 </div>
                 <span className="text-2xl block text-orange-400 mt-2 sm:text-2xl md:text-4xl">
                   Digitale Transparente Vergabeaudits

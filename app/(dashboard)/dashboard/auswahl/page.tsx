@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import useSWR from "swr";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,10 +42,12 @@ import {
   normalizePath,
   fileTreeFetcher,
   FileTreeEntry,
-  FileSystemSettings,
 } from "@/lib/fs/fileTreeUtils-new";
+import type { FileSystemSettings } from "../einstellungen/page";
 
 type FileTreeNode = FileTreeEntry;
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 // Define reserved directory names
 const reservedDirs = ["B", "archive", "md", "A"];
@@ -90,6 +92,22 @@ export default function VaultPage() {
     setSelectedDok, // Assuming setSelectedDok is part of the context
   } = useProject();
   const [showSettings, setShowSettings] = useState(false);
+
+  const { data: fsSettings } = useSWR<FileSystemSettings>(
+    "/api/settings?key=fileSystem",
+    fetcher
+  );
+
+  const fileSystemConfig = useMemo(() => {
+    if (!fsSettings || !fsSettings.type || !fsSettings.path) {
+      return null;
+    }
+    return {
+      type: fsSettings.type,
+      basePath: fsSettings.path,
+      noshowList: ["archive", ".archive"],
+    };
+  }, [fsSettings]);
   const [showRefreshMessage, setShowRefreshMessage] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedView, setSelectedView] = useState("Pb-Browser");
@@ -190,11 +208,6 @@ export default function VaultPage() {
       console.error("Löschen des Bieters fehlgeschlagen:", await res.text());
     }
   };
-  const fileSystemConfig = {
-    type: "webdav",
-    basePath: "/klark0",
-    noshowList: ["archive", ".archive"],
-  };
 
   const {
     data: fileTree,
@@ -202,13 +215,15 @@ export default function VaultPage() {
     mutate,
     isValidating,
   } = useSWR<FileTreeEntry[]>(
-    [
-      fileSystemConfig.basePath,
-      {
-        noshowList: fileSystemConfig.noshowList,
-        fileSystemType: fileSystemConfig.type,
-      },
-    ],
+    fileSystemConfig
+      ? [
+          fileSystemConfig.basePath,
+          {
+            noshowList: fileSystemConfig.noshowList,
+            fileSystemType: fileSystemConfig.type,
+          },
+        ]
+      : null,
     fileTreeFetcher,
     { revalidateOnFocus: false }
   );
@@ -220,7 +235,7 @@ export default function VaultPage() {
     error: bieterError,
     mutate: mutateBieter,
   } = useSWR<FileTreeEntry[]>(
-    selectedProject
+    selectedProject && fileSystemConfig
       ? [
           `${selectedProject}/B`,
           {
@@ -240,7 +255,7 @@ export default function VaultPage() {
       )
     : [];
   const handleCreateProject = async () => {
-    if (!newProjectName.trim()) return;
+    if (!newProjectName.trim() || !fileSystemConfig) return;
     try {
       const params = new URLSearchParams({
         path: `${fileSystemConfig.basePath}/${newProjectName}`,
@@ -262,8 +277,9 @@ export default function VaultPage() {
   };
   // Neuer Handler: Projekt archivieren via WebDAV-Rename
   const handleArchiveProject = async (projectPath: string) => {
+    if (!fileSystemConfig) return;
     const projectName = decodeURIComponent(
-      projectPath.replace(/^\/klark0\//, "").split("/")[0]
+      projectPath.replace(new RegExp(`^${fileSystemConfig.basePath}/`), "").split("/")[0]
     );
     const params = new URLSearchParams({
       path: projectPath,

@@ -35,6 +35,29 @@ OCI Bucket
 - **Payments**: Stripe
 - **Authentication**: JWT with session cookies
 
+## User Authentication and Roles
+
+Klark0 implements a secure user authentication system with role-based access control to manage permissions effectively:
+
+- **Authentication System**:
+  - Uses JSON Web Tokens (JWT) with session cookies for secure user authentication.
+  - Session cookies are set with a 1-day expiration, containing encrypted user ID information.
+  - Passwords are hashed using `bcryptjs` for secure storage.
+  - Middleware protects routes by validating user sessions.
+
+- **Role System**:
+  - Two primary roles are defined: 'member' (default for new users) and 'owner' (higher privilege).
+  - Roles are managed at both global (user) and team-specific levels, allowing users to have different roles within different teams.
+  - 'Owner' role typically has administrative privileges, such as inviting team members or managing settings.
+
+- **Team Structure**:
+  - Users belong to teams, which are the primary unit for collaboration.
+  - Team names are set during creation as `${email}'s Team` by default, based on the creator's email.
+  - Team-specific roles enable nuanced permission management within team contexts.
+
+- **Activity Logging**:
+  - User actions (sign-in, sign-up, team management) are logged for audit purposes, linked to specific users and teams.
+
 ## Middleware
 
 - Global middleware to protect logged-in routes

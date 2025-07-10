@@ -26,7 +26,7 @@ export default async function ReleaseNotesPage() {
       <Card className="w-full">
         <CardHeader>
           <CardTitle className="text-2xl">Release Notes</CardTitle>
-          <CardDescription>Latest updates and version history for fairgabe.app</CardDescription>
+          <CardDescription>Latest updates and version history for dokso.app</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="current" className="w-full">

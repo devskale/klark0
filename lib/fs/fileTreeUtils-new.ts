@@ -8,6 +8,7 @@ export type FileSystemSettings = {
   username?: string;
   password?: string;
   basePath?: string;
+  path?: string;
 };
 
 export type FileTreeEntry = FileEntry & {
@@ -39,9 +40,9 @@ export const fileTreeFetcher = async ([path, options]: [
 
   console.log("fileTreeFetcher called with:", { path, options });
 
-  // Fetch filesystem settings to get the base path if no path is provided or if path contains a potential hardcoded default
+  // Fetch filesystem settings to get the base path if no path is provided
   let finalPath = path;
-  if (!path || path === "/" || path.startsWith("/klark0")) {
+  if (!path || path === "/") {
     try {
       const settingsResponse = await fetch("/api/settings?key=fileSystem");
       if (settingsResponse.ok) {
@@ -59,6 +60,8 @@ export const fileTreeFetcher = async ([path, options]: [
       finalPath = "/"; // Fallback to root if settings fetch fails
     }
   }
+  // For paths starting with /klark0, let the API route handle the path transformation
+  // Don't override here to preserve the full path structure
 
   // Simplified API call - no WebDAV credentials needed
   const queryParams = new URLSearchParams({

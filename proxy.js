@@ -9,7 +9,7 @@ app.use(cors());
 app.use(
   "/webdav",
   createProxyMiddleware({
-    target: "http://pind.mooo.com:5000/klark0",
+    target: "http://amd1.mooo.com:5000/klark0",
     changeOrigin: true,
     pathRewrite: { "^/webdav": "" },
   })

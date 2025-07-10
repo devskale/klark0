@@ -93,7 +93,7 @@ export function AppSidebar({ versions, navMain, ...props }: AppSidebarProps) {
           <div className="flex justify-center items-center p-2">
             <img
               src="/schild_orange.svg"
-              alt="FAIrgabe Logo"
+              alt="dokso Logo"
               className="h-6 w-6"
             />
           </div>
@@ -102,13 +102,13 @@ export function AppSidebar({ versions, navMain, ...props }: AppSidebarProps) {
             <div className="flex items-center font-bold text-xl">
               <img
                 src="/schild_orange.svg"
-                alt="FAIrgabe Logo"
+                alt="dok.so Logo"
                 className="h-6 w-6 mr-2"
               />
-              FAIrgabe Wien
+              dok.so
             </div>
             <span className="text-xs text-gray-500 mt-1">
-              Digitale Transparente Vergabeaudits
+              Digitale Vergabeaudits Wien
             </span>
           </div>
         )}
