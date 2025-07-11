@@ -16,7 +16,7 @@ export default function HomePage() {
                     alt="Logo"
                     className="h-10 w-auto"
                   />
-                  KONTEXT1
+                  kontext<sup>one</sup>
                 </div>
                 <span className="text-2xl block text-orange-400 mt-2 sm:text-2xl md:text-3xl">
                   Digitale Transparente Vergabeaudits

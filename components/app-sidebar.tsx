@@ -105,7 +105,7 @@ export function AppSidebar({ versions, navMain, ...props }: AppSidebarProps) {
                 alt="kontext1 Logo"
                 className="h-6 w-6 mr-2"
               />
-              KONTEXT1
+              kontext<sup>one</sup>
             </div>
             <span className="text-xs text-gray-500 mt-1">
               Digitale Vergabeaudits Wien
