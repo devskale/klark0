@@ -10,6 +10,7 @@ import {
   PDF2MD_INDEX_FILE_NAME,
 } from "@/lib/fs/fileTreeUtils-new";
 import { EditableText } from "@/components/ui/editable-text";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AI_QUERIES } from "@/app/api/ai/config";
 
 /**
@@ -91,6 +92,7 @@ export default function Info() {
   const [aiContext, setAiContext] = React.useState<string>("");
   const [aiRaw, setAiRaw] = React.useState<string>("");
   const [aiContextPath, setAiContextPath] = React.useState<string>("");
+  const [selectedParser, setSelectedParser] = React.useState<string>("");
   const [isSavingMeta, setIsSavingMeta] = React.useState(false);
 
   // Populate form when metadata (.meta.json) loads
@@ -135,6 +137,9 @@ export default function Info() {
     if (Array.isArray(projectMeta.metadaten)) {
       setMetadataList(projectMeta.metadaten.join(", "));
     }
+    if (projectMeta.selectedParser != null) {
+      setSelectedParser(projectMeta.selectedParser);
+    }
   }, [projectMeta]);
 
   /**
@@ -157,6 +162,7 @@ export default function Info() {
         schlagworte: schlagworte || null,
         sprache: sprache || null,
         dokumentdatum: dokumentdatum || null,
+        selectedParser: selectedParser || null,
         metadaten: metadataList
           .split(",")
           .map((s) => s.trim())
@@ -190,9 +196,10 @@ export default function Info() {
    * Analyzes AAB documents in the project to extract metadata
    */
   const handleInit = async () => {
-    if (!selectedProject || !projectDir || !selectedAabFile || !parserDefault) {
+    const activeParser = selectedParser || parserDefault;
+    if (!selectedProject || !projectDir || !selectedAabFile || !activeParser) {
       setAiError(
-        "Erforderliche Informationen (Projekt, AAB-Datei, Standardparser) fehlen."
+        "Erforderliche Informationen (Projekt, AAB-Datei, Parser) fehlen."
       );
       return;
     }
@@ -204,34 +211,34 @@ export default function Info() {
     setAiContextPath(""); // Clear previous context path
 
     try {
-      // 1) Construct path to default parser's markdown file
+      // 1) Construct path to selected parser's markdown file
       const baseNameWithoutExt = fileBaseName;
-      let defaultParserMdPath: string;
+      let selectedParserMdPath: string;
 
-      if (parserDefault.toLowerCase() === "marker") {
+      if (activeParser.toLowerCase() === "marker") {
         // Marker files are in a subdirectory: md/[baseName]/[baseName].marker.md
-        defaultParserMdPath = `${aDirectory}md/${baseNameWithoutExt}/${baseNameWithoutExt}.marker.md`;
-      } else if (parserDefault.toLowerCase() === "md") {
+        selectedParserMdPath = `${aDirectory}md/${baseNameWithoutExt}/${baseNameWithoutExt}.marker.md`;
+      } else if (activeParser.toLowerCase() === "md") {
         // Special case for md parser: md/[baseName].md
-        defaultParserMdPath = `${aDirectory}md/${baseNameWithoutExt}.md`;
+        selectedParserMdPath = `${aDirectory}md/${baseNameWithoutExt}.md`;
       } else {
-        defaultParserMdPath = `${aDirectory}md/${baseNameWithoutExt}.${parserDefault}.md`;
+        selectedParserMdPath = `${aDirectory}md/${baseNameWithoutExt}.${activeParser}.md`;
       }
 
-      setAiContextPath(defaultParserMdPath); // Store the path for dev info
+      setAiContextPath(selectedParserMdPath); // Store the path for dev info
 
-      // 2) Load default parser's markdown content
+      // 2) Load selected parser's markdown content
       const readRes = await fetch("/api/fs/read", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          path: defaultParserMdPath,
+          path: selectedParserMdPath,
         }),
       });
 
       if (!readRes.ok) {
         throw new Error(
-          `Fehler beim Laden der Standard-Parser-Markdown-Datei (${defaultParserMdPath}): ${readRes.statusText}`
+          `Fehler beim Laden der Parser-Markdown-Datei (${selectedParserMdPath}): ${readRes.statusText}`
         );
       }
       const readJson = await readRes.json();
@@ -239,7 +246,7 @@ export default function Info() {
 
       if (!parserMdContent) {
          throw new Error(
-           `Die Standard-Parser-Markdown-Datei (${defaultParserMdPath}) ist leer oder konnte nicht gelesen werden.`
+           `Die Parser-Markdown-Datei (${selectedParserMdPath}) ist leer oder konnte nicht gelesen werden.`
          );
        }
        setAiContext(parserMdContent);
@@ -372,30 +379,42 @@ export default function Info() {
           onChange={setProjektName}
           placeholder="Projektname eingeben"
         />
-        <EditableText
-          label="Ausschreibungsstart:"
-          value={startDatum}
-          onChange={setStartDatum}
-          placeholder="Ausschreibungsstart (YYYY-MM-DD)"
-        />
-        <EditableText
-          label="Ausschreibungsende:"
-          value={bieterabgabe}
-          onChange={setBieterabgabe}
-          placeholder="Ausschreibungsende (YYYY-MM-DD)"
-        />
-        <EditableText
-          label="Projektstart:"
-          value={projektStart}
-          onChange={setProjektStart}
-          placeholder="Projektstart (YYYY-MM-DD)"
-        />
-        <EditableText
-          label="Projektende:"
-          value={endDatum}
-          onChange={setEndDatum}
-          placeholder="Projektende (YYYY-MM-DD)"
-        />
+        <div className="flex gap-4">
+          <div className="flex-1">
+            <EditableText
+              label="Ausschreibungsstart:"
+              value={startDatum}
+              onChange={setStartDatum}
+              placeholder="Ausschreibungsstart (YYYY-MM-DD)"
+            />
+          </div>
+          <div className="flex-1">
+            <EditableText
+              label="Ausschreibungsende:"
+              value={bieterabgabe}
+              onChange={setBieterabgabe}
+              placeholder="Ausschreibungsende (YYYY-MM-DD)"
+            />
+          </div>
+        </div>
+        <div className="flex gap-4">
+          <div className="flex-1">
+            <EditableText
+              label="Projektstart:"
+              value={projektStart}
+              onChange={setProjektStart}
+              placeholder="Projektstart (YYYY-MM-DD)"
+            />
+          </div>
+          <div className="flex-1">
+            <EditableText
+              label="Projektende:"
+              value={endDatum}
+              onChange={setEndDatum}
+              placeholder="Projektende (YYYY-MM-DD)"
+            />
+          </div>
+        </div>
         <EditableText
           label="Beschreibung:"
           value={beschreibung}
@@ -435,20 +454,28 @@ export default function Info() {
           <strong className="mr-2 py-1.5 whitespace-nowrap shrink-0">
             Strukt:
           </strong>
-          <span className="py-1.5 px-3 min-h-[36px] w-full flex items-center">
-            {parserDetList.length > 0 ? (
-              parserDetList.map((name, i) => (
-                <span key={name}>
-                  {i > 0 && ", "}
-                  {name === parserDefault ? <strong>{name}</strong> : name}
-                </span>
-              ))
-            ) : parserDefault ? (
-              <strong>{parserDefault}</strong>
-            ) : (
-              <span className="italic text-muted-foreground">Keine</span>
-            )}
-          </span>
+          <div className="flex-1">
+            <Select value={selectedParser || parserDefault || ""} onValueChange={setSelectedParser}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Parser auswählen" />
+              </SelectTrigger>
+              <SelectContent>
+                {parserDetList.length > 0 ? (
+                  parserDetList.map((parser) => (
+                    <SelectItem key={parser} value={parser}>
+                      {parser} {parser === parserDefault && "(Standard)"}
+                    </SelectItem>
+                  ))
+                ) : (
+                  parserDefault && (
+                    <SelectItem value={parserDefault}>
+                      {parserDefault} (Standard)
+                    </SelectItem>
+                  )
+                )}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         
         <EditableText
