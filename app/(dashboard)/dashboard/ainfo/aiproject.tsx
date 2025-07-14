@@ -116,6 +116,49 @@ export default function AiProject() {
   }, []);
 
   /**
+   * Get basename of a file without extension
+   */
+  const getBasename = (filename: string): string => {
+    return filename.replace(/\.[^/.]+$/, "");
+  };
+
+  /**
+   * Filter extracted documents based on selected source document
+   */
+  const filteredExtractedDocuments = React.useMemo(() => {
+    if (!selectedSourceDoc) {
+      return extractedDocuments;
+    }
+
+    // Get the basename of the selected source document
+    const selectedSourceDocName = projectDocuments.find(doc => doc.path === selectedSourceDoc)?.name;
+    if (!selectedSourceDocName) {
+      return extractedDocuments;
+    }
+
+    const sourceBasename = getBasename(selectedSourceDocName);
+    
+    // Filter extracted documents that start with the source basename
+    return extractedDocuments.filter(doc => {
+      const extractedBasename = getBasename(doc.name);
+      return extractedBasename.startsWith(sourceBasename);
+    });
+  }, [selectedSourceDoc, extractedDocuments, projectDocuments]);
+
+  /**
+   * Reset selected extracted document when source document changes
+   */
+  useEffect(() => {
+    if (selectedSourceDoc && selectedExtractedDoc) {
+      // Check if current selected extracted doc is still valid for the new source doc
+      const isStillValid = filteredExtractedDocuments.some(doc => doc.path === selectedExtractedDoc);
+      if (!isStillValid) {
+        setSelectedExtractedDoc("");
+      }
+    }
+  }, [selectedSourceDoc, filteredExtractedDocuments, selectedExtractedDoc]);
+
+  /**
    * Fetch document content when selectedExtractedDoc changes
    */
   useEffect(() => {
@@ -433,7 +476,11 @@ export default function AiProject() {
             <div className="space-y-2">
               <p><strong>Projekt:</strong> {selectedProject ? decodeURIComponent(selectedProject) : "Kein Projekt ausgewählt"}</p>
               <p><strong>Quelldokumente gefunden:</strong> {projectDocuments.length}</p>
-              <p><strong>Extrahierte Dokumente gefunden:</strong> {extractedDocuments.length}</p>
+              <p><strong>Extrahierte Dokumente gefunden:</strong> {extractedDocuments.length}
+                {selectedSourceDoc && filteredExtractedDocuments.length !== extractedDocuments.length && (
+                  <span className="text-muted-foreground"> (gefiltert: {filteredExtractedDocuments.length})</span>
+                )}
+              </p>
             </div>
             
             {/* Document Selection */}
@@ -461,7 +508,7 @@ export default function AiProject() {
                     <SelectValue placeholder="Extrahiertes Dokument wählen" />
                   </SelectTrigger>
                   <SelectContent>
-                    {extractedDocuments.map((doc, index) => (
+                    {filteredExtractedDocuments.map((doc, index) => (
                       <SelectItem key={index} value={doc.path}>
                         {doc.name} ({doc.parser.toUpperCase()})
                       </SelectItem>
@@ -471,6 +518,11 @@ export default function AiProject() {
                 {extractedDocuments.length === 0 && (
                   <p className="text-sm text-muted-foreground">
                     Keine extrahierten Dokumente gefunden. Bitte verarbeiten Sie zuerst ein Quelldokument.
+                  </p>
+                )}
+                {extractedDocuments.length > 0 && filteredExtractedDocuments.length === 0 && selectedSourceDoc && (
+                  <p className="text-sm text-muted-foreground">
+                    Keine passenden extrahierten Dokumente für das ausgewählte Quelldokument gefunden.
                   </p>
                 )}
               </div>

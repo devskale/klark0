@@ -61,6 +61,50 @@ Gib dein Ergebnis ausschließlich im folgenden JSON-Format aus:
   "Dokumententyp": "Produkthaftpflichtversicherung",
   "Begründung": "Enthält explizit Versicherungsnachweis Produkthaftpflicht inkl. Prämienzahlung — typisch für Nachweis Leistungsfähigkeit."
 }`,
+  A_DOKUMENTTYP_JSON: `### Prompt:
+
+Du bist ein professioneller Dokumenten-Analyst für Vergabeverfahren und öffentliche Ausschreibungen.  
+
+Deine Aufgabe:  
+Analysiere den Inhalt des folgenden Dokuments einer Ausschreibung und bestimme präzise:  
+
+1. Zu welcher Hauptkategorie das Dokument gehört (aus einer vorgegebenen Liste).  
+2. Bestimme zusätzlich den genaueren Dokumententyp (Subkategorie).
+3. Begründe kurz deine Entscheidung anhand von Begriffen, Inhalt oder typischen Merkmalen des Dokuments.  
+
+Gib dein Ergebnis ausschließlich im folgenden JSON-Format aus:
+
+{
+  "Kategorie": "EXAKTE Auswahl aus: Ausschreibungsunterlagen | Sonstiges ",
+  "Aussteller": "Welche Organisation, Firma oder Person hat das Dokument ausgestellt? Beispiel: Wiener Wohnen Hausbetreuung GmbH",
+  "Dokumententyp": "Kurzbeschreibung oder genaue Typbezeichnung, dient als Dateiname — oder 'Unklar', falls nicht erkennbar",
+  "Begründung": "Kurze Begründung für die Klassifizierung (z.B. enthaltene Begriffe, typische Merkmale, Aussagen im Text)"
+}
+
+---
+
+### Mögliche Kategorien und Hinweise:
+
+| Kategorie | Typische Dokumente / Inhalte / Begriffe |
+|-----------|-----------------------------------------|
+| Ausschreibungsdokument | Allgemeine Ausschreibungsbedingungen, Rahmenvertrag |
+| Beilage | Leitfaden, Formblatt Erklärung Bieter und ARGE, Formblatt, Erklärung Santionen, Musterbankgarantie, Leistungsverzeichnis, Formblatt Subunternehmerlinste |
+| Sonstiges | Andere Dokumentenarten |
+
+---
+
+### Input:
+→ Füge hier einfach den reinen Dokumenteninhalt (Textauszug, OCR, etc.) ein.
+
+---
+
+### Output-Beispiel:
+
+{
+  "Aussteller": "Wiener Wohnen Hausbetreuung GmbH",
+  "Dokumententyp": "Musterbankgarantie",
+  "Begründung": "Enthält Vorlage einer Bankgarantie."
+}`,
   METADATEN_JSON: `### Prompt:
 
 Du bist ein Experte für die Extraktion von Metadaten aus Dokumenten, insbesondere im Kontext von Ausschreibungen und Geschäftsunterlagen. Deine Aufgabe ist es, flexibel und intelligent Metadaten zu generieren, die auf dem spezifischen Typ des Dokuments und seiner Kernaussage basieren.
@@ -154,4 +198,27 @@ Gib das Ergebnis ausschließlich im folgenden JSON-Format aus. Wenn eine Informa
     "USt_IdNr_Aussteller": "DE123456789"
   }
 }`,
+  INFO_A: `### Prompt:
+
+Du bist ein Experte für die Extraktion von Metadaten aus Dokumenten, insbesondere im Kontext von Ausschreibungen und Geschäftsunterlagen. Deine Aufgabe ist es, flexibel und intelligent Metadaten zu generieren.
+Die Informationen können nur aus dem Dokumenttyp: Allgemeinen Ausschreibungsunterlagen zuverlässig extrahiert werden. Sollte dieser Dokumenttyp nicht zur Verfügung stehen gib als Antwort NONE zurück.
+
+Deine Aufgabe:
+1. Analysiere das Dokument: Allgemeneinen Ausschreibungsunterlagen sorgfältig.
+2. Extrahiere die folgenden Metadatenfelder:
+    - Vergabestelle: zB Wiener Wohnen Hausbetreuung GmbH
+    - Addresse (der Vergabestelle)
+    - Dokumentdatum (YYYY-MM-DD)
+    - Sprache
+    - Schlagworte (Keywords/Kernbegriffe als Array)
+    - Referenznummer (Interne Projektnummer, Projektnummer etc., Bsp: AS 2023.020043)
+    - Startdatum Ausschreibung (YYYY-MM-DD)
+    - Enddatum Ausschreibung (YYYY-MM-DD)
+    - Projekttitel (max 3 Worte)
+    - Projekt Kurzbeschreibung (1 Satz): Öffentliches Vergabeverfahren über PROJEKTINHALT an den Auftraggeber.
+    - Startdatum Projekt (falls angegeben, ansonsten NONE) (YYYY-MM-DD)
+    - Enddatum Projekt (falls angegeben, ansonsten NONE) (YYYY-MM-DD)
+
+KONTEXT:
+`,
 };
