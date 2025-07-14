@@ -42,11 +42,34 @@ export default function Info() {
 
   // Fetch A directory contents to find AAB files (A = Ausschreibungs directory)
   const aDirectory = projectDir ? `${projectDir}A/` : null;
-  const { data: projectContents } = useSWR(
+  const { data: projectContents, error: entriesError } = useSWR(
     aDirectory ? [aDirectory, { fileSystemType: "webdav" }] : null,
     fileTreeFetcher,
     { revalidateOnFocus: false }
   );
+
+  // Preselect AAB PDF document
+  const aabPdfFiles = projectContents?.filter((item: any) => 
+    item.type === "file" && 
+    item.name.toUpperCase().includes("AAB") && 
+    item.name.toLowerCase().endsWith(".pdf")
+  ) || [];
+  
+  const selectedAabFile = aabPdfFiles.length > 0 ? aabPdfFiles[0] : null;
+  const selectedAabPath = selectedAabFile?.path || null;
+  
+  // Get basename of a file without extension
+  const getBaseName = (filePath: string): string => {
+    const fileName = filePath.split("/").pop() || "";
+    return fileName.replace(/\.[^/.]+$/, "");
+  };
+  
+  const fileBaseName = selectedAabFile ? getBaseName(selectedAabFile.name) : "";
+  const parserEntry = selectedAabFile ? projectContents?.find((e: any) => e.name === selectedAabFile.name) : null;
+  const hasParser = parserEntry?.hasParser ?? false;
+  const parserStatus = parserEntry?.parserStatus ?? "N/A";
+  const parserDetList = parserEntry?.parserDet ?? [];
+  const parserDefault = parserEntry?.parserDefault;
 
   // Editable state for project fields
   const [vergabestelle, setVergabestelle] = React.useState("");
@@ -56,12 +79,17 @@ export default function Info() {
   const [bieterabgabe, setBieterabgabe] = React.useState("");
   const [endDatum, setEndDatum] = React.useState("");
   const [beschreibung, setBeschreibung] = React.useState("");
+  const [referenznummer, setReferenznummer] = React.useState("");
+  const [schlagworte, setSchlagworte] = React.useState("");
+  const [sprache, setSprache] = React.useState("");
+  const [dokumentdatum, setDokumentdatum] = React.useState("");
   const [metadataList, setMetadataList] = React.useState("");
   const [aiLoading, setAiLoading] = React.useState(false);
   const [aiError, setAiError] = React.useState<string | null>(null);
   const [aiPrompt, setAiPrompt] = React.useState<string>("");
   const [aiContext, setAiContext] = React.useState<string>("");
   const [aiRaw, setAiRaw] = React.useState<string>("");
+  const [aiContextPath, setAiContextPath] = React.useState<string>("");
   const [isSavingMeta, setIsSavingMeta] = React.useState(false);
 
   // Populate form when metadata (.meta.json) loads
@@ -88,6 +116,18 @@ export default function Info() {
     if (projectMeta.beschreibung != null) {
       setBeschreibung(projectMeta.beschreibung);
     }
+    if (projectMeta.referenznummer != null) {
+      setReferenznummer(projectMeta.referenznummer);
+    }
+    if (projectMeta.schlagworte != null) {
+      setSchlagworte(projectMeta.schlagworte);
+    }
+    if (projectMeta.sprache != null) {
+      setSprache(projectMeta.sprache);
+    }
+    if (projectMeta.dokumentdatum != null) {
+      setDokumentdatum(projectMeta.dokumentdatum);
+    }
     if (Array.isArray(projectMeta.metadaten)) {
       setMetadataList(projectMeta.metadaten.join(", "));
     }
@@ -108,6 +148,10 @@ export default function Info() {
         bieterabgabe: bieterabgabe || null,
         endDatum: endDatum || null,
         beschreibung: beschreibung || null,
+        referenznummer: referenznummer || null,
+        schlagworte: schlagworte || null,
+        sprache: sprache || null,
+        dokumentdatum: dokumentdatum || null,
         metadaten: metadataList
           .split(",")
           .map((s) => s.trim())
@@ -141,9 +185,9 @@ export default function Info() {
    * Analyzes AAB documents in the project to extract metadata
    */
   const handleInit = async () => {
-    if (!selectedProject || !projectDir) {
+    if (!selectedProject || !projectDir || !selectedAabFile || !parserDefault) {
       setAiError(
-        "Erforderliche Informationen (Projekt) fehlen."
+        "Erforderliche Informationen (Projekt, AAB-Datei, Standardparser) fehlen."
       );
       return;
     }
@@ -152,115 +196,132 @@ export default function Info() {
     setAiPrompt(""); // Clear previous debug info
     setAiContext("");
     setAiRaw("");
+    setAiContextPath(""); // Clear previous context path
 
     try {
-      // Find AAB files in the project directory
-      const aabFiles = projectContents?.filter((item: any) => 
-        item.type === "file" && item.name.toUpperCase().includes("AAB")
-      ) || [];
+      // 1) Construct path to default parser's markdown file
+      const baseNameWithoutExt = fileBaseName;
+      let defaultParserMdPath: string;
 
-      if (aabFiles.length === 0) {
-        setAiError("Keine AAB-Datei im Projektverzeichnis gefunden. AAB-Dateien werden für die AI-Analyse benötigt.");
-        return;
+      if (parserDefault.toLowerCase() === "marker") {
+        // Marker files are in a subdirectory: md/[baseName]/[baseName].marker.md
+        defaultParserMdPath = `${aDirectory}md/${baseNameWithoutExt}/${baseNameWithoutExt}.marker.md`;
+      } else if (parserDefault.toLowerCase() === "md") {
+        // Special case for md parser: md/[baseName].md
+        defaultParserMdPath = `${aDirectory}md/${baseNameWithoutExt}.md`;
+      } else {
+        defaultParserMdPath = `${aDirectory}md/${baseNameWithoutExt}.${parserDefault}.md`;
       }
 
-      // Use the first AAB file found
-      const aabFile = aabFiles[0];
-      const aabFilePath = aabFile.path;
-      
-      console.log("Found AAB file:", aabFile.name, "at path:", aabFilePath);
+      setAiContextPath(defaultParserMdPath); // Store the path for dev info
 
-      // Fetch the AAB file content
-      const fileResponse = await fetch("/api/fs/read", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ path: aabFilePath }),
-      });
-
-      if (!fileResponse.ok) {
-        throw new Error(`Fehler beim Lesen der AAB-Datei: ${fileResponse.statusText}`);
-      }
-
-      const fileData = await fileResponse.json();
-      const aabContent = fileData.content || "";
-      
-      if (!aabContent.trim()) {
-        setAiError("AAB-Datei ist leer oder konnte nicht gelesen werden.");
-        return;
-      }
-
-      // Prepare AI query for project metadata extraction
-      const queryPrompt = `Analysiere die folgende Ausschreibungsbekanntmachung (AAB) und extrahiere die wichtigsten Projektinformationen. Gib die Antwort als JSON-Objekt mit folgenden Feldern zurück:
-
-{
-  "Vergabestelle": "Name der ausschreibenden Stelle",
-  "Adresse": "Vollständige Adresse der Vergabestelle",
-  "ProjektName": "Titel/Name des Projekts oder der Ausschreibung",
-  "StartDatum": "Projektstart im Format YYYY-MM-DD (falls verfügbar)",
-  "Bieterabgabe": "Abgabefrist für Angebote im Format YYYY-MM-DD",
-  "EndDatum": "Projektende im Format YYYY-MM-DD (falls verfügbar)",
-  "Beschreibung": "Kurze Zusammenfassung des Projekts/der Ausschreibung"
-}
-
-Falls ein Feld nicht verfügbar ist, verwende null als Wert.`;
-      
-      setAiContext(aabContent.slice(0, 4000)); // Limit context size
-      setAiPrompt(queryPrompt);
-
-      // Call AI API for analysis
-      const aiResponse = await fetch("/api/ai/gem/stream", {
+      // 2) Load default parser's markdown content
+      const readRes = await fetch("/api/fs/read", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          queryType: "CUSTOM",
-          prompt: queryPrompt,
-          context: aabContent,
+          path: defaultParserMdPath,
         }),
       });
 
-      if (!aiResponse.ok) {
-        throw new Error(`AI-Fehler: ${aiResponse.status} ${aiResponse.statusText}`);
+      if (!readRes.ok) {
+        throw new Error(
+          `Fehler beim Laden der Standard-Parser-Markdown-Datei (${defaultParserMdPath}): ${readRes.statusText}`
+        );
+      }
+      const readJson = await readRes.json();
+      const parserMdContent = readJson.content || "";
+
+      if (!parserMdContent) {
+         throw new Error(
+           `Die Standard-Parser-Markdown-Datei (${defaultParserMdPath}) ist leer oder konnte nicht gelesen werden.`
+         );
+       }
+       setAiContext(parserMdContent);
+
+      // 3) prepare & store prompt using A_INFO query
+      const queryPrompt = AI_QUERIES.A_INFO;
+      const fullPrompt = `${queryPrompt}\n\nContext:\n${parserMdContent}`;
+      setAiPrompt(fullPrompt);
+
+      // 4) stream AI JSON
+      const aiRes = await fetch("/api/ai/gem/stream", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          queryType: "A_INFO",
+          context: parserMdContent, // Use parser's markdown content
+        }),
+      });
+
+      if (!aiRes.ok) {
+        let errorMessage = `AI Error ${aiRes.status}: ${aiRes.statusText}`;
+        try {
+          const errorText = await aiRes.text();
+          if (errorText) {
+            errorMessage += ` - ${errorText}`;
+          }
+        } catch (e) {
+          // Could not read error response
+        }
+        throw new Error(errorMessage);
       }
 
-      // Stream the AI response
-      const reader = aiResponse.body!.getReader();
+      // 5) accumulate stream
+      const reader = aiRes.body!.getReader();
       const decoder = new TextDecoder();
-      let accumulatedResponse = "";
-
+      let aiRawLocal = "";
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        accumulatedResponse += chunk;
+        aiRawLocal += decoder.decode(value, { stream: true });
+      }
+      setAiRaw(aiRawLocal);
+
+      // Clean the raw response: remove markdown fences if present
+      let cleanedJsonString = aiRawLocal.trim();
+      if (cleanedJsonString.startsWith("```json")) {
+        cleanedJsonString = cleanedJsonString.substring(7); // Remove ```json
+      }
+      if (cleanedJsonString.startsWith("```")) {
+        // Handle if it's just ```
+        cleanedJsonString = cleanedJsonString.substring(3);
+      }
+      if (cleanedJsonString.endsWith("```")) {
+        cleanedJsonString = cleanedJsonString.substring(
+          0,
+          cleanedJsonString.length - 3
+        );
+      }
+      cleanedJsonString = cleanedJsonString.trim(); // Trim again after stripping
+
+      // More robust: find the first '{' and last '}'
+      const firstBrace = cleanedJsonString.indexOf("{");
+      const lastBrace = cleanedJsonString.lastIndexOf("}");
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        cleanedJsonString = cleanedJsonString.substring(
+          firstBrace,
+          lastBrace + 1
+        );
       }
 
-      setAiRaw(accumulatedResponse);
+      // 6) parse & populate fields
+      const aiJson = JSON.parse(cleanedJsonString); // Use cleaned string
 
-      // Clean and parse AI response
-      let cleanedResponse = accumulatedResponse.trim();
-      
-      // Remove markdown code fences if present
-      cleanedResponse = cleanedResponse.replace(/^```(?:json)?\n?/gm, "");
-      cleanedResponse = cleanedResponse.replace(/\n?```$/gm, "");
-      
-      // Try to parse JSON response
-      let parsedResponse;
-      try {
-        parsedResponse = JSON.parse(cleanedResponse);
-      } catch (parseError) {
-        console.error("Failed to parse AI response as JSON:", parseError);
-        setAiError("AI-Antwort konnte nicht als JSON geparst werden. Siehe Raw Response in Dev Info.");
-        return;
+      // Populate fields with AI results from A_INFO query
+      if (aiJson.Vergabestelle) setVergabestelle(aiJson.Vergabestelle);
+      if (aiJson.Addresse) setAdresse(aiJson.Addresse);
+      if (aiJson.Projekttitel) setProjektName(aiJson.Projekttitel);
+      if (aiJson["Startdatum Ausschreibung"]) setStartDatum(aiJson["Startdatum Ausschreibung"]);
+      if (aiJson["Enddatum Ausschreibung"]) setBieterabgabe(aiJson["Enddatum Ausschreibung"]);
+      if (aiJson["Enddatum Projekt"]) setEndDatum(aiJson["Enddatum Projekt"]);
+      if (aiJson["Projekt Kurzbeschreibung"]) setBeschreibung(aiJson["Projekt Kurzbeschreibung"]);
+      if (aiJson.Referenznummer) setReferenznummer(aiJson.Referenznummer);
+      if (aiJson.Dokumentdatum) setDokumentdatum(aiJson.Dokumentdatum);
+      if (aiJson.Sprache) setSprache(aiJson.Sprache);
+      if (Array.isArray(aiJson.Schlagworte)) {
+        setSchlagworte(aiJson.Schlagworte.join(", "));
       }
-
-      // Populate fields with AI results
-      if (parsedResponse.Vergabestelle) setVergabestelle(parsedResponse.Vergabestelle);
-      if (parsedResponse.Adresse) setAdresse(parsedResponse.Adresse);
-      if (parsedResponse.ProjektName) setProjektName(parsedResponse.ProjektName);
-      if (parsedResponse.StartDatum) setStartDatum(parsedResponse.StartDatum);
-      if (parsedResponse.Bieterabgabe) setBieterabgabe(parsedResponse.Bieterabgabe);
-      if (parsedResponse.EndDatum) setEndDatum(parsedResponse.EndDatum);
-      if (parsedResponse.Beschreibung) setBeschreibung(parsedResponse.Beschreibung);
       
     } catch (err: any) {
       console.error("AI initialization error:", err);
@@ -312,10 +373,10 @@ Falls ein Feld nicht verfügbar ist, verwende null als Wert.`;
           placeholder="Startdatum (YYYY-MM-DD)"
         />
         <EditableText
-          label="Bieterabgabe:"
+          label="Ausschreibungsende:"
           value={bieterabgabe}
           onChange={setBieterabgabe}
-          placeholder="Bieterabgabe (YYYY-MM-DD)"
+          placeholder="Ausschreibungsende (YYYY-MM-DD)"
         />
         <EditableText
           label="Ende:"
@@ -331,6 +392,53 @@ Falls ein Feld nicht verfügbar ist, verwende null als Wert.`;
           placeholder="Projektbeschreibung hinzufügen"
           inputClassName="min-h-[70px]"
         />
+        <EditableText
+          label="Referenznummer:"
+          value={referenznummer}
+          onChange={setReferenznummer}
+          placeholder="Projektnummer/Referenz eingeben"
+        />
+        <EditableText
+          label="Dokumentdatum:"
+          value={dokumentdatum}
+          onChange={setDokumentdatum}
+          placeholder="Dokumentdatum (YYYY-MM-DD)"
+        />
+        <EditableText
+          label="Sprache:"
+          value={sprache}
+          onChange={setSprache}
+          placeholder="Dokumentsprache"
+        />
+        <EditableText
+          label="Schlagworte:"
+          value={schlagworte}
+          onChange={setSchlagworte}
+          as="textarea"
+          placeholder="Schlagworte kommasepariert"
+          inputClassName="min-h-[70px]"
+        />
+        
+        <div className="flex items-start">
+          <strong className="mr-2 py-1.5 whitespace-nowrap shrink-0">
+            Strukt:
+          </strong>
+          <span className="py-1.5 px-3 min-h-[36px] w-full flex items-center">
+            {parserDetList.length > 0 ? (
+              parserDetList.map((name, i) => (
+                <span key={name}>
+                  {i > 0 && ", "}
+                  {name === parserDefault ? <strong>{name}</strong> : name}
+                </span>
+              ))
+            ) : parserDefault ? (
+              <strong>{parserDefault}</strong>
+            ) : (
+              <span className="italic text-muted-foreground">Keine</span>
+            )}
+          </span>
+        </div>
+        
         <EditableText
           label="Metadaten:"
           value={metadataList}
@@ -386,9 +494,19 @@ Falls ein Feld nicht verfügbar ist, verwende null als Wert.`;
               projectContents (A-Dir) count: {projectContents?.length ?? "N/A"}
             </li>
             <li>
-              AAB files found: {projectContents?.filter((item: any) => 
-                item.type === "file" && item.name.toUpperCase().includes("AAB")
-              ).map((file: any) => file.name).join(", ") || "None"}
+              AAB PDF files found: {aabPdfFiles.map((file: any) => file.name).join(", ") || "None"}
+            </li>
+            <li>selectedAabFile: {selectedAabFile?.name || "None"}</li>
+            <li>fileBaseName: {fileBaseName}</li>
+            <li>parserStatus: {parserStatus}</li>
+            <li>hasParser: {hasParser.toString()}</li>
+            <li>parserDetList: {parserDetList.join(", ")}</li>
+            <li>parserDefault: {parserDefault}</li>
+            <li>
+              AI Context Path:
+              <pre className="mt-1 p-2 bg-gray-100 rounded text-xs break-all whitespace-pre-wrap">
+                {aiContextPath || "(not set)"}
+              </pre>
             </li>
             <li>
               AI Prompt:
@@ -397,7 +515,7 @@ Falls ein Feld nicht verfügbar ist, verwende null als Wert.`;
               </pre>
             </li>
             <li>
-              AI Context:
+              AI Context (first 200 chars from default parser's .md):
               <pre className="mt-1 p-2 bg-gray-100 rounded text-xs break-all whitespace-pre-wrap">
                 {aiContext.slice(0, 200)}
                 {aiContext.length > 200 ? "…" : ""}

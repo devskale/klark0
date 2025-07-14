@@ -14,6 +14,9 @@ Build Kontext1, a webapp for tender document auditing. Webapp language is German
 - Audit-Trail für alle Benutzeraktionen
 - Integrierte Berichtsfunktionen
 - Benutzerfreundliche Oberfläche mit modernem Design
+- AI-gestützte Dokumentenanalyse mit automatischer Metadatenextraktion
+- Automatische AAB-PDF-Dokumentenerkennung und Parser-Auswahl
+- Strukturierte Dokumentenverarbeitung mit Markdown-Konvertierung
 
 ## Einstellungen
 
@@ -177,9 +180,34 @@ Stellen Sie sicher, dass Ihre Datenbankverbindung korrekt konfiguriert ist (in d
 
 Für den Produktiveinsatz empfehlen wir eine Bereitstellung auf [Vercel](https://vercel.com/) oder einer ähnlichen Plattform. Stellen Sie sicher, dass alle erforderlichen Umgebungsvariablen für die Produktionsumgebung gesetzt sind.
 
+## AI-gestützte Dokumentenanalyse
+
+### Ausschreibungsprojekt-Info (ainfo)
+
+Die ainfo-Komponente bietet intelligente Analyse von Ausschreibungsdokumenten:
+
+- **Automatische AAB-PDF-Erkennung**: Erkennt und wählt automatisch AAB (Ausschreibungsbekanntmachung) PDF-Dokumente aus dem Projektverzeichnis
+- **Parser-Integration**: Nutzt den Standard-Parser zur Konvertierung von PDF zu Markdown für bessere AI-Analyse
+- **Metadaten-Extraktion**: Extrahiert automatisch Projektinformationen wie:
+  - Vergabestelle und Adresse
+  - Projektname und Beschreibung
+  - Start-, Bieterabgabe- und Enddatum
+- **Strukt-Anzeige**: Zeigt verfügbare Parser und den aktiven Standard-Parser an
+- **AI-Streaming**: Nutzt Gemini AI für Echtzeit-Analyse mit Stream-Verarbeitung
+- **Metadaten-Persistierung**: Speichert extrahierte Informationen in JSON-Sidecar-Dateien
+
+### Verwendung
+
+1. Navigieren Sie zu einem Ausschreibungsprojekt
+2. Klicken Sie auf "Init" um die AI-Analyse zu starten
+3. Die AI analysiert das AAB-Dokument über den Standard-Parser
+4. Extrahierte Metadaten werden automatisch in die Felder eingetragen
+5. Speichern Sie die Informationen mit "Speichern"
+
 ## Versionierung
 
 v0.0 initiale Version in deutsch. Boilperplate webapp mit Basis Layout und Design.
+v0.1 AI-gestützte Dokumentenanalyse für Ausschreibungsprojekte hinzugefügt.
 
 ## Opinionated Filesystem
 
