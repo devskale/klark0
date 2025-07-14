@@ -45,6 +45,7 @@ Gib dein Ergebnis ausschließlich im folgenden JSON-Format aus:
 | Befugnisse | Gewerbeberechtigung, gesetzliche Befugnisse, EU-Formblätter |
 | Nachweis Bewertung Zuschlagskriterien pro Los | Losnummer, ISO-Zertifikate, Umweltzertifikate, Standorte, Produktionsstandort, Gewährleistung, Preisblätter je Los |
 | Weitere Prüfungen | Preisangemessenheitsprüfung, technische Prüfungen, Zusammenfassungen, Prüfberichte |
+| Ausschreibungsdokument | Allgemeine Ausschreibungsverfahren, Rahmenvertrag, Beilage zur Ausschreibung, Sonstiges |
 
 ---
 
@@ -198,7 +199,30 @@ Gib das Ergebnis ausschließlich im folgenden JSON-Format aus. Wenn eine Informa
     "USt_IdNr_Aussteller": "DE123456789"
   }
 }`,
-  INFO_A: `### Prompt:
+  A_INFO: `### Prompt:
+
+Du bist ein Experte für die Extraktion von Metadaten aus Dokumenten, insbesondere im Kontext von Ausschreibungen und Geschäftsunterlagen. Deine Aufgabe ist es, flexibel und intelligent Metadaten zu generieren.
+Die Informationen können nur aus dem Dokumenttyp: Allgemeinen Ausschreibungsunterlagen zuverlässig extrahiert werden. Sollte dieser Dokumenttyp nicht zur Verfügung stehen gib als Antwort NONE zurück.
+
+Deine Aufgabe:
+1. Analysiere das Dokument: Allgemeneinen Ausschreibungsunterlagen sorgfältig.
+2. Extrahiere die folgenden Metadatenfelder:
+    - Vergabestelle: zB Wiener Wohnen Hausbetreuung GmbH
+    - Addresse (der Vergabestelle)
+    - Dokumentdatum (YYYY-MM-DD)
+    - Sprache
+    - Schlagworte (Keywords/Kernbegriffe als Array)
+    - Referenznummer (Interne Projektnummer, Projektnummer etc., Bsp: AS 2023.020043)
+    - Startdatum Ausschreibung (YYYY-MM-DD)
+    - Enddatum Ausschreibung (YYYY-MM-DD)
+    - Projekttitel (max 3 Worte)
+    - Projekt Kurzbeschreibung (1 Satz): Öffentliches Vergabeverfahren über PROJEKTINHALT an den Auftraggeber.
+    - Startdatum Projekt (falls angegeben, ansonsten NONE) (YYYY-MM-DD)
+    - Enddatum Projekt (falls angegeben, ansonsten NONE) (YYYY-MM-DD)
+
+KONTEXT:
+`,
+  A_KRITERIEN: `### Prompt:
 
 Du bist ein Experte für die Extraktion von Metadaten aus Dokumenten, insbesondere im Kontext von Ausschreibungen und Geschäftsunterlagen. Deine Aufgabe ist es, flexibel und intelligent Metadaten zu generieren.
 Die Informationen können nur aus dem Dokumenttyp: Allgemeinen Ausschreibungsunterlagen zuverlässig extrahiert werden. Sollte dieser Dokumenttyp nicht zur Verfügung stehen gib als Antwort NONE zurück.
