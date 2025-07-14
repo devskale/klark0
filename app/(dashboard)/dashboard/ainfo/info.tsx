@@ -77,6 +77,7 @@ export default function Info() {
   const [projektName, setProjektName] = React.useState("");
   const [startDatum, setStartDatum] = React.useState("");
   const [bieterabgabe, setBieterabgabe] = React.useState("");
+  const [projektStart, setProjektStart] = React.useState("");
   const [endDatum, setEndDatum] = React.useState("");
   const [beschreibung, setBeschreibung] = React.useState("");
   const [referenznummer, setReferenznummer] = React.useState("");
@@ -109,6 +110,9 @@ export default function Info() {
     }
     if (projectMeta.bieterabgabe != null) {
       setBieterabgabe(projectMeta.bieterabgabe);
+    }
+    if (projectMeta.projektStart != null) {
+      setProjektStart(projectMeta.projektStart);
     }
     if (projectMeta.endDatum != null) {
       setEndDatum(projectMeta.endDatum);
@@ -146,6 +150,7 @@ export default function Info() {
         projektName: projektName || null,
         startDatum: startDatum || null,
         bieterabgabe: bieterabgabe || null,
+        projektStart: projektStart || null,
         endDatum: endDatum || null,
         beschreibung: beschreibung || null,
         referenznummer: referenznummer || null,
@@ -312,9 +317,10 @@ export default function Info() {
       if (aiJson.Vergabestelle) setVergabestelle(aiJson.Vergabestelle);
       if (aiJson.Addresse) setAdresse(aiJson.Addresse);
       if (aiJson.Projekttitel) setProjektName(aiJson.Projekttitel);
-      if (aiJson["Startdatum Ausschreibung"]) setStartDatum(aiJson["Startdatum Ausschreibung"]);
-      if (aiJson["Enddatum Ausschreibung"]) setBieterabgabe(aiJson["Enddatum Ausschreibung"]);
-      if (aiJson["Enddatum Projekt"]) setEndDatum(aiJson["Enddatum Projekt"]);
+      if (aiJson.Ausschreibungsstart) setStartDatum(aiJson.Ausschreibungsstart);
+      if (aiJson.Ausschreibungsende) setBieterabgabe(aiJson.Ausschreibungsende);
+      if (aiJson.Projektstart) setProjektStart(aiJson.Projektstart);
+      if (aiJson.Projektende) setEndDatum(aiJson.Projektende);
       if (aiJson["Projekt Kurzbeschreibung"]) setBeschreibung(aiJson["Projekt Kurzbeschreibung"]);
       if (aiJson.Referenznummer) setReferenznummer(aiJson.Referenznummer);
       if (aiJson.Dokumentdatum) setDokumentdatum(aiJson.Dokumentdatum);
@@ -354,7 +360,7 @@ export default function Info() {
         />
         <div className="flex items-start">
           <strong className="mr-2 py-1.5 whitespace-nowrap shrink-0">
-            Projekt ID:
+            Projektpfad:
           </strong>
           <span className="py-1.5 px-3 min-h-[36px] w-full break-all flex items-center">
             {projektPathDecoded}
@@ -367,10 +373,10 @@ export default function Info() {
           placeholder="Projektname eingeben"
         />
         <EditableText
-          label="Start:"
+          label="Ausschreibungsstart:"
           value={startDatum}
           onChange={setStartDatum}
-          placeholder="Startdatum (YYYY-MM-DD)"
+          placeholder="Ausschreibungsstart (YYYY-MM-DD)"
         />
         <EditableText
           label="Ausschreibungsende:"
@@ -379,10 +385,16 @@ export default function Info() {
           placeholder="Ausschreibungsende (YYYY-MM-DD)"
         />
         <EditableText
-          label="Ende:"
+          label="Projektstart:"
+          value={projektStart}
+          onChange={setProjektStart}
+          placeholder="Projektstart (YYYY-MM-DD)"
+        />
+        <EditableText
+          label="Projektende:"
           value={endDatum}
           onChange={setEndDatum}
-          placeholder="Enddatum (YYYY-MM-DD)"
+          placeholder="Projektende (YYYY-MM-DD)"
         />
         <EditableText
           label="Beschreibung:"

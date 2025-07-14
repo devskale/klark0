@@ -208,17 +208,17 @@ Deine Aufgabe:
 1. Analysiere das Dokument: Allgemeneinen Ausschreibungsunterlagen sorgfältig.
 2. Extrahiere die folgenden Metadatenfelder:
     - Vergabestelle: zB Wiener Wohnen Hausbetreuung GmbH
-    - Addresse (der Vergabestelle)
-    - Dokumentdatum (YYYY-MM-DD)
+    - Addresse: (der Vergabestelle)
+    - Dokumentdatum: (YYYY-MM-DD)
     - Sprache
     - Schlagworte (Keywords/Kernbegriffe als Array)
     - Referenznummer (Interne Projektnummer, Projektnummer etc., Bsp: AS 2023.020043)
-    - Startdatum Ausschreibung (YYYY-MM-DD)
-    - Enddatum Ausschreibung (YYYY-MM-DD)
+    - Ausschreibungsstart (YYYY-MM-DD)
+    - Ausschreibungsende (YYYY-MM-DD)
     - Projekttitel (max 3 Worte)
     - Projekt Kurzbeschreibung (1 Satz): Öffentliches Vergabeverfahren über PROJEKTINHALT an den Auftraggeber.
-    - Startdatum Projekt (falls angegeben, ansonsten NONE) (YYYY-MM-DD)
-    - Enddatum Projekt (falls angegeben, ansonsten NONE) (YYYY-MM-DD)
+    - Projektstart (falls angegeben, ansonsten NONE) (YYYY-MM-DD)
+    - Projektende (falls angegeben, ansonsten NONE) (YYYY-MM-DD)
 
 KONTEXT:
 `,
@@ -236,12 +236,12 @@ Deine Aufgabe:
     - Sprache
     - Schlagworte (Keywords/Kernbegriffe als Array)
     - Referenznummer (Interne Projektnummer, Projektnummer etc., Bsp: AS 2023.020043)
-    - Startdatum Ausschreibung (YYYY-MM-DD)
-    - Enddatum Ausschreibung (YYYY-MM-DD)
+    - Ausschreibungsstart (YYYY-MM-DD)
+    - Ausschreibungsende (YYYY-MM-DD)
     - Projekttitel (max 3 Worte)
     - Projekt Kurzbeschreibung (1 Satz): Öffentliches Vergabeverfahren über PROJEKTINHALT an den Auftraggeber.
-    - Startdatum Projekt (falls angegeben, ansonsten NONE) (YYYY-MM-DD)
-    - Enddatum Projekt (falls angegeben, ansonsten NONE) (YYYY-MM-DD)
+    - Projektstart (falls angegeben, ansonsten NONE) (YYYY-MM-DD)
+    - Projektende (falls angegeben, ansonsten NONE) (YYYY-MM-DD)
 
 KONTEXT:
 `,
