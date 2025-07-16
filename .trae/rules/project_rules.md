@@ -75,15 +75,15 @@ The project follows Next.js conventions with directories for routing, components
  │   ├── (dashboard)
  │   │   ├── dashboard
  │   │   │   ├── activity
- │   │   │   ├── afreigabe
- │   │   │   ├── ainfo
+ │   │   │   ├── afreigabe  # ausschreibung freigabe durch nutzer
+ │   │   │   ├── ainfo      # ausschreibungs informationen, inkl. ai funktionen
  │   │   │   ├── atools
- │   │   │   ├── auswahl
+ │   │   │   ├── auswahl    # dateibrowser, dateiauswahl
  │   │   │   ├── binfo
  │   │   │   ├── btools
- │   │   │   ├── dinfo
+ │   │   │   ├── dinfo      # dokumenten info, ai kategorisierung, dok preview
  │   │   │   ├── dtools
- │   │   │   ├── einstellungen
+ │   │   │   ├── einstellungen  # webapp einstellungen vornehmen
  │   │   │   ├── general
  │   │   │   ├── jobs
  │   │   │   ├── konto
@@ -94,7 +94,7 @@ The project follows Next.js conventions with directories for routing, components
  │   │   ├── sign-in
  │   │   └── sign-up
  │   ├── api  # Next.js API routes for server-side logic. Examples: Routes for Stripe Checkout, settings (fileSystem), and other backend functionalities.
- │   │   ├── ai
+ │   │   ├── ai                 # ai inference handling
  │   │   │   ├── aisdk
  │   │   │   ├── gem
  │   │   │   │   ├── custom
@@ -103,7 +103,7 @@ The project follows Next.js conventions with directories for routing, components
  │   │   │   ├── test-settings
  │   │   │   └── uniinfer
  │   │   │       └── stream
- │   │   ├── fs
+ │   │   ├── fs                 # filesystem handling
  │   │   │   ├── delete
  │   │   │   ├── index
  │   │   │   ├── metadata
@@ -119,7 +119,7 @@ The project follows Next.js conventions with directories for routing, components
  │   │   │   └── webhook
  │   │   ├── team
  │   │   ├── user
- │   │   └── worker
+ │   │   └── worker             # remote worker services enqueueing. ocr, fs indexing, etc...
  │   │       ├── debug
  │   │       ├── jobs
  │   │       │   ├── [jobId]
