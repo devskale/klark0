@@ -41,7 +41,7 @@ postgres_data/
 .env*.local
 
 #trae
-.trae/
+#.trae/
 
 #Drizzle Migrations
 lib/db/migrations/
