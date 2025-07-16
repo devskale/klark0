@@ -24,6 +24,7 @@ export interface EignungsKriterien {
 export interface ZuschlagsKriterium {
   name: string;
   gewichtung: string;
+  unterkriterien?: ZuschlagsKriterium[];
 }
 
 export interface Los {
