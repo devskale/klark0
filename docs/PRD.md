@@ -12,10 +12,17 @@ kontext.one ist eine Webapplikation für die digitale Prüfung von Ausschreibung
 - **Automatische Dateiumbenennung** - KI-basierte Umbenennung mit zusammenfassenden Titeln
 - **Anonymisierung** - Schutz sensibler Daten auf Anfrage
 - **Vault-Navigation** - Projekt- und Bieterauswahl für kontextbezogene Aktionen
+- **AI-Analyse Ausschreibungsdokumente** - Intelligente Analyse von Ausschreibungsdokumentensätzen
+- **AI-Kriterienliste Extraktion** - Automatische Extraktion von Bewertungskriterien aus Ausschreibungsdaten
+- **AI-Analyse Bieterdokumente** - Intelligente Analyse von Bieterdatensätzen
+- **AI-Kriterienprüfung** - Automatische Prüfung von Bieterdokumenten gegen Kriterien
+- **AI-Kriteriencheck** - Vollautomatisierte Bewertung mit KI-Unterstützung
+- **Human-in-the-Loop** - Menschliche Validierung und Kontrolle bei allen AI-Prozessen
 
 ## Technische Architektur
 
 ### Tech Stack
+
 - **Framework**: Next.js (TypeScript) mit App Directory
 - **Database**: PostgreSQL mit Drizzle ORM
 - **UI**: shadcn/ui + Tailwind CSS
@@ -24,33 +31,43 @@ kontext.one ist eine Webapplikation für die digitale Prüfung von Ausschreibung
 - **Filesystem**: WebDAV für Remote-Synchronisation
 
 ### API Struktur
+
 - `/api/fs/*` - Dateisystem-Operationen (CRUD, WebDAV)
 - `/api/ai/*` - KI-Services (Streaming, Custom)
 - `/api/worker/*` - Job-Management (Parsing, Anonymisierung, Analyse)
 - `/api/stripe/*` - Zahlungsabwicklung
 
-## Entwicklungsstatus
+## TODO Liste / Entwicklungsstatus
 
 ### ✅ Abgeschlossen
-- Grundsetup (Next.js, TypeScript, Database)
-- Authentifizierung und Benutzerverwaltung
-- Dateisystem-Integration (Upload, Download, Management)
-- Stripe-Integration
-- UI-Komponenten und Sidebar
-- WebDAV-Server Integration
+
+- [x] Grundsetup (Next.js, TypeScript, Database)
+- [x] Authentifizierung und Benutzerverwaltung
+- [x] Dateisystem-Integration (Upload, Download, Management)
+- [x] Stripe-Integration
+- [x] UI-Komponenten und Sidebar
+- [x] WebDAV-Server Integration
+- [x] File Upload zu Server
+- [x] Projekt/Bieter-Kontext-Persistierung
+- [x] **Markdown-Konvertierung**: Vollständige Integration (serverseitig)
 
 ### 🚧 In Arbeit
-- File Upload zu Server
-- Datei-/Verzeichnis-Umbenennung
-- Vault-Integration (Ersatz für aauswahl)
-- Projekt/Bieter-Kontext-Persistierung
+
+- [ ] Datei-/Verzeichnis-Umbenennung
+- [ ] AI-Funktion Dateikategorisierung:
+  - [x] Automatische Dateikategorisierung und -umbenennung pro Dokument
+  - [ ] kategorisierung eines dokumentensatzes (verzeichnisweise)
+- [ ] AI-Funktion Ausschreibungsmetadaten extrakion
+- [ ] AI-Funktion Ausschreibung Kriterienliste extraktion
+- [ ] **AI-Integration**:
+  - [x] gemini integriert
+  - [ ] uniinfer ai inference
 
 ### 📋 Geplant
-- **AI-Integration**: Automatische Dateikategorisierung und -umbenennung
-- **Markdown-Konvertierung**: Vollständige Integration
-- **Anonymisierung**: NER/LLM-basierte Implementierung
-- **Testing**: Unit-, Integration- und E2E-Tests
-- **Performance**: Optimierung und PWA-Features
+
+- [ ] **Anonymisierung**: NER/LLM-basierte Implementierung
+- [ ] **Testing**: Unit-, Integration- und E2E-Tests
+- [ ] **Performance**: Optimierung und PWA-Features
 
 ## Benutzerrollen
 
