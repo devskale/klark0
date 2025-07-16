@@ -7,6 +7,7 @@ import {
   fileTreeFetcher,
   normalizePath,
 } from "@/lib/fs/fileTreeUtils-new";
+import { saveKriterienToFile, loadKriterienFromFile, KriterienMetadata } from "@/lib/kriterien/persistence";
 import {
   Table,
   TableBody,
@@ -20,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { CheckCircle2, Clock, Edit, Sparkles, MoreHorizontal, FileText, ChevronDown, ChevronRight, Eye, User, Bot, Loader2 } from "lucide-react";
+import { CheckCircle2, Clock, Edit, Sparkles, MoreHorizontal, FileText, ChevronDown, ChevronRight, Eye, User, Bot, Loader2, AlertCircle, Save } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -65,6 +66,16 @@ export default function AKriterienPage() {
   // Derive project directory path
   const projectDir = selectedProject ? normalizePath(selectedProject) : null;
   
+  // Load saved criteria from filesystem using SWR
+  const { data: savedKriterienData, mutate: mutateSavedKriterien } = useSWR(
+    projectDir ? `kriterien-${projectDir}` : null,
+    async () => {
+      if (!projectDir) return null;
+      return await loadKriterienFromFile(projectDir);
+    },
+    { revalidateOnFocus: false }
+  );
+  
   // Fetch A directory contents to find AAB files (A = Ausschreibungs directory)
   const aDirectory = projectDir ? `${projectDir}A/` : null;
   const { data: projectContents, error: entriesError } = useSWR(
@@ -88,6 +99,9 @@ export default function AKriterienPage() {
   // State für den Kriterien-Extraktion Workflow
   const [aabContent, setAabContent] = useState<string>("");
   const [extractedCriteria, setExtractedCriteria] = useState<KriterienExtraktion | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [lastSaved, setLastSaved] = useState<string | null>(null);
   const [isExtracting, setIsExtracting] = useState(false);
   const [isLoadingDocument, setIsLoadingDocument] = useState(false);
   const [activeTab, setActiveTab] = useState("source");
@@ -103,6 +117,55 @@ export default function AKriterienPage() {
     timestamp?: string;
   }>({});
   
+  // Effect to load saved criteria when component mounts or project changes
+  useEffect(() => {
+    if (savedKriterienData?.extractedCriteria) {
+      setExtractedCriteria(savedKriterienData.extractedCriteria);
+      setLastSaved(savedKriterienData.lastModified);
+    }
+  }, [savedKriterienData]);
+
+  const handleSaveKriterien = async () => {
+    if (!extractedCriteria || !projectDir) {
+      setSaveError("Keine Kriterien zum Speichern vorhanden");
+      return;
+    }
+
+    setIsSaving(true);
+    setSaveError(null);
+
+    try {
+      const metadata = {
+        aabFileName: selectedAabFile?.name || "unknown",
+        extractionMethod: "KRITERIEN_EXTRAKTION",
+        reviewStatus: {
+          aiReviewed: true,
+          humanReviewed: false,
+        }
+      };
+
+      const result = await saveKriterienToFile(projectDir, extractedCriteria, metadata);
+      
+      if (result.success) {
+        setLastSaved(new Date().toISOString());
+        // Revalidate SWR cache
+        await mutateSavedKriterien();
+        toast.success("Kriterien erfolgreich gespeichert");
+      } else {
+        setSaveError(result.error || "Fehler beim Speichern");
+        toast.error("Fehler beim Speichern der Kriterien");
+      }
+    } catch (err) {
+      console.error("Error saving criteria:", err);
+      setSaveError(
+        err instanceof Error ? err.message : "Unbekannter Fehler beim Speichern"
+      );
+      toast.error("Fehler beim Speichern der Kriterien");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   // Load AAB document content when component mounts or when AAB file changes
   useEffect(() => {
     const loadAabDocument = async () => {
@@ -329,6 +392,22 @@ export default function AKriterienPage() {
               AAB-Dokument: {selectedAabFile.name}
             </p>
           )}
+          {lastSaved && (
+            <div className="flex items-center gap-2 mt-2">
+              <Clock className="h-4 w-4 text-green-600" />
+              <span className="text-sm text-green-600">
+                Zuletzt gespeichert: {new Date(lastSaved).toLocaleString('de-DE')}
+              </span>
+            </div>
+          )}
+          {saveError && (
+            <div className="flex items-center gap-2 mt-2">
+              <AlertCircle className="h-4 w-4 text-red-600" />
+              <span className="text-sm text-red-600">
+                Fehler beim Speichern: {saveError}
+              </span>
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-4">
           <div className="space-y-2">
@@ -346,17 +425,58 @@ export default function AKriterienPage() {
               </SelectContent>
             </Select>
           </div>
-          <Button 
-            onClick={handleExtractCriteria}
-            disabled={isExtracting || isLoadingDocument || !aabContent || !selectedAiQuery}
-            className="flex items-center gap-2"
-          >
-            {(isExtracting || isLoadingDocument) && <Loader2 className="h-4 w-4 animate-spin" />}
-            <Sparkles className="h-4 w-4" />
-            {isExtracting ? "Extrahiere..." : isLoadingDocument ? "Lade Dokument..." : "Kriterien extrahieren"}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              onClick={handleExtractCriteria}
+              disabled={isExtracting || isLoadingDocument || !aabContent || !selectedAiQuery}
+              className="flex items-center gap-2"
+            >
+              {(isExtracting || isLoadingDocument) && <Loader2 className="h-4 w-4 animate-spin" />}
+              <Sparkles className="h-4 w-4" />
+              {isExtracting ? "Extrahiere..." : isLoadingDocument ? "Lade Dokument..." : "Kriterien extrahieren"}
+            </Button>
+            
+            {extractedCriteria && (
+              <Button 
+                onClick={handleSaveKriterien}
+                disabled={isSaving}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                {isSaving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+                {isSaving ? "Speichere..." : "Kriterien speichern"}
+              </Button>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Saved Criteria Status */}
+      {savedKriterienData && (
+        <Card className="border-green-200 bg-green-50">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <CheckCircle2 className="h-5 w-5 text-green-600" />
+                <div>
+                  <h3 className="font-medium text-green-800">Gespeicherte Kriterien gefunden</h3>
+                  <p className="text-sm text-green-600">
+                    Extrahiert am: {new Date(savedKriterienData.extractionTimestamp).toLocaleString('de-DE')}
+                    {savedKriterienData.aabFileName && ` aus ${savedKriterienData.aabFileName}`}
+                  </p>
+                </div>
+              </div>
+              <Badge variant="secondary" className="bg-green-100 text-green-800">
+                {savedKriterienData.reviewStatus?.humanReviewed ? 'Geprüft' : 'AI-Extraktion'}
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4">

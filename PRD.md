@@ -70,11 +70,14 @@ Anforderungen:
         - [ ] Bearbeitungs-Modi für manuelle Kriterien-Anpassungen
         - [ ] Validierungs-Workflow für Human-in-the-Loop Prozesse
         - [ ] Änderungshistorie und Audit-Trail für Reviews
-    - [ ] **Persistierung**: Kriterienliste im Filesystem speichern
-      - [ ] API Route /api/fs/kriterien für JSON-Sidecar Dateien erstellen
-      - [ ] kriterien.json Format im Projektverzeichnis definieren
-      - [ ] Speichern/Laden Funktionalität in kriterien.tsx integrieren
-      - [ ] WebDAV Integration für Remote-Speicherung sicherstellen
+    - [x] **Persistierung**: Kriterienliste im Filesystem speichern
+      - [x] Persistierung-Utility-Funktionen in lib/kriterien/persistence.ts erstellt
+      - [x] kriterien.meta.json Format mit erweiterten Metadaten definiert
+      - [x] SWR-Integration für automatisches Laden gespeicherter Kriterien
+      - [x] Speichern/Laden Funktionalität in kriterien.tsx integriert
+      - [x] UI-Komponenten für Speicher-Status und -Aktionen hinzugefügt
+      - [x] Review-Status Tracking für AI- und Human-Reviews implementiert
+      - [x] Wiederverwendung bestehender /api/fs/metadata API für WebDAV-Kompatibilität
   - [ ] **Bieterdokumenten-Analyse**: Abgleich von Bieterdokumenten mit Kriterien.
   - [ ] **Dateikategorisierung**: Automatische Kategorisierung von Dokumenten.
   - [ ] **Human-in-the-Loop**: UI zur Validierung und Korrektur von KI-Ergebnissen.
@@ -106,7 +109,7 @@ kontext.one/
 └── tests/                # Test-Dateien
 ```
 
-## LERNERFOLGE, CODING-RICHTLINIEN & REGELN
+## LERNERFOLGE, CODING-RICHTLINIEN & REGELN & BEST PRACTICES
 
 ### Coding-Richtlinien
 
@@ -121,3 +124,6 @@ kontext.one/
 - Die Abstraktion des Dateisystems ist entscheidend für die Unterstützung verschiedener Speicherorte.
 - KI-gestützte Analysen erfordern robuste "Human-in-the-Loop"-Prozesse, um die Genauigkeit zu gewährleisten.
 - Ein gut strukturiertes PRD im Stil eines Entwickler-Logbuchs hilft, den Überblick über den Fortschritt und die Entscheidungen zu behalten.
+- Prompts müssen exakt mit dem erwarteten JSON-Schema übereinstimmen, um Parsing-Fehler zu vermeiden; Kategorienamen strikt vordefinieren und im Prompt durchsetzen.
+- Robuste JSON-Parsing-Logik implementieren, um Variationen in AI-Antworten zu handhaben, inklusive aggressiver Extraktion von JSON-Inhalten.
+- Debugging durch Logging roher AI-Antworten und schrittweise Anpassung von Prompts ist essenziell für die Fehlersuche bei KI-Integrationen.
