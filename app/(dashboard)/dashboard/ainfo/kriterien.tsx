@@ -359,6 +359,61 @@ export default function AKriterienPage() {
   };
 
   /**
+   * Berechnet die Gesamtanzahl aller nummerierten Kriterien-Elemente
+   */
+  const calculateTotalCriteria = (criteria: KriterienExtraktion | null): number => {
+    if (!criteria) return 0;
+    
+    let total = 0;
+    
+    // Eignungskriterien: Kategorien + Kriterien + Nachweise zählen
+    const eignungsCategories = Object.keys(criteria.eignungskriterien).length;
+    total += eignungsCategories; // Kategorien (1.1, 1.2, etc.)
+    
+    Object.values(criteria.eignungskriterien).forEach(categoryItems => {
+      if (Array.isArray(categoryItems)) {
+        total += categoryItems.length; // Kriterien (1.1.1, 1.1.2, etc.)
+        // Nachweise in Eignungskriterien zählen (1.1.1.1, 1.1.1.2, etc.)
+        categoryItems.forEach(item => {
+          if (item.nachweise && Array.isArray(item.nachweise)) {
+            total += item.nachweise.length;
+          }
+        });
+      }
+    });
+    
+    // Zuschlagskriterien: Los + Kriterien + Unterkriterien zählen
+    if (Array.isArray(criteria.zuschlagskriterien)) {
+      total += criteria.zuschlagskriterien.length; // Los-Ebene (2.1, 2.2, etc.)
+      
+      criteria.zuschlagskriterien.forEach(los => {
+        if (los.kriterien && Array.isArray(los.kriterien)) {
+          total += los.kriterien.length; // Kriterien (2.1.1, 2.1.2, etc.)
+          
+          // Unterkriterien zählen (2.1.1.1, 2.1.1.2, etc.)
+          los.kriterien.forEach(kriterium => {
+            if (kriterium.unterkriterien && Array.isArray(kriterium.unterkriterien)) {
+              total += kriterium.unterkriterien.length;
+            }
+          });
+        }
+      });
+    }
+    
+    // Formale Anforderungen zählen (4.1, 4.2, etc.)
+    if (Array.isArray(criteria.formale_anforderungen)) {
+      total += criteria.formale_anforderungen.length;
+    }
+    
+    // Subunternehmerregelung zählen (3.1, 3.2, etc.)
+    if (Array.isArray(criteria.subunternehmerregelung)) {
+      total += criteria.subunternehmerregelung.length;
+    }
+    
+    return total;
+  };
+
+  /**
    * Rendert Review-Status Badge
    */
   const renderReviewStatus = (aiReviewed: boolean, humanReviewed: boolean) => {
@@ -551,115 +606,219 @@ export default function AKriterienPage() {
         <TabsContent value="criteria" className="space-y-4">
           {extractedCriteria && (
             <>
+              {/* Kriterien-Statistiken */}
+              <Card className="border-blue-200 bg-blue-50">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <CheckCircle2 className="h-5 w-5 text-blue-600" />
+                      <div>
+                        <h3 className="font-medium text-blue-800">Kriterien-Übersicht</h3>
+                        <p className="text-sm text-blue-600">
+                          Insgesamt {calculateTotalCriteria(extractedCriteria)} Kriterien extrahiert
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-4 text-sm">
+                      <div className="text-center">
+                        <div className="font-bold text-blue-800">
+                          {Object.values(extractedCriteria.eignungskriterien).reduce((acc, cat) => 
+                            acc + (Array.isArray(cat) ? cat.length : 0), 0
+                          )}
+                        </div>
+                        <div className="text-blue-600">Eignungskriterien</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="font-bold text-blue-800">
+                          {Array.isArray(extractedCriteria.zuschlagskriterien) ? 
+                            extractedCriteria.zuschlagskriterien.reduce((acc, los) => 
+                              acc + (los.kriterien ? los.kriterien.length : 0), 0
+                            ) : 0
+                          }
+                        </div>
+                        <div className="text-blue-600">Zuschlagskriterien</div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Eignungskriterien */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Eignungskriterien</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <Badge variant="outline" className="font-mono text-sm">
+                      1.
+                    </Badge>
+                    Eignungskriterien
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {Object.entries(extractedCriteria.eignungskriterien).map(([category, criteria]) => (
-                    <Collapsible 
-                      key={category}
-                      open={expandedSections[category]}
-                      onOpenChange={() => toggleSection(category)}
-                    >
-                      <CollapsibleTrigger asChild>
-                        <Button variant="ghost" className="w-full justify-between p-2">
-                          <span className="font-medium capitalize">
-                            {category.replace(/_/g, ' ')}
-                          </span>
-                          {expandedSections[category] ? 
-                            <ChevronDown className="h-4 w-4" /> : 
-                            <ChevronRight className="h-4 w-4" />
-                          }
-                        </Button>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="space-y-2 mt-2">
-                        {criteria.map((kriterium: KriteriumObjekt, index: number) => (
-                          <div key={index} className="border rounded p-3 space-y-2">
-                            <div className="font-medium">{kriterium.kriterium}</div>
-                            <div className="space-y-1">
-                              {kriterium.nachweise.map((nachweis, nIndex) => (
-                                <div key={nIndex} className="text-sm bg-muted p-2 rounded">
-                                  <div className="flex items-center gap-2">
-                                    <Badge variant={nachweis.typ === 'PFLICHT' ? 'default' : 'secondary'}>
-                                      {nachweis.typ}
-                                    </Badge>
-                                    <span>{nachweis.dokument}</span>
-                                  </div>
-                                  {nachweis.gueltigkeit && (
-                                    <div className="text-xs text-muted-foreground mt-1">
-                                      Gültigkeit: {nachweis.gueltigkeit}
-                                    </div>
-                                  )}
-                                  {nachweis.hinweis && (
-                                    <div className="text-xs text-muted-foreground mt-1">
-                                      Hinweis: {nachweis.hinweis}
-                                    </div>
-                                  )}
+                  {Object.entries(extractedCriteria.eignungskriterien).map(([category, criteria], categoryIndex) => {
+                    const categoryNumber = `1.${categoryIndex + 1}`;
+                    return (
+                      <Collapsible 
+                        key={category}
+                        open={expandedSections[category]}
+                        onOpenChange={() => toggleSection(category)}
+                      >
+                        <CollapsibleTrigger asChild>
+                          <Button variant="ghost" className="w-full justify-between p-2">
+                            <span className="font-medium capitalize flex items-center gap-2">
+                              <Badge variant="outline" className="font-mono text-xs">
+                                {categoryNumber}
+                              </Badge>
+                              {category.replace(/_/g, ' ')}
+                            </span>
+                            {expandedSections[category] ? 
+                              <ChevronDown className="h-4 w-4" /> : 
+                              <ChevronRight className="h-4 w-4" />
+                            }
+                          </Button>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="space-y-2 mt-2">
+                          {criteria.map((kriterium: KriteriumObjekt, index: number) => {
+                            const kriteriumNumber = `${categoryNumber}.${index + 1}`;
+                            return (
+                              <div key={index} className="border rounded p-3 space-y-2">
+                                <div className="flex items-start gap-3">
+                                  <Badge variant="outline" className="font-mono text-xs flex-shrink-0">
+                                    {kriteriumNumber}
+                                  </Badge>
+                                  <div className="font-medium flex-1">{kriterium.kriterium}</div>
                                 </div>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </CollapsibleContent>
-                    </Collapsible>
-                  ))}
+                                <div className="space-y-1 ml-12">
+                                  {kriterium.nachweise.map((nachweis, nIndex) => {
+                                    const nachweisNumber = `${kriteriumNumber}.${nIndex + 1}`;
+                                    return (
+                                      <div key={nIndex} className="text-sm bg-muted p-2 rounded">
+                                        <div className="flex items-center gap-2">
+                                          <Badge variant="outline" className="font-mono text-xs">
+                                            {nachweisNumber}
+                                          </Badge>
+                                          <Badge variant={nachweis.typ === 'PFLICHT' ? 'default' : 'secondary'}>
+                                            {nachweis.typ}
+                                          </Badge>
+                                          <span>{nachweis.dokument}</span>
+                                        </div>
+                                        {nachweis.gueltigkeit && (
+                                          <div className="text-xs text-muted-foreground mt-1 ml-16">
+                                            Gültigkeit: {nachweis.gueltigkeit}
+                                          </div>
+                                        )}
+                                        {nachweis.hinweis && (
+                                          <div className="text-xs text-muted-foreground mt-1 ml-16">
+                                            Hinweis: {nachweis.hinweis}
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </CollapsibleContent>
+                      </Collapsible>
+                    );
+                  })}
                 </CardContent>
               </Card>
 
               {/* Zuschlagskriterien */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Zuschlagskriterien</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <Badge variant="outline" className="font-mono text-sm">
+                      2.
+                    </Badge>
+                    Zuschlagskriterien
+                  </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {extractedCriteria.zuschlagskriterien.map((los, index) => (
-                      <div key={index} className="border rounded p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <div>
-                            <h4 className="font-medium">
+                <CardContent className="space-y-4">
+                  {extractedCriteria.zuschlagskriterien.map((los, index) => {
+                    const losNumber = `2.${index + 1}`;
+                    return (
+                      <Collapsible 
+                        key={index}
+                        open={expandedSections[`los-${index}`]}
+                        onOpenChange={() => toggleSection(`los-${index}`)}
+                      >
+                        <CollapsibleTrigger asChild>
+                          <Button variant="ghost" className="w-full justify-between p-2">
+                            <span className="font-medium flex items-center gap-2">
+                              <Badge variant="outline" className="font-mono text-xs">
+                                {losNumber}
+                              </Badge>
                               {los.los.nummer ? `Los ${los.los.nummer}` : 'Hauptauftrag'}: {los.los.bezeichnung}
-                            </h4>
-                            <Badge variant="outline">{los.prinzip}</Badge>
+                            </span>
+                            {expandedSections[`los-${index}`] ? 
+                              <ChevronDown className="h-4 w-4" /> : 
+                              <ChevronRight className="h-4 w-4" />
+                            }
+                          </Button>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="space-y-2 mt-2">
+                          <div className="border rounded p-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <Badge variant="outline">{los.prinzip}</Badge>
+                            </div>
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Nr.</TableHead>
+                                  <TableHead>Kriterium</TableHead>
+                                  <TableHead>Gewichtung</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {los.kriterien.map((kriterium, kIndex) => {
+                                  const kriteriumNumber = `${losNumber}.${kIndex + 1}`;
+                                  return (
+                                    <TableRow key={kIndex}>
+                                      <TableCell>
+                                        <Badge variant="outline" className="font-mono text-xs">
+                                          {kriteriumNumber}
+                                        </Badge>
+                                      </TableCell>
+                                      <TableCell>{kriterium.name}</TableCell>
+                                      <TableCell>{kriterium.gewichtung}</TableCell>
+                                    </TableRow>
+                                  );
+                                })}
+                              </TableBody>
+                            </Table>
                           </div>
-                        </div>
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Kriterium</TableHead>
-                              <TableHead>Gewichtung</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {los.kriterien.map((kriterium, kIndex) => (
-                              <TableRow key={kIndex}>
-                                <TableCell>{kriterium.name}</TableCell>
-                                <TableCell>{kriterium.gewichtung}</TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    ))}
-                  </div>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    );
+                  })}
                 </CardContent>
               </Card>
 
               {/* Subunternehmerregelung */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Subunternehmerregelung</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <Badge variant="outline" className="font-mono text-sm">
+                      3.
+                    </Badge>
+                    Subunternehmerregelung
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
-                    {extractedCriteria.subunternehmerregelung.map((regel, index) => (
-                      <li key={index} className="flex items-start gap-2">
-                        <span className="text-muted-foreground">•</span>
-                        <span className="text-sm">{regel}</span>
-                      </li>
-                    ))}
+                    {extractedCriteria.subunternehmerregelung.map((regel, index) => {
+                      const regelNumber = `3.${index + 1}`;
+                      return (
+                        <li key={index} className="flex items-start gap-3">
+                          <Badge variant="outline" className="font-mono text-xs flex-shrink-0">
+                            {regelNumber}
+                          </Badge>
+                          <span className="text-sm flex-1">{regel}</span>
+                        </li>
+                      );
+                    })}
                   </ul>
                 </CardContent>
               </Card>
@@ -667,16 +826,26 @@ export default function AKriterienPage() {
               {/* Formale Anforderungen */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Formale Anforderungen</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <Badge variant="outline" className="font-mono text-sm">
+                      4.
+                    </Badge>
+                    Formale Anforderungen
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
-                    {extractedCriteria.formale_anforderungen.map((anforderung, index) => (
-                      <li key={index} className="flex items-start gap-2">
-                        <span className="text-muted-foreground">•</span>
-                        <span className="text-sm">{anforderung}</span>
-                      </li>
-                    ))}
+                    {extractedCriteria.formale_anforderungen.map((anforderung, index) => {
+                      const anforderungNumber = `4.${index + 1}`;
+                      return (
+                        <li key={index} className="flex items-start gap-3">
+                          <Badge variant="outline" className="font-mono text-xs flex-shrink-0">
+                            {anforderungNumber}
+                          </Badge>
+                          <span className="text-sm flex-1">{anforderung}</span>
+                        </li>
+                      );
+                    })}
                   </ul>
                 </CardContent>
               </Card>
