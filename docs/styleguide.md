@@ -1,4 +1,4 @@
-# Klark0 Design System
+# kontext.one Design System
 
 ## Designprinzipien
 

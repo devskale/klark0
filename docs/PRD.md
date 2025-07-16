@@ -1,109 +1,79 @@
-# Produktanforderungsdokument (PRD) für klark0
+# Produktanforderungsdokument (PRD) für kontext.one
 
 ## Produktübersicht
 
-klark0 ist eine Webapplikation für die digitale Prüfung von Ausschreibungsdokumenten (Tender Documents). Die Anwendung unterstützt den gesamten Lebenszyklus eines Ausschreibungsprojekts und fokussiert sich auf Transparenz, Effizienz und Automatisierung in der Vergabeprüfung.
+kontext.one ist eine Webapplikation für die digitale Prüfung von Ausschreibungsdokumenten. Die Anwendung unterstützt den gesamten Lebenszyklus eines Ausschreibungsprojekts mit Fokus auf Transparenz, Effizienz und Automatisierung.
 
 ## Hauptfunktionen
 
-- **Ausschreibungsprojekt erstellen**
-  - Benutzer können neue Ausschreibungsprojekte anlegen.
-- **Dokumente hochladen**
-  - Upload von Ausschreibungsdokumenten und Bieterdokumenten.
-- **Dokumentkonvertierung**
-  - Automatische Umwandlung von hochgeladenen Dokumenten (z. B. DOC, PDF) in Markdown.
-- **Automatische Dateiumbenennung**
-  - Automatische Umbenennung von Dateien basierend auf einem kurzen zusammenfassenden Titel.
-- **Anonymisierung auf Anfrage**
-  - Möglichkeit zur Anonymisierung von Dokumenteninhalten, falls erforderlich.
-- **Projekt- und Bieterauswahl im Vault**
-  - Ermöglicht Benutzern, im Op-Browser (Vault) ein Ausschreibungsprojekt und optional einen Bieter auszuwählen, um diesen Kontext für weitere Aktionen zu übernehmen.
+- **Ausschreibungsprojekt erstellen** - Neue Projekte anlegen und verwalten
+- **Dokumente hochladen** - Upload von Ausschreibungs- und Bieterdokumenten
+- **Dokumentkonvertierung** - Automatische Umwandlung (DOC, PDF) in Markdown
+- **Automatische Dateiumbenennung** - KI-basierte Umbenennung mit zusammenfassenden Titeln
+- **Anonymisierung** - Schutz sensibler Daten auf Anfrage
+- **Vault-Navigation** - Projekt- und Bieterauswahl für kontextbezogene Aktionen
 
-## Benutzerrollen und Szenarien
+## Technische Architektur
 
-### Primäre Anwender
+### Tech Stack
+- **Framework**: Next.js (TypeScript) mit App Directory
+- **Database**: PostgreSQL mit Drizzle ORM
+- **UI**: shadcn/ui + Tailwind CSS
+- **Auth**: JWT Session Cookies
+- **Payments**: Stripe Integration
+- **Filesystem**: WebDAV für Remote-Synchronisation
 
-- **Ausschreibungsprüfer und -analysten**
-  - Erstellen und verwalten Ausschreibungsprojekte.
-  - Laden relevante Dokumente hoch und nutzen Tools für die automatische Konvertierung und Umbenennung.
-  - Fordern bei Bedarf die Anonymisierung sensibler Daten an.
-- **Bieteradministrator**
-  - Laden Bieterdokumente hoch, die Teil des Ausschreibungsprozesses sind.
+### API Struktur
+- `/api/fs/*` - Dateisystem-Operationen (CRUD, WebDAV)
+- `/api/ai/*` - KI-Services (Streaming, Custom)
+- `/api/worker/*` - Job-Management (Parsing, Anonymisierung, Analyse)
+- `/api/stripe/*` - Zahlungsabwicklung
 
-### Nutzer-Storys
+## Entwicklungsstatus
 
-- **Projekterstellung**
-  - „Als Benutzer möchte ich ein neues Ausschreibungsprojekt erstellen, um den Ausschreibungsprozess digital zu verwalten.“
-- **Dokumenten-Upload**
-  - „Als Benutzer möchte ich Ausschreibungs- und Bieterdokumente hochladen, um sie in der Webapplikation zu prüfen.“
-- **Dokumentkonvertierung**
-  - „Als Benutzer möchte ich, dass hochgeladene Dokumente automatisch in Markdown konvertiert werden, um eine einfache und konsistente Darstellung zu gewährleisten.“
-- **Automatische Umbenennung**
-  - „Als Benutzer möchte ich, dass Dateien automatisch umbenannt werden, sodass nur eine kurze Zusammenfassung als Titel verwendet wird.“
-- **Anonymisierung**
-  - „Auf Wunsch möchte ich, dass Dokumente anonymisiert werden, um sensible Informationen zu schützen.“
-- **Auswahl im Vault**
-  - „Als Benutzer möchte ich im Vault ein Ausschreibungsprojekt auswählen, um den Arbeitskontext festzulegen.“
-  - „Als Benutzer möchte ich im Vault einen Bieter innerhalb eines Projekts auswählen, um Dokumente eines Bieters zu prüfen.“
+### ✅ Abgeschlossen
+- Grundsetup (Next.js, TypeScript, Database)
+- Authentifizierung und Benutzerverwaltung
+- Dateisystem-Integration (Upload, Download, Management)
+- Stripe-Integration
+- UI-Komponenten und Sidebar
+- WebDAV-Server Integration
 
-## Technische Anforderungen
+### 🚧 In Arbeit
+- File Upload zu Server
+- Datei-/Verzeichnis-Umbenennung
+- Vault-Integration (Ersatz für aauswahl)
+- Projekt/Bieter-Kontext-Persistierung
 
-- **Framework und Sprache**
-  - Next.js (TypeScript)
-- **Datenbank und ORM**
-  - PostgreSQL, Drizzle ORM
-- **UI-Komponenten**
-  - shadcn/ui
-- **Authentifizierung**
-  - JWT mit Session-Cookies
-- **Zahlungsabwicklung**
-  - Stripe Integration
-- **Middleware**
-  - Globale & lokale Middleware zur Absicherung und Validierung (z. B. Zod-Schemas)
-- **Dateisystemzugriff**
-  - Konfiguration und Zugriff auf Dokumente via Filesystem (Einstellungen)
-  - **Dateisynchronisation**
-    - WebDAV als primäres Synchronisationsprotokoll
-    - Unterstützung für Ausschreibungsunterlagen und Bieterunterlagen
-    - Remote-Verarbeitung durch externe Prozessoren
-    - Automatischer Upload verarbeiteter Dokumente
+### 📋 Geplant
+- **AI-Integration**: Automatische Dateikategorisierung und -umbenennung
+- **Markdown-Konvertierung**: Vollständige Integration
+- **Anonymisierung**: NER/LLM-basierte Implementierung
+- **Testing**: Unit-, Integration- und E2E-Tests
+- **Performance**: Optimierung und PWA-Features
+
+## Benutzerrollen
+
+- **Ausschreibungsprüfer**: Projektmanagement, Dokumentenanalyse
+- **Bieteradministrator**: Upload und Verwaltung von Bieterdokumenten
 
 ## Nicht-funktionale Anforderungen
 
-- **Performance**
-  - Schnelle Ladezeiten und optimierte SSR (Server-Side Rendering) für eine reibungslose Benutzererfahrung.
-- **Sicherheit**
-  - Sichere Authentifizierung, verschlüsselte Kommunikation und Schutz sensibler Daten (einschließlich Dokumentenanonymisierung).
-- **Skalierbarkeit**
-  - Modularer Aufbau, der zukünftige Erweiterungen und Integrationen (z. B. weitere Dateiformate) ermöglicht.
-- **Barrierefreiheit**
-  - Umsetzung von Accessibility-Standards innerhalb der UI-Komponenten.
-- **Internationalisierung**
-  - Hauptsprache Deutsch; Möglichkeit zur Erweiterung um weitere Sprachen bei Bedarf.
+- **Performance**: Optimierte SSR, schnelle Ladezeiten
+- **Sicherheit**: Verschlüsselte Kommunikation, Datenschutz
+- **Skalierbarkeit**: Modularer Aufbau für Erweiterungen
+- **Accessibility**: WCAG-konforme UI-Komponenten
+- **Sprache**: Primär Deutsch, erweiterbar
 
-## Zielsetzung und Erfolgskriterien
+## Entwicklungsziele
 
-- **Benutzerakzeptanz**
-  - Einfache Bedienbarkeit und schnelle Einarbeitung in das System.
-- **Effizienz**
-  - Reduktion manueller Prüfungs- und Umbenennungsprozesse durch Automatisierung.
-- **Sicherheitsverbesserung**
-  - Effektiver Schutz sensibler Daten durch optionale Anonymisierungsfunktionen.
-- **Zuverlässigkeit**
-  - Hohe Verfügbarkeit und konsistente Leistung auch bei hohen Benutzerzahlen.
+1. **Kurzfristig**: Vollständige Vault-Integration und Dateiverwaltung
+2. **Mittelfristig**: KI-basierte Dokumentenverarbeitung
+3. **Langfristig**: Vollautomatisierte Ausschreibungsanalyse
 
-## Zeitplan und Meilensteine
+## Erfolgskriterien
 
-1. **Konzeptphase**
-   - Erstellung des PRD und der Architektur-Dokumentation.
-2. **Implementierungsphase**
-   - Aufbau des Grundgerüsts mit Next.js, Authentifizierung, und erste UI-Komponenten.
-   - Integration der Dateisystemverwaltung und Upload-Funktionalitäten.
-3. **Testphase**
-   - Funktionstests, Sicherheitstests und Performanceoptimierung.
-4. **Launch und Monitoring**
-   - Produktionsstart und kontinuierliche Analyse der Systemleistung und Benutzerfeedback.
-
-## Zusammenfassung
-
-klark0 zielt darauf ab, den manuellen Aufwand in Ausschreibungsprojekten zu minimieren, indem es den gesamten Prozess – von der Projekterstellung über den automatisierten Dokumenten-Upload und -konvertierung bis hin zur Anonymisierung – digitalisiert und automatisiert. Diese Lösungen verbessern die Effizienz und Sicherheit in der Vergabeprüfung erheblich.
+- Reduktion manueller Prozesse um 70%
+- Benutzerakzeptanz >90%
+- Hohe Verfügbarkeit (99.9%)
+- Effektiver Datenschutz durch Anonymisierung

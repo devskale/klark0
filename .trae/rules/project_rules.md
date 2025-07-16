@@ -70,96 +70,112 @@ Remote Storage: Support for remote storage via WebDAV (Other options will be imp
 The project follows Next.js conventions with directories for routing, components, libraries, and documentation. Below is a detailed version of the directory tree:
 
 ```
-. 
- ├── app 
- │   ├── (dashboard) 
- │   │   ├── dashboard 
- │   │   │   ├── activity 
- │   │   │   ├── afreigabe 
- │   │   │   ├── ainfo 
- │   │   │   ├── atools 
- │   │   │   ├── auswahl 
- │   │   │   ├── binfo 
- │   │   │   ├── btools 
- │   │   │   ├── dinfo 
- │   │   │   ├── dtools 
- │   │   │   ├── einstellungen 
- │   │   │   ├── general 
- │   │   │   ├── jobs 
- │   │   │   ├── konto 
- │   │   │   ├── release-notes 
- │   │   │   └── security 
- │   │   └── pricing 
- │   ├── (login) 
- │   │   ├── sign-in 
- │   │   └── sign-up 
- │   ├── api 
- │   │   ├── ai 
- │   │   │   ├── aisdk 
- │   │   │   ├── gem 
- │   │   │   │   ├── custom 
- │   │   │   │   └── stream 
- │   │   │   ├── query 
- │   │   │   ├── test-settings 
- │   │   │   └── uniinfer 
- │   │   │       └── stream 
- │   │   ├── fs 
- │   │   │   ├── delete 
- │   │   │   ├── index 
- │   │   │   ├── metadata 
- │   │   │   ├── mkdir 
- │   │   │   ├── read 
- │   │   │   ├── rename 
- │   │   │   └── upload 
- │   │   ├── project 
- │   │   │   └── info 
- │   │   ├── settings 
- │   │   ├── stripe 
- │   │   │   ├── checkout 
- │   │   │   └── webhook 
- │   │   ├── team 
- │   │   ├── user 
- │   │   └── worker 
- │   │       ├── debug 
- │   │       ├── jobs 
- │   │       │   ├── [jobId] 
- │   │       │   │   └── callback 
- │   │       │   └── callback_generic 
- │   │       ├── list 
- │   │       ├── settings 
- │   │       ├── status 
- │   │       └── test-store 
- │   └── components 
- ├── components 
- │   ├── ai 
- │   ├── customized 
- │   │   └── select 
- │   └── ui 
- ├── context 
- ├── data 
- ├── docs 
- │   └── examplecode 
- ├── hooks 
- ├── lib 
- │   ├── ai 
- │   ├── auth 
- │   ├── db 
- │   │   ├── migrations 
- │   │   │   └── meta 
- │   │   └── schema 
- │   ├── fs 
- │   └── payments 
- ├── node_modules 
- ├── prompts 
- ├── public 
- ├── src 
- │   └── types 
- ├── tests 
- ├── tmp 
+.
+ ├── app  # App Directory. Contains layout and root layouts for global structuring as well as dynamic routing files (e.g., page.tsx).
+ │   ├── (dashboard)
+ │   │   ├── dashboard
+ │   │   │   ├── activity
+ │   │   │   ├── afreigabe
+ │   │   │   ├── ainfo
+ │   │   │   ├── atools
+ │   │   │   ├── auswahl
+ │   │   │   ├── binfo
+ │   │   │   ├── btools
+ │   │   │   ├── dinfo
+ │   │   │   ├── dtools
+ │   │   │   ├── einstellungen
+ │   │   │   ├── general
+ │   │   │   ├── jobs
+ │   │   │   ├── konto
+ │   │   │   ├── release-notes
+ │   │   │   └── security
+ │   │   └── pricing
+ │   ├── (login)
+ │   │   ├── sign-in
+ │   │   └── sign-up
+ │   ├── api  # Next.js API routes for server-side logic. Examples: Routes for Stripe Checkout, settings (fileSystem), and other backend functionalities.
+ │   │   ├── ai
+ │   │   │   ├── aisdk
+ │   │   │   ├── gem
+ │   │   │   │   ├── custom
+ │   │   │   │   └── stream
+ │   │   │   ├── query
+ │   │   │   ├── test-settings
+ │   │   │   └── uniinfer
+ │   │   │       └── stream
+ │   │   ├── fs
+ │   │   │   ├── delete
+ │   │   │   ├── index
+ │   │   │   ├── metadata
+ │   │   │   ├── mkdir
+ │   │   │   ├── read
+ │   │   │   ├── rename
+ │   │   │   └── upload
+ │   │   ├── project
+ │   │   │   └── info
+ │   │   ├── settings
+ │   │   ├── stripe
+ │   │   │   ├── checkout
+ │   │   │   └── webhook
+ │   │   ├── team
+ │   │   ├── user
+ │   │   └── worker
+ │   │       ├── debug
+ │   │       ├── jobs
+ │   │       │   ├── [jobId]
+ │   │       │   │   └── callback
+ │   │       │   └── callback_generic
+ │   │       ├── list
+ │   │       ├── settings
+ │   │       ├── status
+ │   │       └── test-store
+ │   └── components
+ ├── components  # Reusable UI components, such as app-sidebar.tsx, card-section.tsx, and other shadcn/ui-based components. Also includes context-related providers (e.g., SelectedProjectProvider).
+ │   ├── ai
+ │   ├── customized
+ │   │   └── select
+ │   └── ui
+ ├── context
+ ├── data
+ ├── docs  # Documentation on architecture, design system, filesystem standards, and product requirements. Files like appStructure.md, styleguide.md, and fs_oped.md are stored here.
+ │   └── examplecode
+ ├── hooks  # Custom React hooks, e.g., use-mobile for detecting mobile devices.
+ ├── lib  # Shared logic and utility functions. Database access (using Drizzle ORM), Stripe integration, authentication, and helper functions (e.g., in utils).
+ │   ├── ai
+ │   ├── auth
+ │   ├── db
+ │   │   ├── migrations
+ │   │   │   └── meta
+ │   │   └── schema
+ │   ├── fs
+ │   └── payments
+ ├── node_modules
+ ├── prompts
+ ├── public  # Static assets (images, fonts, etc.) for the application.
+ ├── src
+ │   └── types
+ ├── tests
+ ├── tmp
  └── types
 ```
 
 This structure organizes the codebase for maintainability, with `app/` handling routing, `lib/` for business logic, and `docs/` for project docs.
+
+### Application Areas
+
+#### Dashboard
+
+- **app/(dashboard)/**: Contains applications for logged-in users. Subfolders like `dashboard/aauswahl/` (project selection), `dashboard/vault/` (file browser), and other modules. Layouts and pages are modularly divided for reusability and consistent navigation.
+
+#### Login & Authentication
+
+- **app/(login)/**: Contains login, registration, and security pages. Actions and server actions secured by local middleware.
+
+### Best Practices
+
+- **Component Reusability:** All reusable components are in the `components/` folder.
+- **Modular Page Architecture:** Pages are logically separated (e.g., Dashboard, Login) and use shared layouts.
+- **API Routes:** Server-side logic is clearly separated in `api/` to ensure clear interfaces between client and server.
 
 ## Developing
 
