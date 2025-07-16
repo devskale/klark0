@@ -65,11 +65,25 @@ Anforderungen:
         - [x] Zuschlagskriterien Tabelle mit Los-basierter Struktur entwickelt
         - [x] Subunternehmerregelung und formale Anforderungen Listen-UI erstellt
         - [x] Expandable Cards für komplexe Kriterienstrukturen implementiert
+        - [x] **List Layout Migration**: Card-Style zu Table-Layout für bessere Skalierbarkeit
+          - [x] Eignungskriterien: Collapsible Cards zu strukturierten Tabellen mit Spalten für Kriterium, Typ, Dokument, Gültigkeit, Hinweis, Status
+          - [x] Zuschlagskriterien: Erweiterte Tabelle mit Status-Spalte für zukünftige Review-Funktionen
+          - [x] Subunternehmerregelung & Formale Anforderungen: Listen zu Tabellen mit Status-Spalten konvertiert
+          - [x] Vorbereitung für zukünftige Spalten-Erweiterungen (Bearbeitung, Priorität, etc.)
       - [ ] **Review-System**: AI- und Human-Review Funktionalität
         - [x] Review-Status Felder für jedes Kriterium vorbereitet (AI-reviewed, Human-reviewed)
         - [ ] Bearbeitungs-Modi für manuelle Kriterien-Anpassungen
         - [ ] Validierungs-Workflow für Human-in-the-Loop Prozesse
         - [ ] Änderungshistorie und Audit-Trail für Reviews
+      - [x] **Table Layout Improvements**: Verbesserung der Tabellen-Darstellung für bessere Usability
+        - [x] Nummerierungs-Spalte hinzufügen (1., 2., 3., 1.1., 1.2., 1.1.1., etc.)
+        - [x] Tabellen-Breite begrenzen und responsive Design implementieren
+        - [x] Spalten-Breite anpassbar machen (resizable columns)
+        - [x] Text-Truncation mit Tooltip-Hover für lange Inhalte (max 2 Zeilen, dann "...")
+        - [x] TruncatedText Komponente für wiederverwendbare Text-Truncation mit Tooltips
+        - [x] Konsistente Spalten-Definitionen across alle Kriterien-Tabellen
+        - [x] Hierarchische Nummerierung für verschachtelte Kriterien (Eignungskriterien mit Nachweisen)
+        - [x] CSS-Verbesserungen für table-layout: fixed und responsive Breakpoints
     - [x] **Persistierung**: Kriterienliste im Filesystem speichern
       - [x] Persistierung-Utility-Funktionen in lib/kriterien/persistence.ts erstellt
       - [x] kriterien.meta.json Format mit erweiterten Metadaten definiert

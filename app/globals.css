@@ -198,9 +198,112 @@
   --sidebar-primary: hsl(240 5.9% 10%);
   --sidebar-primary-foreground: hsl(0 0% 98%);
   --sidebar-accent: hsl(240 4.8% 95.9%);
-  --sidebar-accent-foreground: hsl(240 5.9% 10%);
-  --sidebar-border: hsl(220 13% 91%);
-  --sidebar-ring: hsl(217.2 91.2% 59.8%);
+}
+
+/* Table improvements for kriterien layout */
+.table-fixed {
+  table-layout: fixed;
+  width: 100%;
+}
+
+/* Resizable columns */
+.resize-x {
+  resize: horizontal;
+  min-width: 100px;
+  max-width: 500px;
+}
+
+/* Improved table container with better overflow handling */
+.overflow-x-auto {
+  width: 100%;
+  overflow-x: auto;
+  margin: 0 -1rem; /* Extend beyond card padding */
+  padding: 0 1rem; /* Restore padding for content */
+}
+
+/* Number column specific styling */
+.table-number-column {
+  width: 80px !important;
+  min-width: 80px;
+  max-width: 80px;
+  text-align: center;
+  font-weight: 500;
+}
+
+/* Status column specific styling */
+.table-status-column {
+  width: 100px !important;
+  min-width: 100px;
+  max-width: 100px;
+  text-align: center;
+}
+
+/* Better table cell content handling */
+.table-cell-content {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 0;
+}
+
+/* Table cell overflow prevention */
+td, th {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 0;
+  padding: 0.75rem 0.5rem; /* Better padding */
+}
+
+/* Allow wrapping for specific content that should wrap */
+.table-cell-wrap {
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Card content adjustments for tables */
+.table-card-content {
+  padding: 1rem 0; /* Remove horizontal padding for tables */
+}
+
+.table-card-content .overflow-x-auto {
+  margin: 0 -1.5rem; /* Extend to card edges */
+  padding: 0 1.5rem; /* Restore content padding */
+}
+
+/* Responsive table adjustments */
+@media (max-width: 768px) {
+  .table-fixed {
+    min-width: 800px;
+  }
+  
+  .resize-x {
+    min-width: 80px;
+    max-width: 300px;
+  }
+  
+  .table-number-column {
+    width: 60px !important;
+    min-width: 60px;
+    max-width: 60px;
+  }
+  
+  .table-status-column {
+    width: 80px !important;
+    min-width: 80px;
+    max-width: 80px;
+  }
+}
+
+/* Tooltip improvements for truncated text */
+[data-radix-tooltip-content] {
+  max-width: 400px;
+  word-wrap: break-word;
+  white-space: pre-wrap;
 }
 
 /*
