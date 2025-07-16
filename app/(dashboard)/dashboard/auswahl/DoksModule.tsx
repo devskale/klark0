@@ -100,12 +100,12 @@ export default function DoksModule() {
   const getFileIcon = (name: string) => {
     const ext = name.split(".").pop()?.toLowerCase();
     if (ext === "pdf")
-      return <FileText className="mr-2 h-4 w-4 text-red-500" />;
+      return <FileText className="mr-2 h-4 w-4 text-red-500 flex-shrink-0" />;
     if (ext && ["doc", "docx", "ppt", "pptx", "xls", "xlsx"].includes(ext))
-      return <FileText className="mr-2 h-4 w-4 text-blue-500" />;
+      return <FileText className="mr-2 h-4 w-4 text-blue-500 flex-shrink-0" />;
     if (ext && ["png", "jpg", "jpeg", "gif", "svg"].includes(ext))
-      return <Image className="mr-2 h-4 w-4 text-green-500" />;
-    return <FileText className="mr-2 h-4 w-4 text-gray-500" />;
+      return <Image className="mr-2 h-4 w-4 text-green-500 flex-shrink-0" />;
+    return <FileText className="mr-2 h-4 w-4 text-gray-500 flex-shrink-0" />;
   };
 
   if (!projectPath) {
@@ -134,16 +134,16 @@ export default function DoksModule() {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/2">
                 Name
               </th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
                 Status
               </th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
                 Kategorie
               </th>
-              <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
                 Aktionen
               </th>
             </tr>
@@ -164,28 +164,32 @@ export default function DoksModule() {
                     selectedDocs.includes(f.path) ? "bg-gray-100" : ""
                   }`}
                   onClick={() => toggleSelect(f.path)}>
-                  <td className="px-4 py-2 whitespace-nowrap">
-                    <div className="flex items-center">
+                  <td className="px-4 py-2 w-1/2">
+                    <div className="flex items-center min-w-0">
                       {f.type === "directory" ? (
-                        <Folder className="mr-2 h-4 w-4" />
+                        <Folder className="mr-2 h-4 w-4 flex-shrink-0" />
                       ) : (
                         getFileIcon(f.name)
                       )}
-                      {metadataMap[f.path]?.name ?? f.name}
+                      <span className="truncate" title={metadataMap[f.path]?.name ?? f.name}>
+                        {metadataMap[f.path]?.name ?? f.name}
+                      </span>
                       {f.type === "file" && f.hasParser && (
-                        <span className="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-sky-100 text-sky-800">
+                        <span className="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-sky-100 text-sky-800 flex-shrink-0">
                           struct
                         </span>
                       )}
                     </div>
                   </td>
-                  <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500 w-20">
                     {f.parserStatus || "-"}
                   </td>
-                  <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
-                    {metadataMap[f.path]?.kategorie ?? "-"}
+                  <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500 w-24">
+                    <span className="truncate block" title={metadataMap[f.path]?.kategorie ?? "-"}>
+                      {metadataMap[f.path]?.kategorie ?? "-"}
+                    </span>
                   </td>
-                  <td className="px-4 py-2 whitespace-nowrap text-right">
+                  <td className="px-4 py-2 whitespace-nowrap text-right w-20">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button
