@@ -125,9 +125,11 @@ export async function updateKriterienReviewStatus(
       ...currentData,
       lastModified: new Date().toISOString(),
       reviewStatus: {
+        aiReviewed: currentData.reviewStatus?.aiReviewed ?? true,
+        humanReviewed: currentData.reviewStatus?.humanReviewed ?? false,
+        lastReviewDate: new Date().toISOString(),
         ...currentData.reviewStatus,
-        ...reviewStatus,
-        lastReviewDate: new Date().toISOString()
+        ...reviewStatus
       }
     };
 

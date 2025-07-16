@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(request: NextRequest) {
   try {
     const callbackData = await request.json();
-    const clientIp = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
+    const clientIp = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
 
     // Log the received callback data
     // In a production environment, you might want to process this data further,
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
 // Optional: Handle GET requests to this endpoint, e.g., for verification by the external service
 export async function GET(request: NextRequest) {
   console.log(
-    `ℹ️ Received GET request on generic callback endpoint from ${request.ip || 'unknown'}.`
+    `ℹ️ Received GET request on generic callback endpoint from ${request.headers.get('x-forwarded-for') || 'unknown'}.`
   );
   return NextResponse.json({
     message: "Generic callback endpoint is active. Use POST to send job updates.",

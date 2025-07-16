@@ -7,9 +7,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { jobId: string } }
+  { params }: { params: Promise<{ jobId: string }> }
 ) {
-  const { jobId } = params;
+  const { jobId } = await params;
   console.warn(
     `POST /api/worker/jobs/${jobId}/callback - This endpoint is deprecated and likely unused. The external parser should call the generic callback.`
   );

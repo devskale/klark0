@@ -28,7 +28,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { KriterienExtraktion, validateKriterienExtraktion } from "@/types/kriterien";
+import { KriterienExtraktion, validateKriterienExtraktion, KriteriumObjekt } from "@/types/kriterien";
 import { toast } from "sonner";
 import { AI_QUERIES } from "@/app/api/ai/config";
 import {
@@ -115,6 +115,12 @@ export default function AKriterienPage() {
     apiRequest?: any;
     parseError?: string;
     timestamp?: string;
+    responseHistory?: any[];
+    selectedAiQuery?: string;
+    aabFileName?: string;
+    aabContentLength?: number;
+    apiEndpoint?: string;
+    requestBody?: any;
   }>({});
   
   // Effect to load saved criteria when component mounts or project changes
@@ -569,7 +575,7 @@ export default function AKriterienPage() {
                         </Button>
                       </CollapsibleTrigger>
                       <CollapsibleContent className="space-y-2 mt-2">
-                        {criteria.map((kriterium, index) => (
+                        {criteria.map((kriterium: KriteriumObjekt, index: number) => (
                           <div key={index} className="border rounded p-3 space-y-2">
                             <div className="font-medium">{kriterium.kriterium}</div>
                             <div className="space-y-1">
