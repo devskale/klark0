@@ -3,13 +3,22 @@ import { streamGeminiResponse } from "@/lib/ai/geminiApi";
 
 export async function POST(request: Request) {
   try {
-    const { queryType, context } = await request.json();
+    const { queryType, context, maxContextLength } = await request.json();
     console.log(
       "AI Stream request - queryType:",
       queryType,
       "context length:",
-      context?.length || 0
+      context?.length || 0,
+      "max context length:",
+      maxContextLength || "unlimited"
     );
+
+    // Apply context length limit if specified
+    let limitedContext = context;
+    if (maxContextLength && typeof maxContextLength === 'number' && context && context.length > maxContextLength) {
+      limitedContext = context.substring(0, maxContextLength);
+      console.log(`Context truncated from ${context.length} to ${limitedContext.length} characters`);
+    }
 
     const encoder = new TextEncoder();
 
@@ -18,7 +27,7 @@ export async function POST(request: Request) {
         try {
           await streamGeminiResponse(
             queryType,
-            context,
+            limitedContext,
             (chunk: string) => controller.enqueue(encoder.encode(chunk)),
             () => controller.close(),
             (err: any) => {

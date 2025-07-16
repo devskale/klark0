@@ -42,6 +42,16 @@ Anforderungen:
 - [ ] **KI-Funktionen**
   - [x] **Metadaten-Extraktion**: Automatische Extraktion von Metadaten aus Dokumenten.
   - [x] **Kriterien-Extraktion**: Extraktion von Bewertungskriterien aus Ausschreibungen.
+  - [x] **Kontextlängen-Management**: Konfigurierbare maximale Kontextlängen für verschiedene AI-Analysen
+    - [x] API-Endpunkt erweitert um `maxContextLength` Parameter für dynamische Kontextbegrenzung
+    - [x] Dokumentenanalyse (dinfo): 10.000 Zeichen Limit für fokussierte Dokumenttyp-Erkennung
+    - [x] Projektanalyse (ainfo): 500.000 Zeichen Limit für umfassende Projektmetadaten-Extraktion
+    - [x] Automatische Kontextkürzung mit Logging für Transparenz bei Überschreitungen
+    - [x] **Dokumenttyp-spezifische Prompts**: Intelligente Prompt-Auswahl basierend auf Dokumentkontext
+      - [x] Bieterdokumente: Verwendung von DOKUMENTTYP_JSON Prompt für Angebots- und Eignungsnachweis-Analyse
+      - [x] Ausschreibungsdokumente: Verwendung von A_DOKUMENTTYP_JSON Prompt für Ausschreibungsunterlagen-Analyse
+      - [x] Automatische Erkennung über selectedBieter Variable (gesetzt = Bieterdokument, nicht gesetzt = Ausschreibungsdokument)
+      - [x] Dynamische queryType-Bestimmung für korrekte API-Endpunkt-Verarbeitung
     - [x] **Prompt Integration**: KRITERIEN_EXTRAKTION Query zu AI_QUERIES in config.ts hinzufügen
       - [x] Prompt aus kriterien_AAB_extrakt.md in AI-Konfiguration integrieren
       - [x] JSON-Schema Validierung für 4 Hauptkategorien implementieren (TypeScript interfaces in types/kriterien.ts)

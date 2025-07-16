@@ -230,16 +230,23 @@ export default function Info() {
       }
       setAiContext(parserMdContent);
 
-      // 3) prepare & store prompt
-      const queryPrompt = AI_QUERIES.DOKUMENTTYP_JSON;
+      // 3) Determine prompt and query type based on document type
+      // If selectedBieter is set, it's a Bieterdokument, otherwise it's an Ausschreibungsdokument
+      const isBieterDokument = !!selectedBieter;
+      const queryType = isBieterDokument ? "DOKUMENTTYP_JSON" : "A_DOKUMENTTYP_JSON";
+      const queryPrompt = isBieterDokument ? AI_QUERIES.DOKUMENTTYP_JSON : AI_QUERIES.A_DOKUMENTTYP_JSON;
+      
       const fullPrompt = `${queryPrompt}\n\nContext:\n${parserMdContent}`;
-      setAiPrompt(fullPrompt); // 4) stream AI JSON
+      setAiPrompt(fullPrompt); 
+      
+      // 4) stream AI JSON
       const aiRes = await fetch("/api/ai/gem/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          queryType: "DOKUMENTTYP_JSON",
+          queryType: queryType,
           context: parserMdContent, // Use parser's markdown content
+          maxContextLength: 10000, // Limit context to 10,000 characters for document analysis
         }),
       });
 

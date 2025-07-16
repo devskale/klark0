@@ -263,6 +263,7 @@ export default function Info() {
         body: JSON.stringify({
           queryType: "A_INFO",
           context: parserMdContent, // Use parser's markdown content
+          maxContextLength: 200000, // Limit context to 500,000 characters for project analysis
         }),
       });
 
