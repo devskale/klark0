@@ -41,19 +41,35 @@ Anforderungen:
 
 - [ ] **KI-Funktionen**
   - [x] **Metadaten-Extraktion**: Automatische Extraktion von Metadaten aus Dokumenten.
-  - [ ] **Kriterien-Extraktion**: Extraktion von Bewertungskriterien aus Ausschreibungen.
+  - [x] **Kriterien-Extraktion**: Extraktion von Bewertungskriterien aus Ausschreibungen.
     - [x] **Prompt Integration**: KRITERIEN_EXTRAKTION Query zu AI_QUERIES in config.ts hinzufügen
       - [x] Prompt aus kriterien_AAB_extrakt.md in AI-Konfiguration integrieren
       - [x] JSON-Schema Validierung für 4 Hauptkategorien implementieren (TypeScript interfaces in types/kriterien.ts)
       - [x] Test mit Integrations-Test durchgeführt (test/kriterien-test.js)
       - [x] Token-Limits erhöht (maxOutputTokens von 8192 auf 32768) für vollständige JSON-Ausgaben
-    - [ ] **UI Visualisierung**: Kriterienliste aus JSON Response in ainfo/kriterien.tsx darstellen
-      - [ ] AI-Extraktion Button ("Extrakt" mit Sparkles Icon) implementieren
-      - [ ] JSON Response Parser für Eignungskriterien (4 Unterkategorien) erstellen
-      - [ ] Zuschlagskriterien Tabelle mit Los-basierter Struktur entwickeln
-      - [ ] Subunternehmerregelung und formale Anforderungen Listen-UI erstellen
-      - [ ] Loading/Error States und Human-in-the-Loop Bearbeitung hinzufügen
-      - [ ] Expandable Cards für komplexe Kriterienstrukturen implementieren
+    - [x] **UI Visualisierung**: Kriterienliste aus JSON Response in ainfo/kriterien.tsx darstellen
+      - [x] **Quelldokument-Anzeige**: AAB Struktur Markdown-Datei im UI anzeigen
+        - [x] Markdown-Viewer Komponente für Ausschreibungsdokumente integriert
+        - [x] Filesystem-basierte AAB-Dokument Ladung implementiert (ersetzt Sample-Daten)
+        - [x] Automatische AAB-PDF Erkennung im A-Verzeichnis
+        - [x] Parser-Integration für Markdown-Konvertierung (marker, md, etc.)
+        - [x] Tab-basierte Navigation zwischen Quelldokument und Kriterien
+        - [x] Error Handling und Loading States für Dokumenten-Ladung
+      - [x] **AI-Extraktion Workflow**: Prompt-Ausführung gegen Markdown-Datei
+        - [x] AI-Extraktion Button ("Kriterien extrahieren" mit Sparkles Icon) implementiert
+        - [x] Prompt-Ausführung mit AAB-Markdown als Input konfiguriert
+        - [x] Loading States während AI-Verarbeitung angezeigt
+        - [x] Error Handling für fehlgeschlagene AI-Requests implementiert
+      - [x] **JSON Response Verarbeitung**: Strukturierte Darstellung der Kriterien
+        - [x] JSON Response Parser für Eignungskriterien (4 Unterkategorien) erstellt
+        - [x] Zuschlagskriterien Tabelle mit Los-basierter Struktur entwickelt
+        - [x] Subunternehmerregelung und formale Anforderungen Listen-UI erstellt
+        - [x] Expandable Cards für komplexe Kriterienstrukturen implementiert
+      - [ ] **Review-System**: AI- und Human-Review Funktionalität
+        - [x] Review-Status Felder für jedes Kriterium vorbereitet (AI-reviewed, Human-reviewed)
+        - [ ] Bearbeitungs-Modi für manuelle Kriterien-Anpassungen
+        - [ ] Validierungs-Workflow für Human-in-the-Loop Prozesse
+        - [ ] Änderungshistorie und Audit-Trail für Reviews
     - [ ] **Persistierung**: Kriterienliste im Filesystem speichern
       - [ ] API Route /api/fs/kriterien für JSON-Sidecar Dateien erstellen
       - [ ] kriterien.json Format im Projektverzeichnis definieren

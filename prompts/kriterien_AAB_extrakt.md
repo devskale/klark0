@@ -4,6 +4,8 @@ Bitte lese die Allgemeinen Ausschreibungsbedingungen und extrahiere alle relevan
 
 Das JSON-Objekt muss folgende Haupt-Schlüssel haben: `eignungskriterien`, `zuschlagskriterien`, `subunternehmerregelung`, und `formale_anforderungen`.
 
+**WICHTIG: Verwende EXAKT diese Kategorienamen für `eignungskriterien`. Erfinde KEINE neuen Kategorien oder ändere die Namen. Klassifiziere ALLE extrahierten Kriterien in eine dieser vier vordefinierten Kategorien. Wenn ein Kriterium nicht perfekt passt, platziere es in der am besten geeigneten.
+
 1.  **`eignungskriterien`**: Ein Objekt, das die Eignungskriterien enthält. Dieses Objekt muss die folgenden vier Schlüssel enthalten:
     *   `befugnis`
     *   `berufliche_zuverlaessigkeit`
