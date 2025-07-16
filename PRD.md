@@ -36,9 +36,29 @@ Anforderungen:
   - [x] **Dokumentenkonvertierung**: Serverseitige Umwandlung von DOC/PDF in Markdown.
   - [ ] **Anonymisierung**: Schutz sensibler Daten durch KI-basierte NER.
 
+- [ ] **Erweiterte Funktionen (unsortiert)**
+  - [ ] Prompt Templating mit Platzhaltern und Kontexten
+
 - [ ] **KI-Funktionen**
   - [x] **Metadaten-Extraktion**: Automatische Extraktion von Metadaten aus Dokumenten.
   - [ ] **Kriterien-Extraktion**: Extraktion von Bewertungskriterien aus Ausschreibungen.
+    - [x] **Prompt Integration**: KRITERIEN_EXTRAKTION Query zu AI_QUERIES in config.ts hinzufügen
+      - [x] Prompt aus kriterien_AAB_extrakt.md in AI-Konfiguration integrieren
+      - [x] JSON-Schema Validierung für 4 Hauptkategorien implementieren (TypeScript interfaces in types/kriterien.ts)
+      - [x] Test mit Integrations-Test durchgeführt (test/kriterien-test.js)
+      - [x] Token-Limits erhöht (maxOutputTokens von 8192 auf 32768) für vollständige JSON-Ausgaben
+    - [ ] **UI Visualisierung**: Kriterienliste aus JSON Response in ainfo/kriterien.tsx darstellen
+      - [ ] AI-Extraktion Button ("Extrakt" mit Sparkles Icon) implementieren
+      - [ ] JSON Response Parser für Eignungskriterien (4 Unterkategorien) erstellen
+      - [ ] Zuschlagskriterien Tabelle mit Los-basierter Struktur entwickeln
+      - [ ] Subunternehmerregelung und formale Anforderungen Listen-UI erstellen
+      - [ ] Loading/Error States und Human-in-the-Loop Bearbeitung hinzufügen
+      - [ ] Expandable Cards für komplexe Kriterienstrukturen implementieren
+    - [ ] **Persistierung**: Kriterienliste im Filesystem speichern
+      - [ ] API Route /api/fs/kriterien für JSON-Sidecar Dateien erstellen
+      - [ ] kriterien.json Format im Projektverzeichnis definieren
+      - [ ] Speichern/Laden Funktionalität in kriterien.tsx integrieren
+      - [ ] WebDAV Integration für Remote-Speicherung sicherstellen
   - [ ] **Bieterdokumenten-Analyse**: Abgleich von Bieterdokumenten mit Kriterien.
   - [ ] **Dateikategorisierung**: Automatische Kategorisierung von Dokumenten.
   - [ ] **Human-in-the-Loop**: UI zur Validierung und Korrektur von KI-Ergebnissen.
