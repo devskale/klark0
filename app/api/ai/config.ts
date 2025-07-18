@@ -89,7 +89,7 @@ Gib dein Ergebnis ausschließlich im folgenden JSON-Format aus:
 | Kategorie | Typische Dokumente / Inhalte / Begriffe |
 |-----------|-----------------------------------------|
 | Ausschreibungsdokument | Allgemeine Ausschreibungsbedingungen, Rahmenvertrag |
-| Beilage | Leitfaden, Formblatt Erklärung Bieter und ARGE, Formblatt, Erklärung Santionen, Musterbankgarantie, Leistungsverzeichnis, Formblatt Subunternehmerlinste |
+| Beilage | Leitfaden, Formblatt Erklärung Bieter und ARGE, Formblatt, Erklärung Sanktionen, Musterbankgarantie, Leistungsverzeichnis, Formblatt Subunternehmerlinste |
 | Sonstiges | Andere Dokumentenarten |
 
 ---
@@ -99,13 +99,27 @@ Gib dein Ergebnis ausschließlich im folgenden JSON-Format aus:
 
 ---
 
-### Output-Beispiel:
+### Output-Beispiele:
 
 {
+  "Kategorie": "Beilage",
   "Aussteller": "Wiener Wohnen Hausbetreuung GmbH",
   "Dokumententyp": "Musterbankgarantie",
   "Begründung": "Enthält Vorlage einer Bankgarantie."
-}`,
+}
+  
+{
+  "Kategorie": "Ausschreibungsdokument",
+  "Aussteller": "Wiener Wohnen Hausbetreuung GmbH",
+  "Dokumententyp": "Rahmenvertrag",
+  "Begründung": "Enthält den Vertragsinhalt des Vergabeprojekts."
+}
+
+---
+
+START KONTEXT:
+
+`,
   METADATEN_JSON: `### Prompt:
 
 Du bist ein Experte für die Extraktion von Metadaten aus Dokumenten, insbesondere im Kontext von Ausschreibungen und Geschäftsunterlagen. Deine Aufgabe ist es, flexibel und intelligent Metadaten zu generieren, die auf dem spezifischen Typ des Dokuments und seiner Kernaussage basieren.
