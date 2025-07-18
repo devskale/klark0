@@ -299,21 +299,57 @@ Gib das Ergebnis ausschließlich im folgenden JSON-Format aus:
 Du bist ein Experte für die Extraktion von Metadaten aus Dokumenten, insbesondere im Kontext von Ausschreibungen und Geschäftsunterlagen. Deine Aufgabe ist es, flexibel und intelligent Metadaten zu generieren.
 Die Informationen können nur aus dem Dokumenttyp: Allgemeinen Ausschreibungsunterlagen zuverlässig extrahiert werden. Sollte dieser Dokumenttyp nicht zur Verfügung stehen gib als Antwort NONE zurück.
 
+**WICHTIG:** Gib deine Antwort **ausschließlich** als JSON-Objekt zurück. Schreibe **keinen zusätzlichen Text, keine Erklärungen, keine Markdown-Codeblöcke**. Das JSON muss exakt die unten vorgegebenen Felder enthalten. Wenn ein Wert nicht gefunden werden kann, setze ihn auf "NONE" (für Strings) oder ein leeres Array [] (für Schlagworte).
+
 Deine Aufgabe:
-1. Analysiere das Dokument: Allgemeneinen Ausschreibungsunterlagen sorgfältig.
-2. Extrahiere die folgenden Metadatenfelder:
-    - Vergabestelle: zB Wiener Wohnen Hausbetreuung GmbH
-    - Addresse: (der Vergabestelle)
-    - Dokumentdatum: (YYYY-MM-DD)
-    - Sprache
-    - Schlagworte (Keywords/Kernbegriffe als Array)
-    - Referenznummer (Interne Projektnummer, Projektnummer etc., Bsp: AS 2023.020043)
-    - Ausschreibungsstart (YYYY-MM-DD)
-    - Ausschreibungsende (YYYY-MM-DD)
-    - Projekttitel (max 3 Worte)
-    - Projekt Kurzbeschreibung (1 Satz): Öffentliches Vergabeverfahren über PROJEKTINHALT an den Auftraggeber.
-    - Projektstart (falls angegeben, ansonsten NONE) (YYYY-MM-DD)
-    - Projektende (falls angegeben, ansonsten NONE) (YYYY-MM-DD)
+1. Analysiere das Dokument: Allgemeinen Ausschreibungsunterlagen sorgfältig.
+2. Extrahiere die folgenden Metadatenfelder und gib sie im folgenden JSON-Format zurück:
+
+{
+  "Vergabestelle": "zB Wiener Wohnen Hausbetreuung GmbH",
+  "Addresse": "(der Vergabestelle)",
+  "Dokumentdatum": "(YYYY-MM-DD oder NONE)",
+  "Sprache": "Deutsch",
+  "Schlagworte": ["Ausschreibung", "Vergabeverfahren", ...],
+  "Referenznummer": "(Interne Projektnummer, Projektnummer etc., zB AS 2023.020043)",
+  "Ausschreibungsstart": "(YYYY-MM-DD oder NONE)",
+  "Ausschreibungsende": "(YYYY-MM-DD oder NONE)",
+  "Projekttitel": "(max 3 Worte)",
+  "Projekt Kurzbeschreibung": "(1 Satz: Öffentliches Vergabeverfahren über PROJEKTINHALT an den Auftraggeber.)",
+  "Projektstart": "(YYYY-MM-DD oder NONE)",
+  "Projektende": "(YYYY-MM-DD oder NONE)"
+}
+
+**Beispiel für eine korrekte Antwort:**
+{
+  "Vergabestelle": "Wiener Wohnen Hausbetreuung GmbH",
+  "Addresse": "1030 Wien, Erdbergstraße 200",
+  "Dokumentdatum": "NONE",
+  "Sprache": "Deutsch",
+  "Schlagworte": [
+    "Ausschreibung",
+    "Vergabeverfahren",
+    "Reinigungsmaterial",
+    "Lieferauftrag",
+    "Rahmenvertrag",
+    "Offenes Verfahren",
+    "BVergG 2018",
+    "Wien",
+    "Wiener Wohnen Hausbetreuung GmbH",
+    "Umwelt-Zertifizierung",
+    "ISO-Zertifizierung",
+    "Produktionsstandort"
+  ],
+  "Referenznummer": "2022_10001_AAB_EV",
+  "Ausschreibungsstart": "NONE",
+  "Ausschreibungsende": "2023-05-02",
+  "Projekttitel": "Reinigungsmaterial Lieferauftrag",
+  "Projekt Kurzbeschreibung": "Öffentliches Vergabeverfahren über die Lieferung von Reinigungsmaterial an den Auftraggeber.",
+  "Projektstart": "2023-08-01",
+  "Projektende": "2027-08-01"
+}
+
+Gib **nur** das JSON-Objekt zurück, ohne weitere Kommentare oder Formatierungen.
 
 KONTEXT:
 `,
@@ -323,7 +359,7 @@ Du bist ein Experte für die Extraktion von Metadaten aus Dokumenten, insbesonde
 Die Informationen können nur aus dem Dokumenttyp: Allgemeinen Ausschreibungsunterlagen zuverlässig extrahiert werden. Sollte dieser Dokumenttyp nicht zur Verfügung stehen gib als Antwort NONE zurück.
 
 Deine Aufgabe:
-1. Analysiere das Dokument: Allgemeneinen Ausschreibungsunterlagen sorgfältig.
+1. Analysiere das Dokument: Allgemeinen Ausschreibungsunterlagen sorgfältig.
 2. Extrahiere die folgenden Metadatenfelder:
     - Vergabestelle: zB Wiener Wohnen Hausbetreuung GmbH
     - Addresse (der Vergabestelle)
