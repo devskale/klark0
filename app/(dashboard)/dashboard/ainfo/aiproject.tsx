@@ -33,6 +33,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+
 /**
  * AI Project Analysis component for Ausschreibungsprojekt
  * Provides AI-powered analysis of project documents and metadata extraction
@@ -75,7 +77,7 @@ export default function AiProject() {
 
   // Fetch project directory contents from A directory
   const { data: projectContents, mutate: mutateContents } = useSWR(
-    aDirectory ? [aDirectory, { fileSystemType: "webdav" }] : null,
+    aDirectory ? [aDirectory, { fileSystemType: "webdav" }, basePath] : null,
     fileTreeFetcher,
     { revalidateOnFocus: false }
   );
@@ -85,7 +87,7 @@ export default function AiProject() {
    */
   const checkKiConfigStatus = async () => {
     try {
-      const response = await fetch("/api/ai/test-settings");
+      const response = await fetch(`${basePath}/api/ai/test-settings`);
       if (response.ok) {
         const data = await response.json();
         setKiConfigStatus({
@@ -174,7 +176,7 @@ export default function AiProject() {
         if (extractedDoc) {
           // Use /api/fs/read endpoint to get actual file content, not metadata
           const params = new URLSearchParams({ path: extractedDoc.path });
-          const contentResponse = await fetch(`/api/fs/read?${params.toString()}`);
+          const contentResponse = await fetch(`${basePath}/api/fs/read?${params.toString()}`);
           if (contentResponse.ok) {
             const content = await contentResponse.text();
             setDocumentContent(content);
@@ -237,7 +239,7 @@ export default function AiProject() {
         const mdDirectory = aDirectory ? `${aDirectory}md/` : null;
         if (mdDirectory) {
           try {
-            const mdContentsResponse = await fetch(`/api/fs?path=${encodeURIComponent(mdDirectory)}`);
+            const mdContentsResponse = await fetch(`${basePath}/api/fs?path=${encodeURIComponent(mdDirectory)}`);
             if (mdContentsResponse.ok) {
               const mdContents = await mdContentsResponse.json();
               const extractedDocs = mdContents.filter((item: any) => {
@@ -360,7 +362,7 @@ export default function AiProject() {
 
       // Store API request for debug info
       setLastApiRequest({
-        url: "/api/ai/gem/stream",
+        url: `${basePath}/api/ai/gem/stream`,
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -371,7 +373,7 @@ export default function AiProject() {
         contextPreview: documentContent.substring(0, 500) + (documentContent.length > 500 ? "..." : "")
       });
 
-      const response = await fetch("/api/ai/gem/stream", {
+      const response = await fetch(`${basePath}/api/ai/gem/stream`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

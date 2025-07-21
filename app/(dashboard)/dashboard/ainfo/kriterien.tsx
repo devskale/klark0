@@ -40,6 +40,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+
 // Interface für Review-Status
 interface ReviewStatus {
   aiReviewed: boolean;
@@ -80,7 +82,7 @@ export default function AKriterienPage() {
   // Fetch A directory contents to find AAB files (A = Ausschreibungs directory)
   const aDirectory = projectDir ? `${projectDir}A/` : null;
   const { data: projectContents, error: entriesError } = useSWR(
-    aDirectory ? [aDirectory, { fileSystemType: "webdav" }] : null,
+    aDirectory ? [aDirectory, { fileSystemType: "webdav" }, basePath] : null,
     fileTreeFetcher,
     { revalidateOnFocus: false }
   );
@@ -198,7 +200,7 @@ export default function AKriterienPage() {
         }
 
         // Load parser's markdown content
-        const readRes = await fetch("/api/fs/read", {
+        const readRes = await fetch(`${basePath}/api/fs/read`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -261,7 +263,7 @@ export default function AKriterienPage() {
       setDebugInfo(prev => ({
         ...prev,
         apiRequest: {
-          url: '/api/ai/gem/stream',
+          url: `${basePath}/api/ai/gem/stream`,
           method: 'POST',
           body: apiRequestBody,
           timestamp: new Date().toISOString(),
@@ -269,7 +271,7 @@ export default function AKriterienPage() {
         }
       }));
       
-      const response = await fetch('/api/ai/gem/stream', {
+      const response = await fetch(`${basePath}/api/ai/gem/stream`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -298,7 +300,7 @@ export default function AKriterienPage() {
         selectedAiQuery,
         aabFileName: selectedAabFile?.name || 'unknown',
         aabContentLength: aabContent.length,
-        apiEndpoint: '/api/ai/gem/stream',
+        apiEndpoint: `${basePath}/api/ai/gem/stream`,
         requestBody: apiRequestBody
       };
       

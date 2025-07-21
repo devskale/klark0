@@ -13,6 +13,8 @@ import { EditableText } from "@/components/ui/editable-text";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AI_QUERIES } from "@/app/api/ai/config";
 
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+
 /**
  * Info component for Ausschreibungsprojekt (tender project) information
  * Provides editable fields for project metadata with AI-powered initialization
@@ -34,7 +36,7 @@ export default function Info() {
     metadataPath,
     async (path) => {
       const params = new URLSearchParams({ path });
-      const res = await fetch(`/api/fs/metadata?${params.toString()}`);
+      const res = await fetch(`${basePath}/api/fs/metadata?${params.toString()}`);
       if (!res.ok) return null;
       return res.json();
     },
@@ -44,7 +46,7 @@ export default function Info() {
   // Fetch A directory contents to find AAB files (A = Ausschreibungs directory)
   const aDirectory = projectDir ? `${projectDir}A/` : null;
   const { data: projectContents, error: entriesError } = useSWR(
-    aDirectory ? [aDirectory, { fileSystemType: "webdav" }] : null,
+    aDirectory ? [aDirectory, { fileSystemType: "webdav" }, basePath] : null,
     fileTreeFetcher,
     { revalidateOnFocus: false }
   );
@@ -170,7 +172,7 @@ export default function Info() {
       };
       
       // Call metadata API
-      const res = await fetch("/api/fs/metadata", {
+      const res = await fetch(`${basePath}/api/fs/metadata`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -228,7 +230,7 @@ export default function Info() {
       setAiContextPath(selectedParserMdPath); // Store the path for dev info
 
       // 2) Load selected parser's markdown content
-      const readRes = await fetch("/api/fs/read", {
+      const readRes = await fetch(`${basePath}/api/fs/read`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -257,7 +259,7 @@ export default function Info() {
       setAiPrompt(fullPrompt);
 
       // 4) stream AI JSON
-      const aiRes = await fetch("/api/ai/gem/stream", {
+      const aiRes = await fetch(`${basePath}/api/ai/gem/stream`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

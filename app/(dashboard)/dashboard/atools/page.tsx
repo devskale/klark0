@@ -32,7 +32,8 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+const fetcher = (url: string) => fetch(`${basePath}${url}`).then((res) => res.json());
 
 type Tool = {
   id: number;
@@ -177,7 +178,7 @@ export default function AtoolsPage() {
             : {}, // Reduced to 2 seconds max for fakejob, random duration for fake_task
       };
     console.log("Submitting job request with payload:", JSON.stringify(payload, null, 2));
-    return await fetch("/api/worker/jobs", {
+    return await fetch(`${basePath}/api/worker/jobs`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -359,7 +360,7 @@ export default function AtoolsPage() {
     }
 
     try {
-      const apiUrl = `/api/worker/jobs/${jobInfo.jobId}`;
+      const apiUrl = `${basePath}/api/worker/jobs/${jobInfo.jobId}`;
       console.log(`📡 Making request to: ${apiUrl}`);
 
       const response = await fetch(apiUrl);
@@ -416,7 +417,7 @@ export default function AtoolsPage() {
     if (isListModalOpen && fetchedTools.length === 0 && !fetching) {
       setFetching(true);
       setFetchError(null);
-      fetch("/api/worker/list")
+      fetch(`${basePath}/api/worker/list`)
         .then(async (res) => {
           if (!res.ok) throw new Error(`Fehler beim Laden der Tools: Status ${res.status}`);
           return res.json();

@@ -30,11 +30,13 @@ export default function DoksModule() {
     ? `${projectPath}/A`
     : null;
 
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
   const { data: docs, error } = useSWR<FileTreeEntry[]>(
     docsPath
       ? [
           docsPath,
           { noshowList: ["archive", ".archive"], fileSystemType: "webdav" },
+          basePath,
         ]
       : null,
     fileTreeFetcher,

@@ -39,7 +39,7 @@ import useSWR from "swr";
 import { useProject } from "@/context/ProjectContext";
 import { trimName } from "@/lib/trim";
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+const fetcher = (url: string) => fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}${url}`).then((res) => res.json());
 
 function UserMenu() {
   const { data: user } = useSWR("/api/user", fetcher);

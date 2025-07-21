@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CreditCard, Database, Zap, Code } from "lucide-react";
 import { Terminal } from "./terminal";
+import Link from "next/link";
 
 export default function HomePage() {
   return (
@@ -12,11 +13,11 @@ export default function HomePage() {
               <h1 className="text-4xl font-bold text-gray-900 tracking-tight sm:text-4xl md:text-5xl">
                 <div className="flex items-center gap-2">
                   <img
-                    src="/android-chrome-192x192.png"
+                    src="/dev/android-chrome-192x192.png"
                     alt="Logo"
                     className="h-10 w-auto"
                   />
-                  kontext<sup>one</sup>
+                  kontext<sup>one</sup> DEV-MODUS
                 </div>
                 <span className="text-2xl block text-orange-400 mt-2 sm:text-2xl md:text-3xl">
                   Digitale Transparente Vergabeaudits
@@ -28,7 +29,7 @@ export default function HomePage() {
                 vertrauenswürdige KI.
               </p>
               <div className="mt-8 sm:max-w-lg sm:mx-auto sm:text-center lg:text-left lg:mx-0">
-                <a href="/dashboard">
+                <Link href="/dashboard">
                   <Button
                     size="lg"
                     variant="outline"
@@ -36,7 +37,7 @@ export default function HomePage() {
                     Zum Projekt Dashboard
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
-                </a>
+                </Link>
               </div>
               <div className="mt-auto pt-8 sm:max-w-lg sm:mx-auto sm:text-center lg:text-left lg:mx-0">
                 <div className="flex flex-col items-start text-sm text-gray-500">
@@ -148,14 +149,14 @@ export default function HomePage() {
               </p>
             </div>
             <div className="mt-8 lg:mt-0 flex justify-center lg:justify-end">
-              <a href="/dashboard" target="_blank">
+              <Link href="/dashboard" target="_blank">
                 <Button
                   size="lg"
                   className="text-lg rounded-full bg-orange-500 hover:bg-orange-600 text-white">
                   Jetzt Projekt anlegen
                   <ArrowRight className="ml-3 h-6 w-6" />
                 </Button>
-              </a>
+              </Link>
             </div>
           </div>
         </div>

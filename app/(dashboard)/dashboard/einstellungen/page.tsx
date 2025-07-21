@@ -30,7 +30,8 @@ import {
 import { Command as CommandPrimitive } from "cmdk";
 import { toast } from "sonner";
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+const fetcher = (url: string) => fetch(`${basePath}${url}`).then((res) => res.json());
 
 // Define FileSystemType
 export type FileSystemType =
@@ -387,7 +388,7 @@ export default function GeneralPage() {
         });
       }
 
-      const response = await fetch("/api/settings?key=fileSystem", {
+      const response = await fetch(`${basePath}/api/settings?key=fileSystem`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newSettings),
@@ -719,7 +720,7 @@ export default function GeneralPage() {
                   const formData = new FormData(e.currentTarget);
                   const newInfo = Object.fromEntries(formData.entries());
                   try {
-                    await fetch("/api/settings?key=info", {
+                    await fetch(`${basePath}/api/settings?key=info`, {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify(newInfo),
@@ -814,7 +815,7 @@ export default function GeneralPage() {
                     ])
                   );
                   try {
-                    await fetch("/api/settings?key=externalWebsites", {
+                    await fetch(`${basePath}/api/settings?key=externalWebsites`, {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify(newSettings),
@@ -970,7 +971,7 @@ export default function GeneralPage() {
                     (newSettings as any).parserUrl = parserUrl;
                   }
                   try {
-                    await fetch("/api/settings?key=markdownKonversion", {
+                    await fetch(`${basePath}/api/settings?key=markdownKonversion`, {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify(newSettings),
@@ -1160,7 +1161,7 @@ export default function GeneralPage() {
                     (newSettings as any).anonymizerUrl = anonymizerUrl;
                   }
                   try {
-                    await fetch("/api/settings?key=personendaten", {
+                    await fetch(`${basePath}/api/settings?key=personendaten`, {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify(newSettings),
@@ -1421,7 +1422,7 @@ export default function GeneralPage() {
 
                   try {
                     const response = await fetch(
-                      "/api/settings?key=kiEinstellungen",
+                      `${basePath}/api/settings?key=kiEinstellungen`,
                       {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },

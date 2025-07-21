@@ -32,19 +32,22 @@ export function normalizePath(path: string): string {
  * Simplified file tree fetcher that uses database-driven configuration
  * No more need to pass WebDAV credentials in parameters
  */
-export const fileTreeFetcher = async ([path, options]: [
+export const fileTreeFetcher = async ([path, options, basePath = ""]: [
   string,
-  FileTreeFetcherOptions?
+  FileTreeFetcherOptions?,
+  string?
 ]): Promise<FileTreeEntry[]> => {
   const noshowList = options?.noshowList || ["archive", ".archive"];
 
-  console.log("fileTreeFetcher called with:", { path, options });
+  console.log("fileTreeFetcher called with:", { path, options, basePath });
 
   // Fetch filesystem settings to get the base path if no path is provided
   let finalPath = path;
   if (!path || path === "/") {
     try {
-      const settingsResponse = await fetch("/api/settings?key=fileSystem");
+      const settingsResponse = await fetch(
+        `${basePath}/api/settings?key=fileSystem`
+      );
       if (settingsResponse.ok) {
         const settings = await settingsResponse.json();
         if (settings.basePath) {
@@ -68,9 +71,12 @@ export const fileTreeFetcher = async ([path, options]: [
     path: finalPath,
   });
 
-  console.log("Making fetch request to:", `/api/fs?${queryParams.toString()}`);
+  console.log(
+    "Making fetch request to:",
+    `${basePath}/api/fs?${queryParams.toString()}`
+  );
 
-  const response = await fetch(`/api/fs?${queryParams.toString()}`);
+  const response = await fetch(`${basePath}/api/fs?${queryParams.toString()}`);
   console.log("Response status:", response.status, response.statusText);
 
   if (!response.ok) {
@@ -97,7 +103,9 @@ export const fileTreeFetcher = async ([path, options]: [
       path: indexFilePath,
     });
 
-    const indexResponse = await fetch(`/api/fs?${indexParams.toString()}`);
+    const indexResponse = await fetch(
+      `${basePath}/api/fs?${indexParams.toString()}`
+    );
     if (indexResponse.ok) {
       const indexJson = await indexResponse.json();
       if (indexJson && Array.isArray(indexJson.files)) {
@@ -142,7 +150,9 @@ export const fileTreeFetcher = async ([path, options]: [
           parserDefault: pInfo?.default || "",
         };
       })
-      .filter((entry) => normalizePath(entry.path) !== normalizePath(finalPath));
+      .filter(
+        (entry) => normalizePath(entry.path) !== normalizePath(finalPath)
+      );
     return entriesWithData;
   }
   throw new Error("Unexpected API response for directory listing");

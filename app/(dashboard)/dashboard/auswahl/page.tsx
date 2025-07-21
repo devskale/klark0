@@ -47,7 +47,8 @@ import type { FileSystemSettings } from "../einstellungen/page";
 
 type FileTreeNode = FileTreeEntry;
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+const fetcher = (url: string) => fetch(`${basePath}${url}`).then((res) => res.json());
 
 // Define reserved directory names
 const reservedDirs = ["B", "archive", "md", "A"];
@@ -139,7 +140,7 @@ export default function VaultPage() {
       const params = new URLSearchParams({
         path: `${selectedProject}/B/${newBieterName}`,
       });
-      const res = await fetch(`/api/fs/mkdir?${params.toString()}`, {
+      const res = await fetch(`${basePath}/api/fs/mkdir?${params.toString()}`, {
         method: "POST",
       });
       if (res.ok) {
@@ -164,7 +165,7 @@ export default function VaultPage() {
       path: bieterPath,
       destination: `${selectedProject}/B/archive/${bieterName}`, // Ensure selectedProject is used
     });
-    const res = await fetch(`/api/fs/rename?${params.toString()}`, {
+    const res = await fetch(`${basePath}/api/fs/rename?${params.toString()}`, {
       method: "POST",
     });
     if (res.ok) {
@@ -190,7 +191,7 @@ export default function VaultPage() {
     const params = new URLSearchParams({
       path: bieterPath,
     });
-    const res = await fetch(`/api/fs/delete?${params.toString()}`, {
+    const res = await fetch(`${basePath}/api/fs/delete?${params.toString()}`, {
       method: "POST",
     });
     if (res.ok) {
@@ -222,6 +223,7 @@ export default function VaultPage() {
             noshowList: fileSystemConfig.noshowList,
             fileSystemType: fileSystemConfig.type,
           },
+          basePath,
         ]
       : null,
     fileTreeFetcher,
@@ -242,6 +244,7 @@ export default function VaultPage() {
             noshowList: fileSystemConfig.noshowList,
             fileSystemType: fileSystemConfig.type,
           },
+          basePath,
         ]
       : null,
     fileTreeFetcher,
@@ -260,7 +263,7 @@ export default function VaultPage() {
       const params = new URLSearchParams({
         path: `${fileSystemConfig.basePath}/${newProjectName}`,
       });
-      const res = await fetch(`/api/fs/mkdir?${params.toString()}`, {
+      const res = await fetch(`${basePath}/api/fs/mkdir?${params.toString()}`, {
         method: "POST",
       });
       if (res.ok) {
@@ -285,7 +288,7 @@ export default function VaultPage() {
       path: projectPath,
       destination: `${fileSystemConfig.basePath}/archive/${projectName}`,
     });
-    const res = await fetch(`/api/fs/rename?${params.toString()}`, {
+    const res = await fetch(`${basePath}/api/fs/rename?${params.toString()}`, {
       method: "POST",
     });
     if (res.ok) {
@@ -308,7 +311,7 @@ export default function VaultPage() {
     const params = new URLSearchParams({
       path: projectPath,
     });
-    const res = await fetch(`/api/fs/delete?${params.toString()}`, {
+    const res = await fetch(`${basePath}/api/fs/delete?${params.toString()}`, {
       method: "POST",
     });
     if (res.ok) {
