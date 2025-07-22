@@ -30,6 +30,16 @@ Anforderungen:
   - [ ] **Benutzerrollen-Konsolidierung**: Überprüfung und Analyse des Benutzerflusses, Login, Teamauswahl, gemeinsame Team-Einstellungen
   - [ ] **Startbildschirm-Icons hinzufügen**: FFG, TU Wien, HPCC Logos
   - [ ] **Dokumentenserver**: Worker-Management (automatisches Parsen hochgeladener Dokumente)
+  - [ ] Auswahl Browser: Multiple File Uploads, Zip uploads, Big file uploads, Downloads.
+  - [ ] project images: preview and generative image gen.  
+- [ ] Kriterienliste
+  - [ ] Vorauswahl Detektion: wurden alle Dokumente abgegeben. Alleine, subunternehmer ider Bietergemeinschaft? wurden alle formblätter abgegeben?
+  - [ ] Pflicht, Optional, Oder Kriterien
+  - [ ] Allgemeine Kriterien sind zu umfangreich.
+- [ ] Bieterinfo
+  - [ ] Preis, Preisspiegel
+- [ ] Ausschreiber Info
+  - [ ] Preisspiegel, wieviele Lose wurden wie oft abegeben, welche lose nicht.
 - [ ] **KI-Funktionen**
   - [x] **KI-Funktionen**: Metadaten- und Kriterien-Extraktion, Kontextlängen-Management (10k/500k Zeichen Limits) mit automatischer Kürzung und Logging
     - [x] **Dokumenttyp-spezifische Prompts**: Automatische Erkennung und Verarbeitung von Bieter-/Ausschreibungsdokumenten mit spezifischen Prompts
