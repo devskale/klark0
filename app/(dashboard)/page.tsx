@@ -74,6 +74,75 @@ export default function HomePage() {
                   </div>
                 </div>
               </div>
+              <div className="mt-auto pt-8 sm:max-w-lg sm:mx-auto sm:text-center lg:text-left lg:mx-0">
+                <div className="flex flex-col items-start text-sm text-gray-500">
+                  <a
+                    href="https://skale.dev"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center hover:text-gray-700">
+                    Partner
+                  </a>
+                  <div className="flex items-center gap-2 mt-2">
+                    <a
+                      href="https://www.tuwien.ac.at/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="TU-Wien"
+                      className="mr-2">
+                      <img
+                        src="/tu.png"
+                        alt="tu informatics"
+                        className="h-7 w-auto grayscale hover:grayscale-0 transition-all"
+                      />
+                    </a>
+                    <a
+                      href="https://ffg.at"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="ffg">
+                      <img
+                        src="/FFG_Logo.png"
+                        alt="FFG"
+                        className="h-7 w-auto grayscale hover:grayscale-0 transition-all"
+                      />
+                    </a>
+                    <a
+                      href="https://commission.europa.eu/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="Euopäische Kommission kofinanziert">
+                      <img
+                        src="/eu_co_funded_en.jpg"
+                        alt="FFG"
+                        className="h-7 w-auto grayscale hover:grayscale-0 transition-all"
+                      />
+                    </a>
+                    <a
+                      href="https://eurohpc-ju.europa.eu/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="eurohpc">
+                      <img
+                        src="/eurohpc.png"
+                        alt="eurohpc"
+                        className="h-7 w-auto grayscale hover:grayscale-0 transition-all"
+                      />
+                    </a>
+                    <a
+                      href="https://eurocc-austria.at/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="eurocc austria">
+                      <img
+                        src="/euroccaustria.png"
+                        alt="euroccaustria"
+                        className="h-7 w-auto grayscale hover:grayscale-0 transition-all"
+                      />
+                    </a>
+                  </div>
+                </div>
+              </div>
             </div>
             <div className="mt-12 relative sm:max-w-lg sm:mx-auto lg:mt-0 lg:max-w-none lg:mx-0 lg:col-span-6 lg:flex lg:items-center">
               <Terminal />
