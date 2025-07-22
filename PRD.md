@@ -38,6 +38,10 @@ Anforderungen:
 
 - [ ] **Erweiterte Funktionen (unsortiert)**
   - [ ] Prompt Templating mit Platzhaltern und Kontexten
+  - [ ] **Basispfad-Konsolidierung**: Code-Anpassung zur Nutzung eines konsistenten Basispfads (z.B. `/dev` oder `/v1`)
+  - [ ] **Benutzerrollen-Konsolidierung**: Überprüfung und Analyse des Benutzerflusses, Login, Teamauswahl, gemeinsame Team-Einstellungen
+  - [ ] **Startbildschirm-Icons hinzufügen**: FFG, TU Wien, HPCC Logos
+  - [ ] **Dokumentenserver**: Worker-Management (automatisches Parsen hochgeladener Dokumente)
 
 - [ ] **KI-Funktionen**
   - [x] **Metadaten-Extraktion**: Automatische Extraktion von Metadaten aus Dokumenten.
