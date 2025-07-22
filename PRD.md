@@ -31,6 +31,7 @@ Anforderungen:
   - [ ] **Startbildschirm-Icons hinzufügen**: FFG, TU Wien, HPCC Logos
   - [ ] **Dokumentenserver**: Worker-Management (automatisches Parsen hochgeladener Dokumente)
   - [ ] Auswahl Browser: Multiple File Uploads, Zip uploads, Big file uploads, Downloads.
+  - [ ] Safety: füge Privatparameter zu doks, bieter oder projekte. solche dokumente sollten nicht öffentlich zugänglich sein.
   - [ ] project images: preview and generative image gen.  
 - [ ] Kriterienliste
   - [ ] Vorauswahl Detektion: wurden alle Dokumente abgegeben. Alleine, subunternehmer ider Bietergemeinschaft? wurden alle formblätter abgegeben?

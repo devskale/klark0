@@ -1,0 +1,62 @@
+server {
+    root /var/www/html;
+    index index.html index.htm index.nginx-debian.html;
+    server_name rag-eval.ds-ifs.tuwien.ac.at; # managed by Certbot
+    
+    # Redirect ONLY root-level images to /dev (exclude if already under /dev)
+    location ~* ^/([^/]+\.(png|jpg|jpeg|gif|ico|svg))$ {
+        # Only redirect if the request doesn't already contain /dev
+        if ($request_uri !~ ^/dev/) {
+            return 301 /dev/$1;
+        }
+        # If it already contains /dev, let it fall through to the /dev location
+        return 404;
+    }
+    
+    # Proxy all /dev requests to Next.js
+    location /dev {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+        
+        # Important: Don't modify the URI, pass it exactly as received
+        proxy_redirect off;
+        
+        # Timeout settings
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+        
+        # Buffer settings
+        proxy_buffering on;
+        proxy_buffer_size 128k;
+        proxy_buffers 4 256k;
+        proxy_busy_buffers_size 256k;
+    }
+    
+    location / {
+        # First attempt to serve request as file, then
+        # as directory, then fall back to displaying a 404.
+        try_files $uri $uri/ =404;
+    }
+
+    listen [::]:443 ssl ipv6only=on; # managed by Certbot
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/rag-eval.ds-ifs.tuwien.ac.at/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/rag-eval.ds-ifs.tuwien.ac.at/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+}
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name rag-eval.ds-ifs.tuwien.ac.at;
+    return 301 https://$host$request_uri;
+}
