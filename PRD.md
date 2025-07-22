@@ -26,10 +26,11 @@ Anforderungen:
 - [ ] **Erweiterte Funktionen (unsortiert)**
   - [ ] enhance prompt definition with, maxInputLength (chars), maxOutputTokens
   - [ ] Prompt Templating mit Platzhaltern und Kontexten
-  - [ ] **Basispfad-Konsolidierung**: Code-Anpassung zur Nutzung eines konsistenten Basispfads (z.B. `/dev` oder `/v1`)
+  - [ ] **Basispfad-Konsolidierung**: Code-Anpassung zur Nutzung eines konsistenten Basispfads (z.B. `/dev` oder `/v1`), in git dev/basepath branch
   - [ ] **Benutzerrollen-Konsolidierung**: Überprüfung und Analyse des Benutzerflusses, Login, Teamauswahl, gemeinsame Team-Einstellungen
   - [ ] **Startbildschirm-Icons hinzufügen**: FFG, TU Wien, HPCC Logos
   - [ ] **Dokumentenserver**: Worker-Management (automatisches Parsen hochgeladener Dokumente)
+  - [ ] Projektansicht: Sortieren der Projekte
 - [ ] **KI-Funktionen**
   - [x] **KI-Funktionen**: Metadaten- und Kriterien-Extraktion, Kontextlängen-Management (10k/500k Zeichen Limits) mit automatischer Kürzung und Logging
     - [x] **Dokumenttyp-spezifische Prompts**: Automatische Erkennung und Verarbeitung von Bieter-/Ausschreibungsdokumenten mit spezifischen Prompts
