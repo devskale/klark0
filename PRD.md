@@ -83,6 +83,50 @@ Die Projektstruktur folgt den Konventionen von Next.js und ist auf Skalierbarkei
 └── tests/                # Test-Dateien
 ```
 
+## AUTHENTIFIZIERUNG & SESSION-MANAGEMENT
+
+### Anmelde-System (Sign-In/Sign-Out)
+
+Das Authentifizierungssystem verwendet JWT-basierte Session-Cookies mit folgender Architektur:
+
+#### **Sign-In Prozess**
+- **Frontend**: `app/(login)/login.tsx` bietet Anmeldeformular mit E-Mail/Passwort
+- **Backend Action**: `app/(login)/actions.ts` → `signIn()` Server Action
+  - Validierung via Zod Schema (`signInSchema`)
+  - Passwort-Hashing mit bcryptjs (10 Rounds)
+  - Datenbankabfrage: User + Team Join via Drizzle ORM
+  - Session-Cookie Erstellung: JWT Token mit 24h Gültigkeit
+  - Activity Logging: `SIGN_IN` Events werden in `activityLogs` gespeichert
+  - Redirect nach erfolgreicher Anmeldung: `/dashboard`
+
+#### **Sign-Out Prozess**
+- **Frontend**: Mehrere UI-Integrationen:
+  - `app/(dashboard)/layout.tsx`: User-Dropdown-Menü mit Sign-Out Button
+  - `app/(dashboard)/dashboard/layout.tsx`: Dashboard-spezifische Navigation
+- **Backend Action**: `app/(login)/actions.ts` → `signOut()` Server Action
+  - Activity Logging: `SIGN_OUT` Event wird geloggt
+  - Session-Cookie Löschung: `cookies().delete('session')`
+  - Kein Redirect - Frontend handelt Navigation
+
+#### **Session-Management**
+- **Cookie**: `session` JWT Token (httpOnly, secure, sameSite: lax)
+- **Middleware**: `middleware.ts` schützt `/dashboard` Routen
+  - Prüft Session-Cookie bei jedem Request
+  - Automatische Session-Verlängerung bei GET-Requests
+  - Redirect zu `/sign-in` bei fehlender/ungültiger Session
+- **Token-Verifizierung**: `lib/auth/session.ts` bietet:
+  - `getSession()`: Aktuelle Session abrufen
+  - `setSession()`: Neue Session erstellen
+  - `verifyToken()`: JWT Token validieren
+
+#### **Sicherheitsmerkmale**
+- Passwort-Hashing mit bcryptjs
+- HTTP-Only Cookies (JS Zugriff verhindert)
+- Secure Flag in Production
+- Session-Timeout nach 24 Stunden
+- Activity-Logging für Audit-Trail
+- Team-basierte Autorisierung über `teamMembers` Tabelle
+
 ## LERNERFOLGE, CODING-RICHTLINIEN & REGELN & BEST PRACTICES
 
 ### Coding-Richtlinien
