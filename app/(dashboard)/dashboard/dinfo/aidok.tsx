@@ -10,7 +10,7 @@ import {
   fileTreeFetcher,
   normalizePath,
   PDF2MD_INDEX_FILE_NAME,
-} from "@/lib/fs/fileTreeUtils-new";
+} from "@/lib/fs/fileTreeUtils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AlertCircle, Loader2, Eye, Check, Wand2 } from "lucide-react";

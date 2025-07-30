@@ -6,7 +6,7 @@ import useSWR from "swr";
 import {
   fileTreeFetcher,
   normalizePath,
-} from "@/lib/fs/fileTreeUtils-new";
+} from "@/lib/fs/fileTreeUtils";
 import { saveKriterienToFile, loadKriterienFromFile, KriterienMetadata } from "@/lib/kriterien/persistence";
 import {
   Table,

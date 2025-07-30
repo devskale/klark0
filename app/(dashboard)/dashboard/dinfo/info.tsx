@@ -10,7 +10,7 @@ import {
   fileTreeFetcher,
   normalizePath,
   PDF2MD_INDEX_FILE_NAME,
-} from "@/lib/fs/fileTreeUtils-new";
+} from "@/lib/fs/fileTreeUtils";
 import { EditableText } from "@/components/ui/editable-text";
 import { AI_QUERIES } from "@/app/api/ai/config";
 

@@ -42,7 +42,7 @@ import {
   normalizePath,
   fileTreeFetcher,
   FileTreeEntry,
-} from "@/lib/fs/fileTreeUtils-new";
+} from "@/lib/fs/fileTreeUtils";
 import type { FileSystemSettings } from "../einstellungen/page";
 
 type FileTreeNode = FileTreeEntry;

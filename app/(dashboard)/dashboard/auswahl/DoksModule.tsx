@@ -14,7 +14,7 @@ import {
   fileTreeFetcher,
   FileTreeEntry,
   FileSystemSettings,
-} from "@/lib/fs/fileTreeUtils-new";
+} from "@/lib/fs/fileTreeUtils";
 
 export default function DoksModule() {
   const {
