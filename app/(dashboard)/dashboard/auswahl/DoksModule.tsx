@@ -30,7 +30,11 @@ export default function DoksModule() {
     ? `${projectPath}/A`
     : null;
 
-  const { data: docs, error } = useSWR<FileTreeEntry[]>(
+  const {
+    data: docs,
+    error,
+    mutate,
+  } = useSWR<FileTreeEntry[]>(
     docsPath
       ? [
           docsPath,
@@ -93,7 +97,28 @@ export default function DoksModule() {
     const wasSelected = selectedDocs.includes(path);
     setSelectedDok(wasSelected ? null : path);
   };
-  const handleDelete = (path: string) => console.log("Delete", path);
+  const handleDelete = async (path: string) => {
+    try {
+      const params = new URLSearchParams({ path });
+      const res = await fetch(`/api/fs/delete?${params.toString()}`, {
+        method: "POST",
+      });
+
+      if (res.ok) {
+        mutate();
+        if (selectedDok === path) {
+          setSelectedDok(null);
+        }
+        setSelectedDocs((prev) => prev.filter((p) => p !== path));
+      } else {
+        console.error("Fehler beim Löschen der Datei:", await res.text());
+        // You might want to show a toast notification to the user here
+      }
+    } catch (error) {
+      console.error("Fehler beim Löschen der Datei:", error);
+      // You might want to show a toast notification to the user here
+    }
+  };
   const handleRename = (path: string) => console.log("Rename", path);
 
   // pick an icon based on file extension
