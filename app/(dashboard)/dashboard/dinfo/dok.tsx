@@ -128,14 +128,20 @@ const DocxPreview: React.FC<{ filePath: string; filename: string; downloadUrl: s
   return (
     <Card className="w-full max-w-4xl">
       <CardContent className="p-6">
-        <div className="mb-4 flex justify-between items-center">
-          <h3 className="text-lg font-semibold text-gray-800">{filename}</h3>
-          <Button asChild size="sm">
-            <a href={downloadUrl} download={filename}>
-              <Download className="h-4 w-4 mr-2" />
-              Herunterladen
-            </a>
-          </Button>
+        <div className="mb-4 flex justify-between items-center gap-4">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-lg font-semibold text-gray-800 truncate" title={filename}>
+              {filename}
+            </h3>
+          </div>
+          <div className="flex-shrink-0">
+            <Button asChild size="sm">
+              <a href={downloadUrl} download={filename}>
+                <Download className="h-4 w-4 mr-2" />
+                Herunterladen
+              </a>
+            </Button>
+          </div>
         </div>
         <div 
           className="max-w-none overflow-auto max-h-[70vh] border rounded p-4 bg-white"
@@ -222,22 +228,24 @@ const XlsxPreview: React.FC<{ filePath: string; filename: string; downloadUrl: s
   return (
     <Card className="w-full max-w-4xl">
       <CardContent className="p-6">
-        <div className="mb-4 flex justify-between items-center">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-800">{filename}</h3>
+        <div className="mb-4 flex justify-between items-center gap-4">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-lg font-semibold text-gray-800 truncate" title={filename}>{filename}</h3>
             {sheetInfo && (
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 truncate" title={sheetInfo.sheetNames.join(', ')}>
                 {sheetInfo.sheetCount} Arbeitsblatt{sheetInfo.sheetCount !== 1 ? 'er' : ''}
                 {sheetInfo.sheetCount > 1 && `: ${sheetInfo.sheetNames.join(', ')}`}
               </p>
             )}
           </div>
-          <Button asChild size="sm">
-            <a href={downloadUrl} download={filename}>
-              <Download className="h-4 w-4 mr-2" />
-              Herunterladen
-            </a>
-          </Button>
+          <div className="flex-shrink-0">
+            <Button asChild size="sm">
+              <a href={downloadUrl} download={filename}>
+                <Download className="h-4 w-4 mr-2" />
+                Herunterladen
+              </a>
+            </Button>
+          </div>
         </div>
         <div 
           className="overflow-auto max-h-[70vh] border rounded bg-white p-4 [&_table]:w-full"
@@ -380,7 +388,7 @@ export default function Dok() {
 
   // Render different preview components based on file type
   const renderPreview = () => {
-    const filename = selectedDok?.split('/').pop() || 'document';
+    const filename = decodeURIComponent(selectedDok?.split('/').pop() || 'document');
     
     switch (fileType) {
       case 'image':
