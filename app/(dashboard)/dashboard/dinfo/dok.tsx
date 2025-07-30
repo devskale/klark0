@@ -138,7 +138,7 @@ const DocxPreview: React.FC<{ filePath: string; filename: string; downloadUrl: s
           </Button>
         </div>
         <div 
-          className="prose max-w-none overflow-auto max-h-[70vh] border rounded p-4 bg-white"
+          className="max-w-none overflow-auto max-h-[70vh] border rounded p-4 bg-white"
           dangerouslySetInnerHTML={{ __html: htmlContent }}
         />
       </CardContent>
@@ -240,7 +240,7 @@ const XlsxPreview: React.FC<{ filePath: string; filename: string; downloadUrl: s
           </Button>
         </div>
         <div 
-          className="overflow-auto max-h-[70vh] border rounded bg-white"
+          className="overflow-auto max-h-[70vh] border rounded bg-white p-4 [&_table]:w-full"
           dangerouslySetInnerHTML={{ __html: htmlContent }}
         />
       </CardContent>
