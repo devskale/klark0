@@ -16,15 +16,20 @@ Bieterdokumente sind die Unterlagen, die ein Bieter (Anbieter) im Rahmen einer A
 ## Verzeichnisstruktur Top Level
 Beinhaltet die aktuellen aktiven Ausschreibungsverzeichnisse (Projektordner):
 
-- **Ausschreibungsname**
-  - **A** (enthält Ausschreibungsdokumente)
-    - **md** (enthält Markdown-Versionen der Ausschreibungsdokumente)
-  - **B** (Bieterverzeichnisse)
-    - **BIETERA** (enthält Bieterdokumente)
-       - **md/** (enthält Markdown-Versionen der Bieterdokumente; unterstützte Dateitypen siehe "Supported Filetypes")
+- Ausschreibungsname
+  - A (Ausschreibungsverzeichnis)
+    - md (enthält Markdown-Versionen der Ausschreibungsdokumente)
+  - B (Bieterverzeichnis)
+    - BIETERNAME (dir, enthält Bieterdokumente)
+       - md/ (enthält Markdown-Versionen der Bieterdokumente; unterstützte Dateitypen siehe "Supported Filetypes")
+       - archive
+- archive
+  - Ausschreibungsname (archivierte ausschreibung)
 
 
 ## Reserved Directory Names
+- A: Verzeichnisname, beinhaltet Ausschreibungsprojektdokumente
+- B: Verzeichnisname, beinhaltet Bieterdokumente
 - **md**: Für ein Verzeichnis, das Markdown-Dateien enthält.
 - **proc**: Enthält verarbeitete Versionen von Dokumenten. 
 - **archive**: Reserviert für ein Verzeichnis mit archivierten Projekten.
