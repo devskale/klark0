@@ -26,6 +26,10 @@ Anforderungen:
   - [x] **Consolidated Upload Functionality**: Einheitliche Upload-Funktionalität in DoksModule mit Drag-and-Drop, Dialog-basiertem Upload, automatischer Pfad-Erkennung (Bieter vs. Ausschreibung), Dateigrößen-Anzeige und Fehlerbehandlung
   - [x] **UI Layout Optimization**: Upload-Button aus DoksModule in die Top-Menüleiste verschoben (neben Refresh-Button), "Dokumente"-Header entfernt für sauberere UI
   - [x] **Upload Logic Consolidation**: Einheitliche Upload-Funktionalität durch `useUpload` Hook und `UploadDialog` Komponente - eliminiert Code-Duplikation zwischen DoksModule, Projekt- und Bieter-Uploads, verbesserte Wartbarkeit und konsistente UX
+    - [x] **Reusable Upload Components**: `hooks/use-upload.ts` Hook für Upload-State-Management und `components/UploadDialog.tsx` für einheitliche Upload-UI
+    - [x] **Consolidated Upload Logic**: Alle Upload-Funktionen (Projekt, Bieter, Dokumente) nutzen dieselbe Basis-Implementierung mit konfigurierbaren Callbacks
+    - [x] **Improved Error Handling**: Einheitliche Fehlerbehandlung und Benachrichtigungen über alle Upload-Bereiche hinweg
+    - [x] **Type Safety**: Vollständig typisierte Upload-Funktionen mit TypeScript für bessere Entwicklererfahrung
   - [ ] **Anonymisierung**: Schutz sensibler Daten durch KI-basierte NER.
 - [ ] **Erweiterte Funktionen (unsortiert)**
   - [ ] enhance prompt definition with, maxInputLength (chars), maxOutputTokens
@@ -168,3 +172,9 @@ Das Authentifizierungssystem verwendet JWT-basierte Session-Cookies mit folgende
   - View-Switching-Logic sollte selectedDok-State nicht automatisch clearen; nur bei expliziten Projekt-/Bieter-Wechseln ist State-Reset angebracht
   - Highlighting-Logic muss sowohl selectedDocs Array als auch einzelnen selectedDok-State berücksichtigen für konsistente UI-Darstellung
   - Navigation zwischen Detail- und Auswahlansichten erfordert koordinierte State-Management-Strategien zwischen verschiedenen Komponenten
+- **Upload Logic Consolidation & Reusable Components**:
+  - Code-Duplikation zwischen verschiedenen Upload-Bereichen führt zu Wartungsproblemen und inkonsistenter UX; zentrale Hooks und Komponenten lösen dies effektiv
+  - Custom Hooks (`useUpload`) mit konfigurierbaren Callbacks ermöglichen flexible Wiederverwendung bei unterschiedlichen Upload-Kontexten (Projekt, Bieter, Dokumente)
+  - Einheitliche Dialog-Komponenten (`UploadDialog`) mit Props-basierter Konfiguration schaffen konsistente UI-Patterns und reduzieren Entwicklungsaufwand
+  - SWR-Mutation-Funktionen müssen korrekt referenziert werden; `mutate()` vs. `mutateProjects()` - falsche Funktionsnamen führen zu Runtime-Fehlern
+  - Drag-and-Drop-Funktionalität sollte in wiederverwendbaren Komponenten gekapselt werden, um konsistentes Verhalten über alle Upload-Bereiche zu gewährleisten
