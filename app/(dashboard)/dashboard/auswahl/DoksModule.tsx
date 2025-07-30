@@ -51,9 +51,18 @@ export default function DoksModule() {
   // clear selection on project/bieter change
   useEffect(() => {
     setSelectedDocs([]);
-    // Only clear selectedDok when switching project or bieter
-    setSelectedDok(null);
-  }, [projectPath, bieterPath, setSelectedDok]);
+    // Only clear selectedDok when switching project or bieter, but preserve if already set from localStorage
+    if (!selectedDok) {
+      setSelectedDok(null);
+    }
+  }, [projectPath, bieterPath, setSelectedDok, selectedDok]);
+
+  // Ensure selectedDocs includes selectedDok when restored from localStorage
+  useEffect(() => {
+    if (selectedDok && !selectedDocs.includes(selectedDok)) {
+      setSelectedDocs(prev => [...prev, selectedDok]);
+    }
+  }, [selectedDok, selectedDocs]);
   // clear and fetch index metadata when docs change
   useEffect(() => {
     if (docs && docsPath) {
@@ -186,7 +195,7 @@ export default function DoksModule() {
                 <tr
                   key={f.path}
                   className={`cursor-pointer ${
-                    selectedDocs.includes(f.path) ? "bg-gray-100" : ""
+                    selectedDocs.includes(f.path) || selectedDok === f.path ? "bg-gray-100" : ""
                   }`}
                   onClick={() => toggleSelect(f.path)}>
                   <td className="px-4 py-2 w-1/2">

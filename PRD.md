@@ -22,6 +22,7 @@ Anforderungen:
 - [x] **Grund-Setup**: Next.js Projekt mit TypeScript, Drizzle ORM (PostgreSQL) und shadcn/ui/Tailwind CSS Integration
 - [x] **Authentifizierung & Benutzerverwaltung**: JWT-basierte Authentifizierung mit Session-Cookies, geschützte Routen via Middleware, Anmelde-/Registrierungsseiten
 - [x] **Kernfunktionen**: Projektmanagement, Dokumenten-Upload, WebDAV-Integration, Dokumentenkonvertierung (DOC/PDF zu Markdown)
+  - [x] **Context-Sensitive Navigation**: Automatisches Umschalten zur "Docs"-Ansicht bei Dokumentauswahl, Persistierung des selectedDok-Status über localStorage, Breadcrumb-Navigation mit Dokumentkontext
   - [ ] **Anonymisierung**: Schutz sensibler Daten durch KI-basierte NER.
 - [ ] **Erweiterte Funktionen (unsortiert)**
   - [ ] enhance prompt definition with, maxInputLength (chars), maxOutputTokens
@@ -158,3 +159,9 @@ Das Authentifizierungssystem verwendet JWT-basierte Session-Cookies mit folgende
   - Leere Module (wie `jobsStore.ts`) müssen implementiert werden, bevor sie importiert werden können; In-Memory-Stores sind eine schnelle Lösung für Development.
   - Review-Status-Interfaces benötigen explizite boolean-Defaults, um TypeScript-Kompatibilität bei optionalen Properties zu gewährleisten.
   - **ZuschlagsKriterium Interface**: Erweiterte TypeScript-Interfaces für hierarchische Kriterien-Strukturen; `unterkriterien` Property als optionales Array für verschachtelte Zuschlagskriterien hinzugefügt, um Build-Fehler bei Kriterien-Zählung zu beheben.
+- **Context-Sensitive Navigation & State Persistence**:
+  - localStorage-basierte Persistierung von selectedProject, selectedBieter und selectedDok verhindert Datenverlust bei Navigation
+  - useEffect-Hooks müssen sorgfältig implementiert werden, um State-Clearing zu vermeiden; aggressive State-Resets können localStorage-Wiederherstellung unterbrechen
+  - View-Switching-Logic sollte selectedDok-State nicht automatisch clearen; nur bei expliziten Projekt-/Bieter-Wechseln ist State-Reset angebracht
+  - Highlighting-Logic muss sowohl selectedDocs Array als auch einzelnen selectedDok-State berücksichtigen für konsistente UI-Darstellung
+  - Navigation zwischen Detail- und Auswahlansichten erfordert koordinierte State-Management-Strategien zwischen verschiedenen Komponenten

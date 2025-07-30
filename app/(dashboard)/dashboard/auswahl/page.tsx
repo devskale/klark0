@@ -112,6 +112,13 @@ export default function VaultPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedView, setSelectedView] = useState("Pb-Browser");
 
+  // Context-sensitive navigation: Switch to Docs view when a document is selected
+  useEffect(() => {
+    if (selectedDok) {
+      setSelectedView("Docs");
+    }
+  }, [selectedDok]);
+
   // State for Add Project Dialog
   const [isAddProjectDialogOpen, setIsAddProjectDialogOpen] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
@@ -566,7 +573,6 @@ export default function VaultPage() {
             }`}
             onClick={() => {
               setSelectedView("Pb-Browser");
-              setSelectedDok(null);
             }}>
             Projekt / Bieter
           </button>
@@ -576,7 +582,6 @@ export default function VaultPage() {
             }`}
             onClick={() => {
               setSelectedView("Docs");
-              setSelectedDok(null);
             }}>
             Docs
           </button>
