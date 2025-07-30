@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { formatFileSize } from "@/hooks/use-upload";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface UploadDialogProps {
   open: boolean;
@@ -107,7 +108,7 @@ export default function UploadDialog({
                 {files.map((file, index) => (
                   <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{file.name}</p>
+                      <TruncatedText text={file.name} maxLines={1} className="text-sm font-medium" />
                       <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
                     </div>
                     <Button

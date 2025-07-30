@@ -19,31 +19,7 @@ interface TruncatedTextProps {
 }
 
 export function TruncatedText({ text, maxLines = 2, className = "" }: TruncatedTextProps) {
-  // Check if text is longer than a reasonable threshold to show tooltip
-  const shouldTruncate = text.length > 50;
-  
-  // For table cells, use simple ellipsis truncation
-  const isTableCell = className.includes('table-cell') || maxLines === 1;
-  
-  if (isTableCell) {
-    return (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span 
-              className={`cursor-help block overflow-hidden text-ellipsis whitespace-nowrap ${className}`}
-              title={text}
-            >
-              {text}
-            </span>
-          </TooltipTrigger>
-          <TooltipContent className="max-w-md p-3">
-            <div className="whitespace-pre-wrap text-sm">{text}</div>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    );
-  }
+  const shouldTruncate = text.length > 50; // Heuristic to avoid tooltip for short text
   
   const truncatedStyle = {
     display: '-webkit-box',
