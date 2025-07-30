@@ -184,3 +184,12 @@ Das Authentifizierungssystem verwendet JWT-basierte Session-Cookies mit folgende
   - Einheitliche Dialog-Komponenten (`UploadDialog`) mit Props-basierter Konfiguration schaffen konsistente UI-Patterns und reduzieren Entwicklungsaufwand
   - SWR-Mutation-Funktionen müssen korrekt referenziert werden; `mutate()` vs. `mutateProjects()` - falsche Funktionsnamen führen zu Runtime-Fehlern
   - Drag-and-Drop-Funktionalität sollte in wiederverwendbaren Komponenten gekapselt werden, um konsistentes Verhalten über alle Upload-Bereiche zu gewährleisten
+- **Office Document Preview System**:
+  - DOCX und XLSX Dateien können jetzt direkt im Browser als formatiertes HTML angezeigt werden
+  - Server-seitige Konvertierung mit mammoth.js (DOCX) und SheetJS (XLSX) für sichere Verarbeitung ohne externe APIs
+  - HTML-Sanitization mit DOMPurify verhindert XSS-Angriffe bei der Anzeige konvertierter Inhalte
+  - Separate API-Routen (`/api/preview/docx`, `/api/preview/xlsx`) für modulare Dokumentenverarbeitung
+  - Loading-States und Fehlerbehandlung für bessere UX bei der Dokumentenkonvertierung
+  - Excel-Dateien zeigen alle Arbeitsblätter mit Styling und Sheet-Navigation
+  - Word-Dokumente behalten semantische Formatierung (Überschriften, Listen, Tabellen) bei
+  - Fallback auf Download-Option bei Konvertierungsfehlern oder nicht unterstützten Formaten

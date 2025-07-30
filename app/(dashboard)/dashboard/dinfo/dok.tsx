@@ -17,12 +17,14 @@ const getFileExtension = (filename: string): string => {
   return filename.split('.').pop()?.toLowerCase() || '';
 };
 
-const getFileType = (filename: string): 'pdf' | 'image' | 'office' | 'unsupported' => {
+const getFileType = (filename: string): 'pdf' | 'image' | 'docx' | 'xlsx' | 'office' | 'unsupported' => {
   const ext = getFileExtension(filename);
   
   if (ext === 'pdf') return 'pdf';
   if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) return 'image';
-  if (['docx', 'doc', 'xlsx', 'xls', 'pptx', 'ppt'].includes(ext)) return 'office';
+  if (['docx', 'doc'].includes(ext)) return 'docx';
+  if (['xlsx', 'xls'].includes(ext)) return 'xlsx';
+  if (['pptx', 'ppt'].includes(ext)) return 'office';
   return 'unsupported';
 };
 
@@ -55,16 +57,203 @@ const ImagePreview: React.FC<{ src: string; alt: string }> = ({ src, alt }) => {
   );
 };
 
-// Office document preview component
+// DOCX document preview component
+const DocxPreview: React.FC<{ filePath: string; filename: string; downloadUrl: string }> = ({ filePath, filename, downloadUrl }) => {
+  const [htmlContent, setHtmlContent] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  useEffect(() => {
+    const convertDocx = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const response = await fetch('/api/preview/docx', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ filePath }),
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to convert DOCX file');
+        }
+        
+        setHtmlContent(data.html);
+      } catch (err) {
+        console.error('Error converting DOCX:', err);
+        setError(err instanceof Error ? err.message : 'Unknown error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    convertDocx();
+  }, [filePath]);
+  
+  if (loading) {
+    return (
+      <Card className="w-full max-w-4xl">
+        <CardContent className="p-8 text-center">
+          <FileText className="h-16 w-16 mx-auto mb-4 text-blue-500 animate-pulse" />
+          <p className="text-gray-600">Word-Dokument wird konvertiert...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  if (error) {
+    return (
+      <Card className="w-full max-w-4xl">
+        <CardContent className="p-8 text-center">
+          <FileText className="h-16 w-16 mx-auto mb-4 text-red-500" />
+          <h3 className="text-lg font-semibold mb-2 text-red-600">Fehler beim Laden</h3>
+          <p className="text-gray-600 mb-4">{filename}</p>
+          <p className="text-sm text-red-500 mb-6">{error}</p>
+          <Button asChild>
+            <a href={downloadUrl} download={filename}>
+              <Download className="h-4 w-4 mr-2" />
+              Dokument herunterladen
+            </a>
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  return (
+    <Card className="w-full max-w-4xl">
+      <CardContent className="p-6">
+        <div className="mb-4 flex justify-between items-center">
+          <h3 className="text-lg font-semibold text-gray-800">{filename}</h3>
+          <Button asChild size="sm">
+            <a href={downloadUrl} download={filename}>
+              <Download className="h-4 w-4 mr-2" />
+              Herunterladen
+            </a>
+          </Button>
+        </div>
+        <div 
+          className="prose max-w-none overflow-auto max-h-[70vh] border rounded p-4 bg-white"
+          dangerouslySetInnerHTML={{ __html: htmlContent }}
+        />
+      </CardContent>
+    </Card>
+  );
+};
+
+// XLSX document preview component
+const XlsxPreview: React.FC<{ filePath: string; filename: string; downloadUrl: string }> = ({ filePath, filename, downloadUrl }) => {
+  const [htmlContent, setHtmlContent] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [sheetInfo, setSheetInfo] = useState<{ sheetNames: string[]; sheetCount: number } | null>(null);
+  
+  useEffect(() => {
+    const convertXlsx = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const response = await fetch('/api/preview/xlsx', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ filePath }),
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to convert XLSX file');
+        }
+        
+        setHtmlContent(data.html);
+        setSheetInfo({
+          sheetNames: data.sheetNames,
+          sheetCount: data.sheetCount
+        });
+      } catch (err) {
+        console.error('Error converting XLSX:', err);
+        setError(err instanceof Error ? err.message : 'Unknown error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    convertXlsx();
+  }, [filePath]);
+  
+  if (loading) {
+    return (
+      <Card className="w-full max-w-4xl">
+        <CardContent className="p-8 text-center">
+          <FileText className="h-16 w-16 mx-auto mb-4 text-green-500 animate-pulse" />
+          <p className="text-gray-600">Excel-Tabelle wird konvertiert...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  if (error) {
+    return (
+      <Card className="w-full max-w-4xl">
+        <CardContent className="p-8 text-center">
+          <FileText className="h-16 w-16 mx-auto mb-4 text-red-500" />
+          <h3 className="text-lg font-semibold mb-2 text-red-600">Fehler beim Laden</h3>
+          <p className="text-gray-600 mb-4">{filename}</p>
+          <p className="text-sm text-red-500 mb-6">{error}</p>
+          <Button asChild>
+            <a href={downloadUrl} download={filename}>
+              <Download className="h-4 w-4 mr-2" />
+              Tabelle herunterladen
+            </a>
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  return (
+    <Card className="w-full max-w-4xl">
+      <CardContent className="p-6">
+        <div className="mb-4 flex justify-between items-center">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800">{filename}</h3>
+            {sheetInfo && (
+              <p className="text-sm text-gray-600">
+                {sheetInfo.sheetCount} Arbeitsblatt{sheetInfo.sheetCount !== 1 ? 'er' : ''}
+                {sheetInfo.sheetCount > 1 && `: ${sheetInfo.sheetNames.join(', ')}`}
+              </p>
+            )}
+          </div>
+          <Button asChild size="sm">
+            <a href={downloadUrl} download={filename}>
+              <Download className="h-4 w-4 mr-2" />
+              Herunterladen
+            </a>
+          </Button>
+        </div>
+        <div 
+          className="overflow-auto max-h-[70vh] border rounded bg-white"
+          dangerouslySetInnerHTML={{ __html: htmlContent }}
+        />
+      </CardContent>
+    </Card>
+  );
+};
+
+// Office document preview component (for PowerPoint and other unsupported Office formats)
 const OfficePreview: React.FC<{ filename: string; downloadUrl: string }> = ({ filename, downloadUrl }) => {
   const ext = getFileExtension(filename);
-  const isWord = ['doc', 'docx'].includes(ext);
-  const isExcel = ['xls', 'xlsx'].includes(ext);
   const isPowerPoint = ['ppt', 'pptx'].includes(ext);
   
   const getDocumentTypeLabel = () => {
-    if (isWord) return 'Word-Dokument';
-    if (isExcel) return 'Excel-Tabelle';
     if (isPowerPoint) return 'PowerPoint-Präsentation';
     return 'Office-Dokument';
   };
@@ -76,7 +265,7 @@ const OfficePreview: React.FC<{ filename: string; downloadUrl: string }> = ({ fi
         <h3 className="text-lg font-semibold mb-2">{getDocumentTypeLabel()}</h3>
         <p className="text-gray-600 mb-4">{filename}</p>
         <p className="text-sm text-gray-500 mb-6">
-          Office-Dokumente können nicht direkt im Browser angezeigt werden.
+          Dieses Office-Dokument kann nicht direkt im Browser angezeigt werden.
         </p>
         <Button asChild>
           <a href={downloadUrl} download={filename}>
@@ -116,7 +305,7 @@ export default function Dok() {
   const [numPages, setNumPages] = useState<number | null>(null);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [fileUrl, setFileUrl] = useState<string | null>(null);
-  const [fileType, setFileType] = useState<'pdf' | 'image' | 'office' | 'unsupported'>('pdf');
+  const [fileType, setFileType] = useState<'pdf' | 'image' | 'docx' | 'xlsx' | 'office' | 'unsupported'>('pdf');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -196,6 +385,12 @@ export default function Dok() {
     switch (fileType) {
       case 'image':
         return <ImagePreview src={fileUrl} alt={filename} />;
+      
+      case 'docx':
+        return <DocxPreview filePath={selectedDok} filename={filename} downloadUrl={fileUrl} />;
+      
+      case 'xlsx':
+        return <XlsxPreview filePath={selectedDok} filename={filename} downloadUrl={fileUrl} />;
       
       case 'office':
         return <OfficePreview filename={filename} downloadUrl={fileUrl} />;
