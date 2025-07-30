@@ -84,7 +84,6 @@ The project follows Next.js conventions with directories for routing, components
 ├── .trae/
 │   ├── .ignore
 │   └── rules/
-│       ├── project_rules v1.0.md
 │       └── project_rules.md
 ├── LICENSE
 ├── PRD.md
@@ -127,30 +126,7 @@ The project follows Next.js conventions with directories for routing, components
 │   │   └── select/
 │   └── ui/                    # shadcn/ui components
 │       ├── alert.tsx
-│       ├── avatar.tsx
-│       ├── badge.tsx
-│       ├── breadcrumb.tsx
-│       ├── button.tsx
-│       ├── card.tsx
-│       ├── checkbox.tsx
-│       ├── collapsible.tsx
-│       ├── command.tsx
-│       ├── dialog.tsx
-│       ├── dropdown-menu.tsx
-│       ├── editable-text.tsx
-│       ├── input.tsx
-│       ├── label.tsx
-│       ├── radio-group.tsx
-│       ├── scroll-area.tsx
-│       ├── select.tsx
-│       ├── separator.tsx
-│       ├── sheet.tsx
-│       ├── sidebar.tsx
-│       ├── skeleton.tsx
-│       ├── sonner.tsx
-│       ├── table.tsx
-│       ├── tabs.tsx
-│       ├── textarea.tsx
+│       ├── ...
 │       ├── tooltip.tsx
 │       └── truncated-text.tsx
 ├── context/
