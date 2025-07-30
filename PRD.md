@@ -30,6 +30,12 @@ Anforderungen:
     - [x] **Consolidated Upload Logic**: Alle Upload-Funktionen (Projekt, Bieter, Dokumente) nutzen dieselbe Basis-Implementierung mit konfigurierbaren Callbacks
     - [x] **Improved Error Handling**: Einheitliche Fehlerbehandlung und Benachrichtigungen über alle Upload-Bereiche hinweg
     - [x] **Type Safety**: Vollständig typisierte Upload-Funktionen mit TypeScript für bessere Entwicklererfahrung
+  - [x] **Enhanced File Preview System**: Erweiterte Dokumentenvorschau für multiple Dateitypen in der dinfo-Route
+    - [x] **Multi-Format Support**: PDF-Vorschau (bestehend), Bild-Vorschau (JPG, PNG, GIF, BMP, WebP, SVG), Office-Dokumente (DOCX, XLSX, PPTX) mit Download-Option
+    - [x] **File Type Detection**: Automatische Erkennung des Dateityps basierend auf Dateiendung mit entsprechender Vorschau-Komponente
+    - [x] **Responsive Preview Components**: Separate Komponenten für verschiedene Dateitypen mit einheitlichem Card-Layout und Fehlerbehandlung
+    - [x] **Download Functionality**: Download-Buttons für nicht-vorschaubare Dateien (Office-Dokumente, nicht unterstützte Formate)
+    - [x] **Error Handling**: Robuste Fehlerbehandlung für fehlgeschlagene Bild-Ladevorgänge und nicht unterstützte Dateitypen
   - [ ] **Anonymisierung**: Schutz sensibler Daten durch KI-basierte NER.
 - [ ] **Erweiterte Funktionen (unsortiert)**
   - [ ] enhance prompt definition with, maxInputLength (chars), maxOutputTokens
