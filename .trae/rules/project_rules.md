@@ -273,3 +273,4 @@ The user runs the app with `pnpm dev` and monitors webapp continuously. The deve
 - Enforce coding standards: type safety, modularity, error handling
 - Use reusable components and hooks to avoid code duplication
 - Ensure proper SWR mutation function usage for data consistency
+- Use Context7 Tool, a mcp tool that you can use, to retrieve latest documentation for next.js or sw modules.
