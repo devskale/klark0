@@ -43,7 +43,7 @@ Anforderungen:
   - [ ] Prompt Templating mit Platzhaltern und Kontexten
   - [ ] **Basispfad-Konsolidierung**: Code-Anpassung zur Nutzung eines konsistenten Basispfads (z.B. `/dev` oder `/v1`), in git dev/basepath branch
   - [ ] **Benutzerrollen-Konsolidierung**: Überprüfung und Analyse des Benutzerflusses, Login, Teamauswahl, gemeinsame Team-Einstellungen
-  - [ ] **Startbildschirm-Icons hinzufügen**: FFG, TU Wien, HPCC Logos
+  - [x] **Startbildschirm-Icons hinzufügen**: FFG, TU Wien, HPCC Logos
   - [ ] **Dokumentenserver**: Worker-Management (automatisches Parsen hochgeladener Dokumente)
   - [ ] Projektansicht: Sortieren der Projekte
   - [ ] Auswahl Browser: Multiple File Uploads, Zip uploads, Big file uploads, Downloads.
@@ -73,7 +73,7 @@ Anforderungen:
       - [x] **Table Layout Improvements**: Responsive Tabellen mit Nummerierung, anpassbaren Spalten, Text-Truncation und konsistentem Design
     - [x] **Persistierung**: Filesystem-basierte Speicherung mit SWR-integration, Review-Status Tracking und WebDAV-Kompatibilität
   - [ ] **Bieterdokumenten-Analyse**: Abgleich von Bieterdokumenten mit Kriterien.
-  - [ ] **Dateikategorisierung**: Automatische Kategorisierung von Dokumenten.
+  - [x] **Dateikategorisierung**: Automatische Kategorisierung von Dokumenten.
   - [ ] **Human-in-the-Loop**: UI zur Validierung und Korrektur von KI-Ergebnissen.
 - [ ] **Weitere technische Aufgaben**
   - [x] **Stripe-Integration**: Zahlungspläne und Checkout-Funktionalität

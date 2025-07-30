@@ -144,7 +144,7 @@ const DocxPreview: React.FC<{ filePath: string; filename: string; downloadUrl: s
           </div>
         </div>
         <div 
-          className="max-w-none overflow-auto max-h-[70vh] border rounded p-4 bg-white"
+          className="max-w-none overflow-auto max-h-[70vh] border rounded p-4 bg-white [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:p-2 [&_td]:border [&_td]:p-2"
           dangerouslySetInnerHTML={{ __html: htmlContent }}
         />
       </CardContent>
