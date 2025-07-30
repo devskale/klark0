@@ -140,6 +140,9 @@ export default function VaultPage() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isDraggingProject, setIsDraggingProject] = useState(false);
   const [isDraggingBieter, setIsDraggingBieter] = useState(false);
+  
+  // Upload dialog state for DoksModule
+  const [isDocsUploadDialogOpen, setIsDocsUploadDialogOpen] = useState(false);
   const handleCreateBieter = async () => {
     if (!newBieterName.trim() || !selectedProject) return;
     try {
@@ -605,6 +608,18 @@ export default function VaultPage() {
               <RefreshCw className="h-4 w-4" />
             )}
           </button>
+          {selectedView === "Docs" && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsDocsUploadDialogOpen(true)}
+              disabled={!selectedProject && !selectedBieter}
+              className="flex items-center gap-2"
+            >
+              <Upload className="h-4 w-4" />
+              Upload
+            </Button>
+          )}
           {showRefreshMessage && (
             <div className="text-green-500 text-xs self-center">
               neu eingelesen
@@ -1205,7 +1220,10 @@ export default function VaultPage() {
           </div>
         </>
       ) : (
-        <DoksModule />
+        <DoksModule 
+          isUploadDialogOpen={isDocsUploadDialogOpen}
+          setIsUploadDialogOpen={setIsDocsUploadDialogOpen}
+        />
       )}
     </section>
   );
