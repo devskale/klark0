@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Loader2, MoreHorizontal, Folder, FileText, Image, Upload, X } from "lucide-react";
+import { Loader2, MoreHorizontal, Folder, FileText, Image, Upload } from "lucide-react";
 import useSWR from "swr";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,20 +9,14 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { useProject } from "@/context/ProjectContext";
 import {
   fileTreeFetcher,
   FileTreeEntry,
   FileSystemSettings,
 } from "@/lib/fs/fileTreeUtils";
+import { useUpload } from "@/hooks/use-upload";
+import UploadDialog from "@/components/UploadDialog";
 
 interface DoksModuleProps {
   isUploadDialogOpen?: boolean;
@@ -65,11 +59,17 @@ export default function DoksModule({ isUploadDialogOpen: externalUploadDialogOpe
   const [internalUploadDialogOpen, setInternalUploadDialogOpen] = useState(false);
   const isUploadDialogOpen = externalUploadDialogOpen ?? internalUploadDialogOpen;
   const setIsUploadDialogOpen = externalSetUploadDialogOpen ?? setInternalUploadDialogOpen;
-  const [uploadFiles, setUploadFiles] = useState<File[]>([]);
-  const [uploading, setUploading] = useState(false);
-  const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
-  const [uploadError, setUploadError] = useState<string | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
+  
+  // Use consolidated upload hook
+  const upload = useUpload({
+    onSuccess: () => {
+      setIsUploadDialogOpen(false);
+      mutate(); // Refresh document list
+    },
+    onError: (error) => {
+      console.error('Upload error:', error);
+    }
+  });
 
   // clear selection on project/bieter change
   useEffect(() => {
@@ -153,76 +153,9 @@ export default function DoksModule({ isUploadDialogOpen: externalUploadDialogOpe
   };
   const handleRename = (path: string) => console.log("Rename", path);
 
-  // Upload handlers
-  const handleFileDrag = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setIsDragging(true);
-    } else if (e.type === "dragleave" || e.type === "drop") {
-      setIsDragging(false);
-    }
-  };
-
-  const handleFileDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      setUploadFiles(Array.from(e.dataTransfer.files));
-      setIsUploadDialogOpen(true);
-    }
-  };
-
-  const handleUpload = async () => {
-    if (!uploadFiles.length || !docsPath) return;
-
-    setUploading(true);
-    setUploadError(null);
-
-    try {
-      const formData = new FormData();
-      uploadFiles.forEach((file) => {
-        formData.append("files", file);
-      });
-
-      const queryParams = new URLSearchParams({
-        path: docsPath,
-      });
-
-      const response = await fetch(`/api/fs/upload?${queryParams.toString()}`, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
-
-      // Upload erfolgreich
-      setUploadSuccess(`${uploadFiles.length} Dateien hochgeladen`);
-      setTimeout(() => setUploadSuccess(null), 3000);
-      setUploadFiles([]);
-      setIsUploadDialogOpen(false);
-
-      // Dokumentenliste neu laden
-      await mutate();
-    } catch (error) {
-      console.error("Fehler beim Upload:", error);
-      setUploadError(
-        error instanceof Error
-          ? error.message
-          : "Unbekannter Fehler beim Upload"
-      );
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const removeFile = (index: number) => {
-    setUploadFiles(prev => prev.filter((_, i) => i !== index));
+  // Upload handler using consolidated hook
+  const handleUpload = () => {
+    upload.upload(docsPath);
   };
 
   const formatFileSize = (bytes: number) => {
@@ -266,17 +199,7 @@ export default function DoksModule({ isUploadDialogOpen: externalUploadDialogOpe
   return (
     <div>
       
-      {/* Success/Error Messages */}
-      {uploadSuccess && (
-        <div className="mb-4 p-2 bg-green-100 border border-green-400 text-green-700 rounded">
-          {uploadSuccess}
-        </div>
-      )}
-      {uploadError && (
-        <div className="mb-4 p-2 bg-red-100 border border-red-400 text-red-700 rounded">
-          {uploadError}
-        </div>
-      )}
+
 
       {docs && docs.length > 0 ? (
         <table className="min-w-full divide-y divide-gray-200">
@@ -364,15 +287,7 @@ export default function DoksModule({ isUploadDialogOpen: externalUploadDialogOpe
           </tbody>
         </table>
       ) : (
-        <div
-          className={`p-8 border-2 border-dashed rounded-lg text-center ${
-            isDragging ? "border-blue-400 bg-blue-50" : "border-gray-300"
-          }`}
-          onDragEnter={handleFileDrag}
-          onDragLeave={handleFileDrag}
-          onDragOver={handleFileDrag}
-          onDrop={handleFileDrop}
-        >
+        <div className="p-8 border-2 border-dashed rounded-lg text-center border-gray-300">
           <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
           <p className="text-sm text-gray-500 mb-2">
             Keine Dokumente gefunden. Dateien hier ablegen oder
@@ -388,95 +303,23 @@ export default function DoksModule({ isUploadDialogOpen: externalUploadDialogOpe
       )}
       
       {/* Upload Dialog */}
-      <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              Upload zu {bieterPath ? "Bieter" : "Ausschreibung"}
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            {/* Drag and Drop Area */}
-            <div
-              className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-                isDragging ? "border-blue-400 bg-blue-50" : "border-gray-300"
-              }`}
-              onDragEnter={handleFileDrag}
-              onDragLeave={handleFileDrag}
-              onDragOver={handleFileDrag}
-              onDrop={handleFileDrop}
-            >
-              <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-              <p className="text-sm text-gray-600 mb-2">
-                Dateien hier ablegen oder
-              </p>
-              <Input
-                type="file"
-                multiple
-                onChange={(e) => {
-                  if (e.target.files) {
-                    setUploadFiles(Array.from(e.target.files));
-                  }
-                }}
-                className="hidden"
-                id="file-upload"
-              />
-              <Button
-                variant="outline"
-                onClick={() => document.getElementById('file-upload')?.click()}
-              >
-                Dateien auswählen
-              </Button>
-            </div>
-            
-            {/* Selected Files List */}
-            {uploadFiles.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="text-sm font-medium">Ausgewählte Dateien:</h4>
-                <div className="max-h-32 overflow-y-auto space-y-1">
-                  {uploadFiles.map((file, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{file.name}</p>
-                        <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeFile(index)}
-                        className="ml-2 h-6 w-6 p-0"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-          
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setUploadFiles([]);
-                setIsUploadDialogOpen(false);
-              }}
-            >
-              Abbrechen
-            </Button>
-            <Button
-              onClick={handleUpload}
-              disabled={uploadFiles.length === 0 || uploading}
-              className="flex items-center gap-2"
-            >
-              {uploading && <Loader2 className="h-4 w-4 animate-spin" />}
-              {uploading ? "Uploading..." : `Upload (${uploadFiles.length})`}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <UploadDialog
+         open={isUploadDialogOpen}
+         onOpenChange={setIsUploadDialogOpen}
+         title={`Upload zu ${bieterPath ? "Bieter" : "Ausschreibung"}`}
+         files={upload.files}
+         uploading={upload.uploading}
+         isDragging={upload.isDragging}
+         onFilesChange={upload.setFiles}
+         onRemoveFile={upload.removeFile}
+         onUpload={handleUpload}
+         onDragEnter={upload.handleDragEnter}
+         onDragLeave={upload.handleDragLeave}
+         onDragOver={upload.handleDragOver}
+         onDrop={upload.handleDrop}
+         uploadButtonText="Upload"
+         disabled={!docsPath}
+       />
     </div>
   );
 }

@@ -25,6 +25,7 @@ Anforderungen:
   - [x] **Context-Sensitive Navigation**: Automatisches Umschalten zur "Docs"-Ansicht bei Dokumentauswahl, Persistierung des selectedDok-Status über localStorage, Breadcrumb-Navigation mit Dokumentkontext
   - [x] **Consolidated Upload Functionality**: Einheitliche Upload-Funktionalität in DoksModule mit Drag-and-Drop, Dialog-basiertem Upload, automatischer Pfad-Erkennung (Bieter vs. Ausschreibung), Dateigrößen-Anzeige und Fehlerbehandlung
   - [x] **UI Layout Optimization**: Upload-Button aus DoksModule in die Top-Menüleiste verschoben (neben Refresh-Button), "Dokumente"-Header entfernt für sauberere UI
+  - [x] **Upload Logic Consolidation**: Einheitliche Upload-Funktionalität durch `useUpload` Hook und `UploadDialog` Komponente - eliminiert Code-Duplikation zwischen DoksModule, Projekt- und Bieter-Uploads, verbesserte Wartbarkeit und konsistente UX
   - [ ] **Anonymisierung**: Schutz sensibler Daten durch KI-basierte NER.
 - [ ] **Erweiterte Funktionen (unsortiert)**
   - [ ] enhance prompt definition with, maxInputLength (chars), maxOutputTokens

@@ -44,6 +44,8 @@ import {
   FileTreeEntry,
 } from "@/lib/fs/fileTreeUtils";
 import type { FileSystemSettings } from "../einstellungen/page";
+import { useUpload } from "@/hooks/use-upload";
+import UploadDialog from "@/components/UploadDialog";
 
 type FileTreeNode = FileTreeEntry;
 
@@ -127,22 +129,31 @@ export default function VaultPage() {
   const [isAddBieterDialogOpen, setIsAddBieterDialogOpen] = useState(false);
   const [newBieterName, setNewBieterName] = useState("");
 
-  // Upload-Dialog States
-  const [isProjectUploadDialogOpen, setIsProjectUploadDialogOpen] =
-    useState(false);
-  const [projectUploadFiles, setProjectUploadFiles] = useState<File[]>([]);
-  const [isBieterUploadDialogOpen, setIsBieterUploadDialogOpen] =
-    useState(false);
-  const [bieterUploadFiles, setBieterUploadFiles] = useState<File[]>([]);
-  const [uploadingProject, setUploadingProject] = useState(false);
-  const [uploadingBieter, setUploadingBieter] = useState(false);
-  const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
-  const [uploadError, setUploadError] = useState<string | null>(null);
-  const [isDraggingProject, setIsDraggingProject] = useState(false);
-  const [isDraggingBieter, setIsDraggingBieter] = useState(false);
-  
-  // Upload dialog state for DoksModule
+  // Upload dialog states
+  const [isProjectUploadDialogOpen, setIsProjectUploadDialogOpen] = useState(false);
+  const [isBieterUploadDialogOpen, setIsBieterUploadDialogOpen] = useState(false);
   const [isDocsUploadDialogOpen, setIsDocsUploadDialogOpen] = useState(false);
+  
+  // Consolidated upload hooks
+  const projectUpload = useUpload({
+    onSuccess: () => {
+      setIsProjectUploadDialogOpen(false);
+      mutate();
+    },
+    onError: (error) => {
+      console.error('Project upload error:', error);
+    }
+  });
+  
+  const bieterUpload = useUpload({
+    onSuccess: () => {
+      setIsBieterUploadDialogOpen(false);
+      mutateBieter();
+    },
+    onError: (error) => {
+      console.error('Bieter upload error:', error);
+    }
+  });
   const handleCreateBieter = async () => {
     if (!newBieterName.trim() || !selectedProject) return;
     try {
@@ -422,138 +433,19 @@ export default function VaultPage() {
     }
   };
 
-  // Verbesserte Handler für Drag & Drop
-  const handleProjectFileDrag = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setIsDraggingProject(true);
-    } else if (e.type === "dragleave" || e.type === "drop") {
-      setIsDraggingProject(false);
+  // Upload handlers using consolidated hooks
+  const handleProjectUpload = () => {
+    if (selectedProject) {
+      projectUpload.upload(`${selectedProject}/A`);
     }
   };
 
-  const handleProjectFileDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDraggingProject(false);
-
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      setProjectUploadFiles(Array.from(e.dataTransfer.files));
+  const handleBieterUpload = () => {
+    if (selectedBieter) {
+      bieterUpload.upload(selectedBieter);
     }
   };
 
-  const handleBieterFileDrag = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setIsDraggingBieter(true);
-    } else if (e.type === "dragleave" || e.type === "drop") {
-      setIsDraggingBieter(false);
-    }
-  };
-
-  const handleBieterFileDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDraggingBieter(false);
-
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      setBieterUploadFiles(Array.from(e.dataTransfer.files));
-    }
-  };
-  const handleProjectUpload = async () => {
-    if (!projectUploadFiles.length || !selectedProject) return;
-
-    setUploadingProject(true);
-    setUploadError(null);
-
-    try {
-      const formData = new FormData();
-      projectUploadFiles.forEach((file) => {
-        formData.append("files", file);
-      });
-
-      // Modifiziert, um in den A-Unterordner hochzuladen (für Projekt/Ausschreibungsdaten)
-      const uploadPath = `${selectedProject}/A`;
-      const queryParams = new URLSearchParams({
-        path: uploadPath,
-      });
-
-      const response = await fetch(`/api/fs/upload?${queryParams.toString()}`, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
-
-      // Upload erfolgreich
-      setUploadSuccess(`${projectUploadFiles.length} Dateien hochgeladen`);
-      setTimeout(() => setUploadSuccess(null), 3000);
-      setProjectUploadFiles([]);
-      setIsProjectUploadDialogOpen(false);
-
-      // Optional: Tree neu laden falls notwendig
-      await mutate();
-    } catch (error) {
-      console.error("Fehler beim Upload:", error);
-      setUploadError(
-        error instanceof Error
-          ? error.message
-          : "Unbekannter Fehler beim Upload"
-      );
-    } finally {
-      setUploadingProject(false);
-    }
-  };
-  const handleBieterUpload = async () => {
-    if (!bieterUploadFiles.length || !selectedBieter) return;
-
-    setUploadingBieter(true);
-    setUploadError(null);
-
-    try {
-      const formData = new FormData();
-      bieterUploadFiles.forEach((file) => {
-        formData.append("files", file);
-      });
-
-      const queryParams = new URLSearchParams({
-        path: selectedBieter,
-      });
-
-      const response = await fetch(`/api/fs/upload?${queryParams.toString()}`, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
-
-      // Upload erfolgreich
-      setUploadSuccess(`${bieterUploadFiles.length} Dateien hochgeladen`);
-      setTimeout(() => setUploadSuccess(null), 3000);
-      setBieterUploadFiles([]);
-      setIsBieterUploadDialogOpen(false);
-
-      // Bieter-Liste bzw. Dateiliste neu laden
-      await mutateBieter();
-    } catch (error) {
-      console.error("Fehler beim Upload:", error);
-      setUploadError(
-        error instanceof Error
-          ? error.message
-          : "Unbekannter Fehler beim Upload"
-      );
-    } finally {
-      setUploadingBieter(false);
-    }
-  };
 
   const handleProjectAction = (action: string, projectPath: string) => {
     console.log(`Project Action: ${action} on ${projectPath}`);
@@ -680,17 +572,7 @@ export default function VaultPage() {
         </div>
       </div>
 
-      {uploadSuccess && (
-        <div className="fixed top-4 right-4 bg-green-100 text-green-800 p-3 rounded-md shadow-md z-50">
-          {uploadSuccess}
-        </div>
-      )}
 
-      {uploadError && (
-        <div className="fixed top-4 right-4 bg-red-100 text-red-800 p-3 rounded-md shadow-md z-50">
-          {uploadError}
-        </div>
-      )}
 
       {error ? (
         <div className="text-red-500">Error fetching file tree</div>
@@ -742,119 +624,34 @@ export default function VaultPage() {
                     </Dialog>
                     {/* Upload-Dialog für Projekt */}
                     {selectedProject && (
-                      <Dialog
-                        open={isProjectUploadDialogOpen}
-                        onOpenChange={setIsProjectUploadDialogOpen}>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="icon">
-                            <Upload className="h-4 w-4" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>
-                              Dateien zu Projekt hinzufügen
-                            </DialogTitle>
-                          </DialogHeader>
-                          <div className="space-y-4 py-4">
-                            <div
-                              className={`border-2 ${
-                                isDraggingProject
-                                  ? "border-primary"
-                                  : "border-dashed"
-                              } p-4 rounded-md text-center cursor-pointer relative`}
-                              onDragEnter={handleProjectFileDrag}
-                              onDragOver={handleProjectFileDrag}
-                              onDragLeave={handleProjectFileDrag}
-                              onDrop={handleProjectFileDrop}
-                              onClick={() =>
-                                document
-                                  .getElementById("project-file-upload")
-                                  ?.click()
-                              }>
-                              <input
-                                id="project-file-upload"
-                                type="file"
-                                multiple
-                                className="sr-only"
-                                onChange={(e) =>
-                                  setProjectUploadFiles(
-                                    Array.from(e.target.files || [])
-                                  )
-                                }
-                              />
-                              <Upload className="h-10 w-10 mx-auto text-gray-400 mb-2" />
-                              <p className="mb-1 text-sm text-gray-600">
-                                Dateien hier ablegen oder{" "}
-                                <span className="text-primary font-medium">
-                                  klicken
-                                </span>{" "}
-                                zum Auswählen
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                Unterstützt werden alle Dateitypen
-                              </p>
-                            </div>
-                            {projectUploadFiles.length > 0 && (
-                              <div>
-                                <p className="text-sm font-medium mb-2">
-                                  Ausgewählte Dateien (
-                                  {projectUploadFiles.length}):
-                                </p>
-                                <ul className="text-sm max-h-40 overflow-y-auto border rounded-md p-2">
-                                  {projectUploadFiles.map((f) => (
-                                    <li
-                                      key={f.name}
-                                      className="py-1 border-b last:border-0 flex justify-between">
-                                      <span className="truncate mr-2">
-                                        {f.name}
-                                      </span>
-                                      <span className="text-gray-400 text-xs">
-                                        {(f.size / 1024).toFixed(1)} KB
-                                      </span>
-                                    </li>
-                                  ))}
-                                </ul>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="mt-2"
-                                  onClick={() => setProjectUploadFiles([])}>
-                                  Auswahl zurücksetzen
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                          <DialogFooter>
-                            <DialogClose asChild>
-                              <Button variant="outline">Abbrechen</Button>
-                            </DialogClose>
-                            <Button
-                              onClick={handleProjectUpload}
-                              disabled={
-                                projectUploadFiles.length === 0 ||
-                                uploadingProject
-                              }>
-                              {uploadingProject ? (
-                                <>
-                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                  Uploading...
-                                </>
-                              ) : (
-                                <>
-                                  Zu Projekt{" "}
-                                  {decodeURIComponent(
-                                    selectedProject
-                                      .replace(/^\/klark0\//, "")
-                                      .split("/")[0]
-                                  )}{" "}
-                                  hinzufügen
-                                </>
-                              )}
-                            </Button>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
+                      <>
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          onClick={() => setIsProjectUploadDialogOpen(true)}
+                        >
+                          <Upload className="h-4 w-4" />
+                        </Button>
+                        <UploadDialog
+                          open={isProjectUploadDialogOpen}
+                          onOpenChange={setIsProjectUploadDialogOpen}
+                          title="Dateien zu Projekt hinzufügen"
+                          files={projectUpload.files}
+                          uploading={projectUpload.uploading}
+                          isDragging={projectUpload.isDragging}
+                          onFilesChange={projectUpload.setFiles}
+                          onRemoveFile={projectUpload.removeFile}
+                          onUpload={handleProjectUpload}
+                          onDragEnter={projectUpload.handleDragEnter}
+                          onDragLeave={projectUpload.handleDragLeave}
+                          onDragOver={projectUpload.handleDragOver}
+                          onDrop={projectUpload.handleDrop}
+                          uploadButtonText={`Zu Projekt ${decodeURIComponent(
+                            selectedProject.replace(/^\/klark0\//, "").split("/")[0]
+                          )} hinzufügen`}
+                          disabled={!selectedProject}
+                        />
+                      </>
                     )}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -1005,120 +802,34 @@ export default function VaultPage() {
                       </Dialog>
                       {/* Upload-Dialog für Bieter */}
                       {selectedBieter && (
-                        <Dialog
-                          open={isBieterUploadDialogOpen}
-                          onOpenChange={setIsBieterUploadDialogOpen}>
-                          <DialogTrigger asChild>
-                            <Button variant="outline" size="icon">
-                              <Upload className="h-4 w-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>
-                                Dateien zu Bieter hinzufügen
-                              </DialogTitle>
-                            </DialogHeader>
-                            <div className="space-y-4 py-4">
-                              <div
-                                className={`border-2 ${
-                                  isDraggingBieter
-                                    ? "border-primary"
-                                    : "border-dashed"
-                                } p-4 rounded-md text-center cursor-pointer relative`}
-                                onDragEnter={handleBieterFileDrag}
-                                onDragOver={handleBieterFileDrag}
-                                onDragLeave={handleBieterFileDrag}
-                                onDrop={handleBieterFileDrop}
-                                onClick={() =>
-                                  document
-                                    .getElementById("bieter-file-upload")
-                                    ?.click()
-                                }>
-                                <input
-                                  id="bieter-file-upload"
-                                  type="file"
-                                  multiple
-                                  className="sr-only"
-                                  onChange={(e) =>
-                                    setBieterUploadFiles(
-                                      Array.from(e.target.files || [])
-                                    )
-                                  }
-                                />
-                                <Upload className="h-10 w-10 mx-auto text-gray-400 mb-2" />
-                                <p className="mb-1 text-sm text-gray-600">
-                                  Dateien hier ablegen oder{" "}
-                                  <span className="text-primary font-medium">
-                                    klicken
-                                  </span>{" "}
-                                  zum Auswählen
-                                </p>
-                                <p className="text-xs text-gray-500">
-                                  Unterstützt werden alle Dateitypen
-                                </p>
-                              </div>
-                              {bieterUploadFiles.length > 0 && (
-                                <div>
-                                  <p className="text-sm font-medium mb-2">
-                                    Ausgewählte Dateien (
-                                    {bieterUploadFiles.length}):
-                                  </p>
-                                  <ul className="text-sm max-h-40 overflow-y-auto border rounded-md p-2">
-                                    {bieterUploadFiles.map((f) => (
-                                      <li
-                                        key={f.name}
-                                        className="py-1 border-b last:border-0 flex justify-between">
-                                        <span className="truncate mr-2">
-                                          {f.name}
-                                        </span>
-                                        <span className="text-gray-400 text-xs">
-                                          {(f.size / 1024).toFixed(1)} KB
-                                        </span>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="mt-2"
-                                    onClick={() => setBieterUploadFiles([])}>
-                                    Auswahl zurücksetzen
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-                            <DialogFooter>
-                              <DialogClose asChild>
-                                <Button variant="outline">Abbrechen</Button>
-                              </DialogClose>
-                              <Button
-                                onClick={handleBieterUpload}
-                                disabled={
-                                  bieterUploadFiles.length === 0 ||
-                                  uploadingBieter
-                                }>
-                                {uploadingBieter ? (
-                                  <>
-                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                    Uploading...
-                                  </>
-                                ) : (
-                                  <>
-                                    Zu Bieter{" "}
-                                    {decodeURIComponent(
-                                      selectedBieter
-                                        .replace(/\/$/, "")
-                                        .split("/")
-                                        .pop()!
-                                    )}{" "}
-                                    hinzufügen
-                                  </>
-                                )}
-                              </Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
+                        <>
+                          <Button 
+                            variant="outline" 
+                            size="icon"
+                            onClick={() => setIsBieterUploadDialogOpen(true)}
+                          >
+                            <Upload className="h-4 w-4" />
+                          </Button>
+                          <UploadDialog
+                            open={isBieterUploadDialogOpen}
+                            onOpenChange={setIsBieterUploadDialogOpen}
+                            title="Dateien zu Bieter hinzufügen"
+                            files={bieterUpload.files}
+                            uploading={bieterUpload.uploading}
+                            isDragging={bieterUpload.isDragging}
+                            onFilesChange={bieterUpload.setFiles}
+                            onRemoveFile={bieterUpload.removeFile}
+                            onUpload={handleBieterUpload}
+                            onDragEnter={bieterUpload.handleDragEnter}
+                            onDragLeave={bieterUpload.handleDragLeave}
+                            onDragOver={bieterUpload.handleDragOver}
+                            onDrop={bieterUpload.handleDrop}
+                            uploadButtonText={`Zu Bieter ${decodeURIComponent(
+                              selectedBieter.replace(/\/$/, "").split("/").pop()!
+                            )} hinzufügen`}
+                            disabled={!selectedBieter}
+                          />
+                        </>
                       )}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
