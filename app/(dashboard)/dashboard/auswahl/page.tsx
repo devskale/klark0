@@ -42,6 +42,8 @@ import {
   normalizePath,
   fileTreeFetcher,
   FileTreeEntry,
+  extractProjectName,
+  removeWebDAVBasePath,
 } from "@/lib/fs/fileTreeUtils";
 import type { FileSystemSettings } from "../einstellungen/page";
 import { useUpload } from "@/hooks/use-upload";
@@ -647,7 +649,7 @@ export default function VaultPage() {
                           onDragOver={projectUpload.handleFileDrag}
                           onDrop={projectUpload.handleFileDrop}
                           uploadButtonText={`Zu Projekt ${decodeURIComponent(
-                            selectedProject.replace(/^\/klark0\//, "").split("/")[0]
+                            extractProjectName(selectedProject, fileSystemConfig?.basePath || null)
                           )} hinzufügen`}
                           disabled={!selectedProject}
                         />
@@ -670,10 +672,25 @@ export default function VaultPage() {
                 <ul>
                   {fileTree
                     .filter(
-                      (node) =>
-                        node.type === "directory" &&
-                        !reservedDirs.includes(node.name) &&
-                        node.name !== fileSystemConfig?.basePath
+                      (node) => {
+                        // Filter out directories that are not valid projects
+                        if (node.type !== "directory") return false;
+                        if (reservedDirs.includes(node.name)) return false;
+                        
+                        // Filter out the WebDAV root path itself
+                        if (fileSystemConfig?.basePath) {
+                          const normalizedNodePath = node.path.endsWith("/") ? node.path : node.path + "/";
+                          const normalizedBasePath = fileSystemConfig.basePath.endsWith("/") ? fileSystemConfig.basePath : fileSystemConfig.basePath + "/";
+                          
+                          // Exclude if this is the root directory itself
+                          if (normalizedNodePath === normalizedBasePath) return false;
+                          
+                          // Exclude if this node is a parent of the basePath (shouldn't happen but safety check)
+                          if (normalizedBasePath.startsWith(normalizedNodePath) && normalizedNodePath !== normalizedBasePath) return false;
+                        }
+                        
+                        return true;
+                      }
                     )
                     .map((project) => (
                       <li
@@ -687,10 +704,7 @@ export default function VaultPage() {
                           }`}
                           onClick={() => {
                             const isSame = selectedProject === project.path;
-                            const raw = project.path
-                              .replace(/^\/klark0\//, "")
-                              .split("/")[0];
-                            const projName = decodeURIComponent(raw);
+                            const projName = extractProjectName(project.path, fileSystemConfig?.basePath || null);
                             if (isSame) {
                               setSelectedProject(null);
                               setSelectedBieter(null);
@@ -758,9 +772,7 @@ export default function VaultPage() {
                     <h2 className="text-md font-medium">
                       Bieter für:{" "}
                       {decodeURIComponent(
-                        selectedProject
-                          ?.replace(/^\/klark0\//, "")
-                          .split("/")[0] || "Ausgewähltes Projekt"
+                        extractProjectName(selectedProject, fileSystemConfig?.basePath || null) || "Ausgewähltes Projekt"
                       )}
                     </h2>
                     <div className="flex items-center space-x-2">

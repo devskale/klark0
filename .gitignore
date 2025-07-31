@@ -52,3 +52,4 @@ data/**
 stripe/
 *.swp
 tmp/
+*.zip

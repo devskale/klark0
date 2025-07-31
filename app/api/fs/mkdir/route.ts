@@ -17,27 +17,20 @@ async function handleMkdirRequest(request: RequestWithTeam) {
     // Get filesystem configuration from database
     const fsSettings = await getFileSystemSettings(request.teamId);
     
-    // Override path if it starts with "/klark0" to use path from settings
-    if (path.startsWith("/klark0")) {
-      console.log("Detected hardcoded path '/klark0' in request, overriding...");
-      // Extract the subdirectory after "/klark0" if any
-      const subPath = path.length > 7 ? path.substring(7) : "";
-      
-      if (fsSettings.path && fsSettings.path !== "/") {
-        // Use the path from settings, but avoid double klark0
-        if (fsSettings.path === "klark0" || fsSettings.path === "/klark0") {
-          // If settings path is 'klark0', use it as base and append subPath
-          path = "klark0" + subPath;
-        } else {
-          // For other paths, use them directly with subPath
-          path = fsSettings.path + subPath;
-        }
-        console.log("Overridden with path from settings:", path);
-      } else {
-        // If no valid path in settings, strip "/klark0" and use the subdirectory or default to "/"
-        path = subPath || "/";
-        console.log("Overridden with default root or subdirectory (no valid path in settings):", path);
-      }
+    // Dynamic base path detection and override
+    const basePath = fsSettings.path || "";
+    const normalizedBasePath = basePath.startsWith("/") ? basePath.substring(1) : basePath;
+    
+    if (normalizedBasePath && (path === `/${normalizedBasePath}` || path === normalizedBasePath)) {
+      // If the request is for the base path itself, use the settings path
+      console.log(`Detected base path request '${path}', using settings path: ${fsSettings.path}`);
+      path = fsSettings.path || "/";
+    } else if (normalizedBasePath && path.startsWith(`/${normalizedBasePath}/`)) {
+      // If the request starts with the base path, extract the subpath and append to settings path
+      console.log(`Detected base path prefix '/${normalizedBasePath}' in request, overriding...`);
+      const subPath = path.substring(normalizedBasePath.length + 1); // +1 for the leading slash
+      path = (fsSettings.path || "") + (subPath ? `/${subPath}` : "");
+      console.log("Overridden with path from settings:", path);
     }
 
     if (fsSettings.type !== "webdav") {
@@ -54,8 +47,11 @@ async function handleMkdirRequest(request: RequestWithTeam) {
       );
     }
 
+    // Ensure path is relative for proper URL construction
+    const relativePath = path.startsWith("/") ? path.substring(1) : path;
+    
     const webdavUrl = new URL(
-      path,
+      relativePath,
       fsSettings.host.endsWith("/") ? fsSettings.host : fsSettings.host + "/"
     ).toString();
     const resp = await fetch(webdavUrl, {
