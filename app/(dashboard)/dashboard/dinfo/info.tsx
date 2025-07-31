@@ -10,7 +10,6 @@ import {
   fileTreeFetcher,
   normalizePath,
   PDF2MD_INDEX_FILE_NAME,
-  extractProjectName,
 } from "@/lib/fs/fileTreeUtils";
 import { EditableText } from "@/components/ui/editable-text";
 import { AI_QUERIES } from "@/app/api/ai/config";
@@ -19,22 +18,14 @@ export default function Info() {
   const { selectedDok, selectedProject, selectedBieter } = useProject();
   const dokName = selectedDok ?? "Dokname nicht verfügbar";
 
-  // fetch filesystem settings for dynamic base path
-  const { data: fileSystemConfig } = useSWR(
-    "/api/settings?key=fileSystem",
-    async (url) => {
-      const res = await fetch(url);
-      if (!res.ok) return null;
-      return res.json();
-    }
-  );
-
   // decode URL‐encoded dok path for display
   const dokPathDecoded = selectedDok ? decodeURIComponent(selectedDok) : "N/A";
 
-  // derive dynamic names using the new utility
+  // derive dynamic names
   const projectName = selectedProject
-    ? extractProjectName(selectedProject, fileSystemConfig?.basePath || null)
+    ? decodeURIComponent(
+        selectedProject.replace(/^\/klark0\//, "").split("/")[0]
+      )
     : "N/A";
   const bieterName = selectedBieter
     ? decodeURIComponent(selectedBieter.replace(/\/$/, "").split("/").pop()!)

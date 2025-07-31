@@ -2,52 +2,6 @@ import { abstractFileSystemView, FileEntry } from "@/lib/fs/abstractFilesystem";
 
 export const PDF2MD_INDEX_FILE_NAME = ".pdf2md_index.json";
 
-/**
- * Utility function to get the WebDAV base path from settings
- * This replaces hardcoded references to specific directory names
- */
-export async function getWebDAVBasePath(): Promise<string | null> {
-  try {
-    const settingsResponse = await fetch("/api/settings?key=fileSystem");
-    if (settingsResponse.ok) {
-      const fsSettings = await settingsResponse.json();
-      return fsSettings.path || null;
-    }
-  } catch (error) {
-    console.error("Error fetching WebDAV base path:", error);
-  }
-  return null;
-}
-
-/**
- * Client-side utility to remove the WebDAV base path prefix from a path
- * This replaces hardcoded path replacements like .replace(/^\/klark0\//, "")
- */
-export function removeWebDAVBasePath(path: string, basePath: string | null): string {
-  if (!basePath || !path) return path;
-  
-  const basePathWithSlash = `/${basePath}/`;
-  if (path.startsWith(basePathWithSlash)) {
-    return path.substring(basePathWithSlash.length);
-  }
-  
-  // Also handle case where path starts with just the base path
-  const basePathOnly = `/${basePath}`;
-  if (path === basePathOnly) {
-    return "";
-  }
-  
-  return path;
-}
-
-/**
- * Extract project name from a path by removing the WebDAV base path prefix
- */
-export function extractProjectName(projectPath: string, basePath: string | null): string {
-  const cleanPath = removeWebDAVBasePath(projectPath, basePath);
-  return cleanPath.split("/")[0] || "";
-}
-
 export type FileSystemSettings = {
   type: "webdav" | "local";
   host?: string;
@@ -253,36 +207,7 @@ export const fileTreeFetcher = async (
           parserDefault: pInfo?.default || "",
         };
       })
-      .filter((entry) => {
-        // Normalize paths for comparison
-        const normalizedEntryPath = normalizePath(entry.path);
-        const normalizedFinalPath = normalizePath(finalPath);
-        
-        // Direct path comparison
-        if (normalizedEntryPath === normalizedFinalPath) {
-          return false;
-        }
-        
-        // Handle WebDAV paths that include the full server path structure
-        // e.g., entry.path = "/disk/klark0/" and finalPath = "klark0"
-        if (normalizedEntryPath.endsWith(normalizedFinalPath)) {
-          // Check if this is exactly the root directory by comparing the name
-          const pathSegments = normalizedEntryPath.split('/').filter(Boolean);
-          const finalPathSegments = normalizedFinalPath.split('/').filter(Boolean);
-          
-          // If the entry path ends with the final path and has the same number of segments
-          // or just one more segment (the server prefix), it's likely the root directory
-          if (pathSegments.length <= finalPathSegments.length + 1) {
-            const entryName = pathSegments[pathSegments.length - 1];
-            const finalName = finalPathSegments[finalPathSegments.length - 1];
-            if (entryName === finalName) {
-              return false; // This is the root directory, exclude it
-            }
-          }
-        }
-        
-        return true; // Include this entry
-      });
+      .filter((entry) => normalizePath(entry.path) !== normalizePath(finalPath));
     return entriesWithData;
   }
   throw new Error("Unexpected API response for directory listing");
