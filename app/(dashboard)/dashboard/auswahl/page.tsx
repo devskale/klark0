@@ -177,33 +177,60 @@ export default function VaultPage() {
   };
   // Neuer Handler: Bieter archivieren via WebDAV-Rename
   const handleArchiveBieter = async (bieterPath: string) => {
-    if (!selectedProject) return; // Added !selectedProject check
-    const bieterName = decodeURIComponent(
-      bieterPath.replace(/\/$/, "").split("/").pop() || ""
-    );
-    const params = new URLSearchParams({
-      path: bieterPath,
-      destination: `${selectedProject}/B/archive/${bieterName}`, // Ensure selectedProject is used
-    });
-    const res = await fetch(`/api/fs/rename?${params.toString()}`, {
-      method: "POST",
-    });
-    if (res.ok) {
-      await mutateBieter();
-      resetSelectionsOnPathAction(
-        bieterPath,
-        selectedProject,
-        setSelectedProject,
-        selectedBieter,
-        setSelectedBieter,
-        selectedDok,
-        setSelectedDok
+    if (!selectedProject || !fileSystemConfig) return;
+
+    const cleanedBieterPath = bieterPath.replace(/\/$/, ""); // remove trailing slash
+
+    const lastSlashIndex = cleanedBieterPath.lastIndexOf('/');
+    const bieterParentPath = cleanedBieterPath.substring(0, lastSlashIndex);
+    const bieterName = cleanedBieterPath.substring(lastSlashIndex + 1);
+
+    const destinationPath = `${bieterParentPath}/archive/${bieterName}`;
+
+    try {
+      // Ensure the archive directory exists
+      const archiveDir = `${bieterParentPath}/archive`;
+      const archiveDirParams = new URLSearchParams({ path: archiveDir });
+      const archiveDirRes = await fetch(
+        `/api/fs/mkdir?${archiveDirParams.toString()}`,
+        {
+          method: "POST",
+        }
       );
-    } else {
-      console.error(
-        "Archivieren des Bieters fehlgeschlagen:",
-        await res.text()
-      );
+
+      if (!archiveDirRes.ok && archiveDirRes.status !== 405) {
+        // 405 is Method Not Allowed, often returned if dir exists
+        console.warn(
+          `Could not create bieter archive directory, proceeding anyway. Status: ${archiveDirRes.status}`
+        );
+      }
+
+      const params = new URLSearchParams({
+        path: bieterPath, // send original path
+        destination: destinationPath,
+      });
+      const res = await fetch(`/api/fs/rename?${params.toString()}`, {
+        method: "POST",
+      });
+      if (res.ok) {
+        await mutateBieter();
+        resetSelectionsOnPathAction(
+          bieterPath,
+          selectedProject,
+          setSelectedProject,
+          selectedBieter,
+          setSelectedBieter,
+          selectedDok,
+          setSelectedDok
+        );
+      } else {
+        console.error(
+          "Archivieren des Bieters fehlgeschlagen:",
+          await res.text()
+        );
+      }
+    } catch (error) {
+      console.error("Fehler beim Archivieren des Bieters:", error);
     }
   };
   // Neuer Handler: Bieter löschen via WebDAV-Delete
@@ -299,90 +326,46 @@ export default function VaultPage() {
   // Neuer Handler: Projekt archivieren via WebDAV-Rename
   const handleArchiveProject = async (projectPath: string) => {
     if (!fileSystemConfig) return;
-    
-    console.log("DEBUG: handleArchiveProject called with:", {
-      projectPath,
-      fileSystemConfig: fileSystemConfig.basePath
-    });
-    
-    // Extract project name from the full path
-    const projectName = decodeURIComponent(
-      projectPath.replace(/\/$/, "").split("/").pop() || ""
-    );
-    
-    console.log("DEBUG: Extracted project name:", projectName);
-    
-    // Construct archive directory path at the same level as projects
-    // Remove the project name from the path to get the parent directory
-    const pathParts = projectPath.replace(/\/$/, "").split("/");
-    pathParts.pop(); // Remove project name
-    const parentDir = pathParts.join("/");
-    const archiveDir = `${parentDir}/archive`;
-    const destinationPath = `${archiveDir}/${projectName}`;
-    
-    console.log("DEBUG: Path construction:", {
-      pathParts,
-      parentDir,
-      archiveDir,
-      destinationPath
-    });
-    
+
+    const cleanedProjectPath = projectPath.replace(/\/$/, "");
+
+    const lastSlashIndex = cleanedProjectPath.lastIndexOf('/');
+    const parentDir = cleanedProjectPath.substring(0, lastSlashIndex);
+    const projectName = cleanedProjectPath.substring(lastSlashIndex + 1);
+
+    const destinationPath = `${parentDir}/archive/${projectName}`;
+
     try {
-      // First, try to create the archive directory
+      const archiveDir = `${parentDir}/archive`;
       const archiveDirParams = new URLSearchParams({
         path: archiveDir,
       });
-      
-      console.log("DEBUG: Creating archive directory:", archiveDir);
-      
-      const archiveDirRes = await fetch(`/api/fs/mkdir?${archiveDirParams.toString()}`, {
-        method: "POST",
-      });
-      
-      console.log("DEBUG: Archive directory creation response:", {
-        status: archiveDirRes.status,
-        statusText: archiveDirRes.statusText,
-        ok: archiveDirRes.ok
-      });
-      
-      // If mkdir fails with 405, it might be a method not allowed or directory already exists
-      // WebDAV MKCOL returns 405 if the directory already exists, so this is often expected
-      if (!archiveDirRes.ok) {
-        const errorText = await archiveDirRes.text();
-        console.log("DEBUG: Archive directory creation failed:", {
-          status: archiveDirRes.status,
-          errorText
-        });
-        
-        // If it's not a 405 (Method Not Allowed) or 409 (Conflict - already exists), 
-        // this might be a real error
-        if (archiveDirRes.status !== 405 && archiveDirRes.status !== 409) {
-          console.warn("Unexpected error creating archive directory:", errorText);
+      const archiveDirRes = await fetch(
+        `/api/fs/mkdir?${archiveDirParams.toString()}`,
+        {
+          method: "POST",
         }
+      );
+
+      if (!archiveDirRes.ok && archiveDirRes.status !== 405) {
+        console.warn(
+          `Could not create archive directory, proceeding anyway. Status: ${archiveDirRes.status}`
+        );
       }
-      
-      // Proceed with the rename operation regardless of mkdir result
-      // The directory might already exist or the WebDAV server might create it automatically
+
+      // Proceed with the rename operation.
       const renameParams = new URLSearchParams({
-        path: projectPath,
+        path: projectPath, // send original path
         destination: destinationPath,
       });
-      
-      console.log("DEBUG: Rename operation:", {
-        source: projectPath,
-        destination: destinationPath
-      });
-      
-      const renameRes = await fetch(`/api/fs/rename?${renameParams.toString()}`, {
-        method: "POST",
-      });
-      
-      console.log("DEBUG: Rename response:", {
-        status: renameRes.status,
-        statusText: renameRes.statusText,
-        ok: renameRes.ok
-      });
-      
+
+      const renameRes = await fetch(
+        `/api/fs/rename?${renameParams.toString()}`,
+        {
+          method: "POST",
+        }
+      );
+
       if (renameRes.ok) {
         mutate();
         resetSelectionsOnPathAction(
@@ -394,19 +377,13 @@ export default function VaultPage() {
           selectedDok,
           setSelectedDok
         );
-        console.log(`Projekt "${projectName}" erfolgreich archiviert`);
+        console.log(`Projekt "${projectName}" erfolgreich archiviert.`);
       } else {
         const errorText = await renameRes.text();
-        console.error("Archivieren fehlgeschlagen:", errorText);
-        console.error("DEBUG: Rename response details:", {
-          status: renameRes.status,
-          statusText: renameRes.statusText,
-          errorText
-        });
-        // You could add a toast notification here for user feedback
+        console.error("Archivieren des Projekts fehlgeschlagen:", errorText);
       }
     } catch (error) {
-      console.error("Fehler beim Archivieren:", error);
+      console.error("Fehler beim Archivieren des Projekts:", error);
     }
   };
   // Neuer Handler: Projekt löschen via WebDAV-Delete
