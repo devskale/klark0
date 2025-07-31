@@ -39,6 +39,8 @@ Anforderungen:
     - [x] **Error Handling**: Robuste Fehlerbehandlung für fehlgeschlagene Bild-Ladevorgänge und nicht unterstützte Dateitypen
   - [ ] **Anonymisierung**: Schutz sensibler Daten durch KI-basierte NER.
 - [ ] **Erweiterte Funktionen (unsortiert)**
+  - [x] **Archivierungsfunktion für Projekte und Bieter**: Ermöglicht das sichere Archivieren von Projekt- und Bieterverzeichnissen über WebDAV-Rename-Operationen.
+    - [x] **Fix**: Die `Destination`-URL für WebDAV `MOVE`-Operationen wurde korrigiert, um die Kompatibilität mit strikteren Server-Implementierungen zu gewährleisten.
   - [ ] enhance prompt definition with, maxInputLength (chars), maxOutputTokens
   - [ ] Prompt Templating mit Platzhaltern und Kontexten
   - [ ] **Basispfad-Konsolidierung**: Code-Anpassung zur Nutzung eines konsistenten Basispfads (z.B. `/dev` oder `/v1`), in git dev/basepath branch

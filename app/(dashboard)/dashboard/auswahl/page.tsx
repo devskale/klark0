@@ -206,7 +206,7 @@ export default function VaultPage() {
       }
 
       const params = new URLSearchParams({
-        path: bieterPath, // send original path
+        path: cleanedBieterPath,
         destination: destinationPath,
       });
       const res = await fetch(`/api/fs/rename?${params.toString()}`, {
@@ -355,7 +355,7 @@ export default function VaultPage() {
 
       // Proceed with the rename operation.
       const renameParams = new URLSearchParams({
-        path: projectPath, // send original path
+        path: cleanedProjectPath,
         destination: destinationPath,
       });
 
@@ -646,12 +646,19 @@ export default function VaultPage() {
               <CardContent>
                 <ul>
                   {fileTree
-                    .filter(
-                      (node) =>
+                    .filter((node) => {
+                      if (!fileSystemConfig) return false;
+                      // Exclude the base path directory itself from the list
+                      const basePathName = fileSystemConfig.basePath
+                        .split("/")
+                        .filter(Boolean)
+                        .pop();
+                      return (
                         node.type === "directory" &&
                         !reservedDirs.includes(node.name) &&
-                        node.name !== fileSystemConfig?.basePath
-                    )
+                        node.name !== basePathName
+                      );
+                    })
                     .map((project) => (
                       <li
                         key={project.path}
