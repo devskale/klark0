@@ -642,10 +642,10 @@ export default function VaultPage() {
                           onFilesChange={projectUpload.setFiles}
                           onRemoveFile={projectUpload.removeFile}
                           onUpload={handleProjectUpload}
-                          onDragEnter={projectUpload.handleDragEnter}
-                          onDragLeave={projectUpload.handleDragLeave}
-                          onDragOver={projectUpload.handleDragOver}
-                          onDrop={projectUpload.handleDrop}
+                          onDragEnter={projectUpload.handleFileDrag}
+                          onDragLeave={projectUpload.handleFileDrag}
+                          onDragOver={projectUpload.handleFileDrag}
+                          onDrop={projectUpload.handleFileDrop}
                           uploadButtonText={`Zu Projekt ${decodeURIComponent(
                             selectedProject.replace(/^\/klark0\//, "").split("/")[0]
                           )} hinzufügen`}
@@ -820,10 +820,10 @@ export default function VaultPage() {
                             onFilesChange={bieterUpload.setFiles}
                             onRemoveFile={bieterUpload.removeFile}
                             onUpload={handleBieterUpload}
-                            onDragEnter={bieterUpload.handleDragEnter}
-                            onDragLeave={bieterUpload.handleDragLeave}
-                            onDragOver={bieterUpload.handleDragOver}
-                            onDrop={bieterUpload.handleDrop}
+                            onDragEnter={bieterUpload.handleFileDrag}
+                            onDragLeave={bieterUpload.handleFileDrag}
+                            onDragOver={bieterUpload.handleFileDrag}
+                            onDrop={bieterUpload.handleFileDrop}
                             uploadButtonText={`Zu Bieter ${decodeURIComponent(
                               selectedBieter.replace(/\/$/, "").split("/").pop()!
                             )} hinzufügen`}

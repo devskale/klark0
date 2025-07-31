@@ -155,7 +155,9 @@ export default function DoksModule({ isUploadDialogOpen: externalUploadDialogOpe
 
   // Upload handler using consolidated hook
   const handleUpload = () => {
-    upload.upload(docsPath);
+    if (docsPath) {
+      upload.upload(docsPath);
+    }
   };
 
   const formatFileSize = (bytes: number) => {
@@ -313,10 +315,10 @@ export default function DoksModule({ isUploadDialogOpen: externalUploadDialogOpe
          onFilesChange={upload.setFiles}
          onRemoveFile={upload.removeFile}
          onUpload={handleUpload}
-         onDragEnter={upload.handleDragEnter}
-         onDragLeave={upload.handleDragLeave}
-         onDragOver={upload.handleDragOver}
-         onDrop={upload.handleDrop}
+         onDragEnter={upload.handleFileDrag}
+         onDragLeave={upload.handleFileDrag}
+         onDragOver={upload.handleFileDrag}
+         onDrop={upload.handleFileDrop}
          uploadButtonText="Upload"
          disabled={!docsPath}
        />

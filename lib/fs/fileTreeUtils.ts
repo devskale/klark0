@@ -28,6 +28,11 @@ export function normalizePath(path: string): string {
   return path.endsWith("/") ? path : path + "/";
 }
 
+// Type guard to check if an object is FileSystemSettings
+function isFileSystemSettings(obj: any): obj is FileSystemSettings {
+  return obj && typeof obj === 'object' && ('host' in obj || 'type' in obj);
+}
+
 /**
  * Simplified file tree fetcher that uses database-driven configuration
  * No more need to pass WebDAV credentials in parameters
@@ -48,12 +53,16 @@ export const fileTreeFetcher = async (
     path = pathOrArgs;
     options = undefined;
   } else if (Array.isArray(pathOrArgs)) {
-    if (pathOrArgs.length === 2 && typeof pathOrArgs[1] === "object" && !pathOrArgs[1].host) {
+    if (pathOrArgs.length === 2 && typeof pathOrArgs[1] === "object" && !isFileSystemSettings(pathOrArgs[1])) {
       // New signature: [path, options]
       [path, options] = pathOrArgs;
     } else {
       // Legacy signature: [path, settings, options]
-      [path, legacySettings, options] = pathOrArgs;
+      path = pathOrArgs[0];
+      if (isFileSystemSettings(pathOrArgs[1])) {
+        legacySettings = pathOrArgs[1];
+      }
+      options = pathOrArgs[2];
     }
   } else {
     throw new Error("Invalid arguments for fileTreeFetcher");
