@@ -54,3 +54,4 @@ stripe/
 tmp/
 *.zip
 disk/
+.dir

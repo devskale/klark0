@@ -26,19 +26,19 @@ Processed outputs include Markdown (.md) and JSON metadata.
 
 The root directory (e.g., `/disk/`) contains active tender project folders and an archive:
 
-- **Project Folder** (named after the tender, e.g., `2025-04 Lampen` or `A-TEST`):
-  - **A/**: Directory for tender documents (Ausschreibungsdokumente).
+- Project Folder (named after the tender, e.g., `2025-04 Lampen` or `A-TEST`):
+  - A/: Directory for tender documents (Ausschreibungsdokumente).
     - Contains original files (PDFs, DOCX, etc.).
-    - **md/**: Subdirectory for Markdown conversions of tender documents.
+    - md/: Subdirectory for Markdown conversions of tender documents.
       - Includes converted .md files and subdirectories for extracted content (e.g., images from PDFs).
-  - **B/**: Directory for bidder documents (Bieterdokumente).
-    - **BIETERNAME/** (e.g., `Lampion`): Subdirectory for each bidder's documents.
+  - B/: Directory for bidder documents (Bieterdokumente).
+    - BIETERNAME/ (e.g., `Lampion`): Subdirectory for each bidder's documents.
       - Original bidder files.
-      - **md/**: Markdown conversions of bidder documents.
-      - **archive/**: Holds archived versions of bidder directories.
-  - **projekt.meta.json**: Project metadata file (see Reserved Filenames).
-  - **kriterien.meta.json** (optional): Criteria metadata (see Reserved Filenames).
-- **archive/**: Directory for archived projects.
+      - md/: Markdown conversions of bidder documents.
+      - archive/: Holds archived versions of bidder directories.
+  - projekt.meta.json: Project metadata file (see Reserved Filenames).
+  - kriterien.meta.json (optional): Criteria metadata (see Reserved Filenames).
+- archive/: Directory for archived projects.
   - Contains moved project folders (e.g., archived `Ausschreibungsname`).
 
 Additionally, index files like `.pdf2md_index.json` may appear at various levels to track conversions.
@@ -236,3 +236,135 @@ This structure illustrates:
 - Extracted assets in subdirectories
 - Metadata files at the project level
 - Archive directories for both bidders and completed projects
+
+## Metadata File Specifications (Focused Overview)
+
+This section consolidates and deepens the description of the three core JSON metadata artifacts referenced across tools (`pdf2md`, `strukt2meta`) and visible in the sample project tree (`.dir`).
+
+### 1. projekt.meta.json (Project-Level Canonical Metadata)
+Location: Project root (e.g., `2025-04 Lampen/projekt.meta.json`)
+Purpose: Canonical high-level tender/project descriptor used for UI, search, enrichment context.
+Lifecycle:
+- Created after initial document ingestion or first metadata extraction run.
+- Updated when AI extraction or manual curation adds / changes project facts.
+- Read-only for downstream parsing steps (they should not overwrite core identity fields without explicit user action).
+
+Minimal Field Set (recommended):
+```
+{
+  "projektName": "Leuchten, Masten, Ausleger",          # Human readable project name
+  "referenznummer": "AS 2024.06001",                   # Tender reference / internal ID
+  "vergabestelle": "Wiener Wohnen Hausbetreuung GmbH", # Contracting authority
+  "adresse": "Erdbergstraße 200, 1030 Wien",           # Authority address
+  "sprache": "Deutsch",                                # Primary language
+  "beschreibung": "...",                               # Short summary (<= 600 chars)
+  "startDatum": "NONE",                                # If unknown use "NONE" or null
+  "bieterabgabe": "2025-06-16",                        # Bid submission deadline
+  "projektStart": "NONE",
+  "endDatum": "NONE",
+  "dokumentdatum": "2025-07-31",                       # Date of key base doc (AAB)
+  "schlagworte": "comma,separated,keywords",
+  "selectedParser": null,                               # Preferred parser id (optional)
+  "metadaten": []                                       # Future structured enrichments
+}
+```
+Best Practices:
+- Keep immutable identity keys (`referenznummer`) stable; if changed, log history externally.
+- Normalize dates to ISO `YYYY-MM-DD`.
+- Consider adding a `version` and `updatedAt` field in future schema evolution.
+
+### 2. kriterien.meta.json (Extracted Criteria & Compliance Model)
+Location: Project root (optional; created when criteria extraction runs successfully).
+Purpose: Central structured representation of award & suitability criteria for scoring, compliance checking, and bid guidance.
+Typical Structure (abridged):
+```
+{
+  "extractedCriteria": {
+    "eignungskriterien": { ... },            # Suitability requirements (object or list)
+    "zuschlagskriterien": [ { ... } ],        # Award criteria list with weights
+    "subunternehmerregelung": [ ... ],       # Subcontracting clauses
+    "formale_anforderungen": [ ... ]         # Formal submission rules
+  },
+  "aabFileName": "2024_06001_AAB_EV.pdf",    # Source anchor document
+  "extractionMethod": "KRITERIEN_EXTRAKTION", # Extraction pipeline id
+  "extractionTimestamp": "2025-07-31T14:09:10Z",
+  "lastModified": "2025-07-31T14:09:10Z",
+  "version": "1.0",
+  "reviewStatus": { "aiReviewed": true, "humanReviewed": false }
+}
+```
+Best Practices:
+- Always persist `aabFileName` (traceability to governing source).
+- Include weights/points inside each `zuschlagskriterien` entry where applicable.
+- Introduce `normalizationVersion` if scoring normalization logic changes later.
+- After human review, set `reviewStatus.humanReviewed=true` and optionally add `approver` + `reviewTimestamp`.
+
+### 3. .pdf2md_index.json (Directory-Level Parse & Metadata Index)
+Location: Any directory containing source documents (`A/`, bidder subfolders, etc.).
+Purpose: Operational index for file discovery, parser coverage tracking, and document-level metadata attachment (lightweight enrichment layer).
+Key Sections:
+```
+{
+  "schema_version": 1,                 # (Planned field, may be absent in legacy files)
+  "timestamp": 1732972365.123,         # Last write epoch
+  "files": [
+    {
+      "name": "2024_06001_AAB_EV.pdf",
+      "size": 123456,
+      "hash": "<sha256|md5>",          # Integrity & change detection
+      "parsers": {
+        "status": "completed",        # Legacy aggregate status (optional)
+        "det": ["docling", "pdfplumber"],
+        "default": "docling"          # Preferred parser selection (optional)
+      },
+      "meta": {
+        "kategorie": "Ausschreibungsunterlagen", # Domain category
+        "name": "AAB EV"                         # Human-friendly label
+      }
+    }
+  ],
+  "directories": []
+}
+```
+Modernization Direction (OFS Core):
+- Introduce `parsers` map with per-parser objects: `{ "docling": {"ts": ..., "ok": true}}` while maintaining `parsers.det` for backward compatibility.
+- Add optional `rel_path` to decouple from physical moves.
+- Provide idempotent update semantics via `record_parse` API.
+
+Integrity & Consistency:
+- If file hash changes but size identical: treat as modified; re-parse may be required.
+- Stale index detection: compare `timestamp` against file mtimes; schedule re-scan.
+- Recovery: If JSON corrupt → back up corrupted file (`.bak`) and regenerate.
+
+### Relationships & Flow
+1. Raw documents enter `A/` or `B/<Bidder>/`.
+2. Conversions populate `md/` and update `.pdf2md_index.json` (parser coverage).
+3. Project-level synthesis produces / updates `projekt.meta.json`.
+4. Criteria extraction pipeline outputs `kriterien.meta.json` referencing authoritative source doc(s) recorded in the index.
+5. Downstream enrichment (categorization, AI metadata) augments `meta` blocks inside the index and/or adds structured objects to `projekt.meta.json`.
+
+### Example Cross-Referencing (Using Tree)
+- `2025-04 Lampen/A/2024_06001_AAB_EV.pdf` → entry in `A/.pdf2md_index.json` with parsers `[docling, pdfplumber, marker]`.
+- Criteria extraction sets `aabFileName` = that file in `kriterien.meta.json`.
+- `projekt.meta.json` `projektName` and `referenznummer` surface in UI search; `schlagworte` support tag-based retrieval.
+
+### Validation Checklist (Recommended Before Deployment)
+| Check | File | Condition |
+|-------|------|-----------|
+| Project identity present | projekt.meta.json | `projektName` & `referenznummer` non-empty |
+| Core deadlines consistent | projekt.meta.json | `bieterabgabe` >= today or flagged archived |
+| AAB reference resolvable | kriterien.meta.json | `aabFileName` exists in index `files` list |
+| Parser coverage threshold | .pdf2md_index.json | Required minimum parser(s) executed |
+| Categorization completeness | .pdf2md_index.json | All `meta.kategorie` populated (or queued) |
+
+### Tooling Implications
+- `pdf2md` updates index incrementally → no direct writes to project / criteria JSON.
+- `strukt2meta` reads index to decide which markdown version to use and to inject metadata back.
+- Future OFS Core centralizes JSON schema validation & graceful migrations.
+
+### Future Enhancements (Planned)
+- Add `projectId` GUID to `projekt.meta.json` & echo in index entries for join efficiency.
+- Maintain `criteriaHash` in `kriterien.meta.json` to detect drift after document updates.
+- Introduce `meta.provenance` per document listing parser + model + timestamp for each metadata field.
+
+---
