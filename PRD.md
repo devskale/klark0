@@ -1,19 +1,31 @@
 # kontext.one - Product Requirements Document
 
-## Ziel
+## 📋 Inhaltsverzeichnis
+
+1. [🎯 Ziel](#ziel)
+2. [📋 Anforderungen](#anforderungen)
+3. [🚀 Produktvision](#produktvision)
+4. [📈 Entwicklungsplan & Status](#entwicklungsplan--status)
+5. [🏗️ Projektstruktur](#projektstruktur)
+6. [🔐 Authentifizierung & Session-Management](#authentifizierung--session-management)
+7. [📚 Lessons Learned & Best Practices](#lessons-learned--best-practices)
+
+---
+
+## 🎯 Ziel
 
 Entwicklung einer digitalen Webapp für die Auditierung von Ausschreibungsunterlagen (Tender Documents). Die Anwendung soll Transparenz, Effizienz und Automatisierung in den Bewertungsprozess von Ausschreibungen bringen.
 
-## Anforderungen
+## 📋 Anforderungen
 
-### Funktionale Anforderungen
+### ⚙️ Funktionale Anforderungen
 - **Dokumenten-Upload und -Verwaltung**: Sichere Speicherung und Organisation von Ausschreibungsunterlagen
 - **KI-gestützte Analyse**: Automatische Extraktion und Bewertung von Kriterien aus Dokumenten
 - **Benutzer- und Teamverwaltung**: Rollenbasierte Zugriffskontrolle und Teamzusammenarbeit
 - **Transparente Bewertung**: Nachvollziehbare Kriterien und Bewertungsprozesse
 - **Sicherheit**: Schutz sensibler Ausschreibungsdaten
 
-### Technische Anforderungen
+### 🛠️ Technische Anforderungen
 - **Framework**: Next.js mit TypeScript
 - **Datenbank**: PostgreSQL mit Drizzle ORM
 - **UI**: shadcn/ui Komponenten
@@ -22,22 +34,22 @@ Entwicklung einer digitalen Webapp für die Auditierung von Ausschreibungsunterl
 
 *Detaillierte technische Implementierung siehe [README.md](./README.md)*
 
-## Produktvision
+## 🚀 Produktvision
 
-### Kernfunktionalitäten
+### 🎯 Kernfunktionalitäten
 - **Projektmanagement**: Strukturierte Organisation von Ausschreibungsprojekten
 - **Dokumentenanalyse**: KI-gestützte Extraktion von Bewertungskriterien
 - **Kollaborative Bewertung**: Teambasierte Prüfung und Bewertung
 - **Compliance-Tracking**: Nachverfolgung von Anforderungserfüllung
 - **Reporting**: Automatisierte Berichte und Auswertungen
 
-### Zielgruppen
+### 👥 Zielgruppen
 - **Öffentliche Auftraggeber**: Behörden und öffentliche Institutionen
 - **Beratungsunternehmen**: Spezialisierte Ausschreibungsberater
 - **Compliance-Teams**: Interne Prüfungsabteilungen
 - **Projektmanager**: Verantwortliche für Ausschreibungsprozesse
 
-## ENTWICKLUNGSPLAN / STATUS
+## 📈 Entwicklungsplan & Status
 
 ### ✅ Phase 1: Grundlagen (Abgeschlossen)
 
@@ -74,34 +86,34 @@ Entwicklung einer digitalen Webapp für die Auditierung von Ausschreibungsunterl
 - [ ] **Performance-Tests**: Lastests und Optimierung
 - [ ] **Security-Audits**: Sicherheitsprüfungen und Penetrationstests
 
-## PROJEKTSTRUKTUR
+## 🏗️ Projektstruktur
 
 *Detaillierte Projektstruktur und technische Architektur siehe [README.md](./README.md)*
 
-### Organisationsprinzipien
+### 📐 Organisationsprinzipien
 - **Modulare Architektur**: Klare Trennung von Geschäftslogik, UI und Datenebene
 - **Feature-basierte Organisation**: Zusammengehörige Funktionen in gemeinsamen Verzeichnissen
 - **Wiederverwendbarkeit**: Zentrale Komponenten und Hooks für konsistente UX
 - **Skalierbarkeit**: Struktur unterstützt Wachstum und Erweiterungen
 
-## AUTHENTIFIZIERUNG & SESSION-MANAGEMENT
+## 🔐 Authentifizierung & Session-Management
 
-### Sicherheitsanforderungen
+### 🛡️ Sicherheitsanforderungen
 - **Sichere Authentifizierung**: JWT-basierte Session-Cookies mit bcryptjs-Hashing
 - **Rollenbasierte Zugriffskontrolle**: Team-Mitgliedschaften und Berechtigungen
 - **Session-Sicherheit**: Automatische Validierung und sichere Cookie-Übertragung
 - **Audit-Trail**: Vollständige Protokollierung von Anmelde-Aktivitäten
 
-### Compliance-Features
+### ✅ Compliance-Features
 - **DSGVO-Konformität**: Datenschutzkonforme Benutzerregistrierung und -verwaltung
 - **Sicherheitsstandards**: HTTPS-only, CSRF-Schutz, Rate Limiting
 - **Transparenz**: Nachvollziehbare Zugriffs- und Aktivitätsprotokolle
 
 *Technische Implementierungsdetails siehe [README.md](./README.md)*
 
-## LERNERFOLGE, CODING-RICHTLINIEN & REGELN & BEST PRACTICES
+## 📚 Lessons Learned & Best Practices
 
-### Coding-Richtlinien
+### 💻 Coding-Richtlinien
 
 - Typsicherheit: TypeScript konsequent nutzen.
 - Modularität: Code in logische und wiederverwendbare Module aufteilen.
@@ -109,7 +121,7 @@ Entwicklung einer digitalen Webapp für die Auditierung von Ausschreibungsunterl
 - Kommentare: Komplexe Logik und Funktionen klar dokumentieren.
 - Umweltvariablen: Sensible Daten und Konfigurationen in .env Dateien speichern.
 
-### Lernerfolge
+### 🎓 Lernerfolge
 
 - Die Abstraktion des Dateisystems ist entscheidend für die Unterstützung verschiedener Speicherorte.
 - KI-gestützte Analysen erfordern robuste "Human-in-the-Loop"-Prozesse, um die Genauigkeit zu gewährleisten.
@@ -137,8 +149,19 @@ Entwicklung einer digitalen Webapp für die Auditierung von Ausschreibungsunterl
   - Highlighting-Logic muss sowohl selectedDocs Array als auch einzelnen selectedDok-State berücksichtigen für konsistente UI-Darstellung
   - Navigation zwischen Detail- und Auswahlansichten erfordert koordinierte State-Management-Strategien zwischen verschiedenen Komponenten
 - **Upload Logic Consolidation & Reusable Components**:
-  - Code-Duplikation zwischen verschiedenen Upload-Bereichen führt zu Wartungsproblemen und inkonsistenter UX; zentrale Hooks und Komponenten lösen dies effektiv
-  - Custom Hooks (`useUpload`) mit konfigurierbaren Callbacks ermöglichen flexible Wiederverwendung bei unterschiedlichen Upload-Kontexten (Projekt, Bieter, Dokumente)
+    - Code-Duplikation zwischen verschiedenen Upload-Bereichen führt zu Wartungsproblemen und inkonsistenter UX; zentrale Hooks und Komponenten lösen dies effektiv
+    - Custom Hooks (`useUpload`) mit konfigurierbaren Callbacks ermöglichen flexible Wiederverwendung bei unterschiedlichen Upload-Kontexten (Projekt, Bieter, Dokumente)
+
+---
+
+## 🔗 Verwandte Dokumentation
+
+- **[README.md](./README.md)** - Technische Dokumentation, Installation und API-Referenz
+- **[docs/appStructure.md](./docs/appStructure.md)** - Detaillierte Anwendungsarchitektur
+- **[docs/db_guide.md](./docs/db_guide.md)** - Datenbankschema und Queries
+- **[docs/styleguide.md](./docs/styleguide.md)** - Design System und UI-Richtlinien
+- **[docs/opinionatedFilesystem.md](./docs/opinionatedFilesystem.md)** - Dateisystem-Standards und Best Practices
+- **[system_requirements.md](./system_requirements.md)** - Systemanforderungen und Module
   - Einheitliche Dialog-Komponenten (`UploadDialog`) mit Props-basierter Konfiguration schaffen konsistente UI-Patterns und reduzieren Entwicklungsaufwand
   - SWR-Mutation-Funktionen müssen korrekt referenziert werden; `mutate()` vs. `mutateProjects()` - falsche Funktionsnamen führen zu Runtime-Fehlern
   - Drag-and-Drop-Funktionalität sollte in wiederverwendbaren Komponenten gekapselt werden, um konsistentes Verhalten über alle Upload-Bereiche zu gewährleisten

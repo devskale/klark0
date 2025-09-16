@@ -4,7 +4,27 @@
 
 *Für Produktanforderungen und Entwicklungsplanung siehe [PRD.md](./PRD.md)*
 
-## Technische Features
+## 📋 Inhaltsverzeichnis
+
+1. [🛠️ Technische Features](#-technische-features)
+2. [⚡ Tech Stack](#-tech-stack)
+3. [👤 User Authentication and Roles](#-user-authentication-and-roles)
+4. [🛡️ Middleware](#-middleware)
+5. [📁 Filesystem](#-filesystem)
+6. [☁️ Remote Storage](#-remote-storage)
+7. [🚀 Installation & Setup](#-installation--setup)
+8. [🗄️ Datenbankschema anpassen](#-datenbankschema-anpassen)
+9. [🔑 Standardzugangsdaten](#-standardzugangsdaten)
+10. [🚀 Produktivbetrieb](#-produktivbetrieb)
+11. [🤖 AI-gestützte Dokumentenanalyse](#-ai-gestützte-dokumentenanalyse)
+12. [📁 Dateisystem-Struktur](#-dateisystem-struktur)
+13. [🔧 Abstracted Filesystem Layer](#-abstracted-filesystem-layer)
+14. [🌐 API Routes](#-api-routes)
+15. [💻 Frontend Integration Guide](#-frontend-integration-guide)
+
+---
+
+## 🛠️ Technische Features
 
 - **Sichere Authentifizierung**: JWT-basierte Session-Cookies mit bcryptjs-Hashing
 - **Rollenbasierte Zugriffskontrolle**: Team-Management und Berechtigungssystem
@@ -14,7 +34,7 @@
 - **Worker-System**: Asynchrone Verarbeitung zeitaufwändiger Aufgaben
 - **Audit-Trail**: Vollständige Protokollierung aller Benutzeraktionen
 
-## Tech Stack
+## ⚡ Tech Stack
 
 - **Framework**: [Next.js](https://nextjs.org/)
 - **Language**: TypeScript
@@ -25,7 +45,7 @@
 - **Payments**: Stripe
 - **Authentication**: JWT with session cookies
 
-## User Authentication and Roles
+## 👤 User Authentication and Roles
 
 Klark0 implements a secure user authentication system with role-based access control to manage permissions effectively:
 
@@ -51,20 +71,20 @@ Klark0 implements a secure user authentication system with role-based access con
 - **Activity Logging**:
   - User actions (sign-in, sign-up, team management) are logged for audit purposes, linked to specific users and teams.
 
-## Middleware
+## 🛡️ Middleware
 
 - Global middleware to protect logged-in routes
 - Local middleware to protect Server Actions or validate Zod schemas
 
-## Filesystem
+## 📁 Filesystem
 
 Access to documents via filesystem, configured in Einstellungen.
 
-## Remote Storage
+## ☁️ Remote Storage
 
 Support for remote storage via WebDAV (Other options will be implemented later).
 
-## Installation
+## 🚀 Installation & Setup
 
 1. Repository klonen:
 
@@ -100,7 +120,7 @@ pnpm dev
 
 Die Anwendung ist dann unter [http://localhost:3000](http://localhost:3000) erreichbar.
 
-## Datenbankschema anpassen
+## 🗄️ Datenbankschema anpassen
 
 Um das Datenbankschema zu ändern (z.B. neue Tabellen hinzufügen oder bestehende Tabellen modifizieren), sind folgende Schritte notwendig:
 
@@ -158,16 +178,16 @@ Um das Datenbankschema zu ändern (z.B. neue Tabellen hinzufügen oder bestehend
 
 Stellen Sie sicher, dass Ihre Datenbankverbindung korrekt konfiguriert ist (in der Regel über Umgebungsvariablen wie `POSTGRES_URL` in Ihrer `.env` Datei), bevor Sie die Migrationsbefehle ausführen.
 
-## Standardzugangsdaten
+## 🔑 Standardzugangsdaten
 
 - Benutzer: `admin@klark0.de`
 - Passwort: `admin123`
 
-## Produktivbetrieb
+## 🚀 Produktivbetrieb
 
 Für den Produktiveinsatz empfehlen wir eine Bereitstellung auf [Vercel](https://vercel.com/) oder einer ähnlichen Plattform. Stellen Sie sicher, dass alle erforderlichen Umgebungsvariablen für die Produktionsumgebung gesetzt sind.
 
-## AI-gestützte Dokumentenanalyse
+## 🤖 AI-gestützte Dokumentenanalyse
 
 ### Ausschreibungsprojekt-Info (ainfo)
 
@@ -191,11 +211,11 @@ Die ainfo-Komponente bietet intelligente Analyse von Ausschreibungsdokumenten:
 4. Extrahierte Metadaten werden automatisch in die Felder eingetragen
 5. Speichern Sie die Informationen mit "Speichern"
 
-## Dateisystem-Struktur
+## 📁 Dateisystem-Struktur
 
 Das System verwendet eine strukturierte Ordnerorganisation für Ausschreibungsprojekte:
 
-### Projektstruktur
+### 🏗️ Projektstruktur
 ```
 PROJEKTNAME/                    # Hauptprojektordner
 ├── ausschreibung.json         # Projektmetadaten (Datum, Status, etc.)
@@ -209,7 +229,7 @@ PROJEKTNAME/                    # Hauptprojektordner
 └── archiv/                   # Archivierte Dateien
 ```
 
-### Reservierte Ordner
+### 📂 Reservierte Ordner
 - `.NAME`: Versteckte Systemordner
 - `.processed`: Verarbeitete Dateien
 - `.md`: Reserviert für Markdown-Dateien
@@ -218,7 +238,7 @@ PROJEKTNAME/                    # Hauptprojektordner
 Dateiendungen
 .md: Markdown Files
 
-## Abstracted Filesystem Layer
+## 🔧 Abstracted Filesystem Layer
 
 Um die opinionated Dateistruktur zu abstrahieren, wurde eine Middleware-Schicht entwickelt, die zwischen den physischen Dateien/Ordnern und ihrer logischen Darstellung vermittelt. Diese Schicht:
 
@@ -228,7 +248,7 @@ Um die opinionated Dateistruktur zu abstrahieren, wurde eine Middleware-Schicht 
 
 Diese Abstraktion ermöglicht eine einheitliche API und eine flexible Darstellung des Dateisystems.
 
-## API Routes
+## 🌐 API Routes
 
 Klark0 stellt REST-Endpunkte unter `/api/fs/*` zur Verfügung, um Dateien per WebDAV zu verwalten. Alle Endpunkte verwenden die WebDAV-Konfiguration aus der Datenbank (Einstellungen-Seite) und sind team-aware. Authentifizierung erfolgt über die Session des angemeldeten Benutzers.
 
@@ -317,7 +337,7 @@ curl -X POST "http://localhost:3000/api/fs/upload?path=/klark0/neuer-ordner/" \
   -F "files=@/pfad/zur/lokalen/datei2.txt"
 ```
 
-## Frontend Integration Guide
+## 💻 Frontend Integration Guide
 
 ### Filesystem API Integration in React Components
 
@@ -485,5 +505,18 @@ export default function FileManager({ basePath }: { basePath: string }) {
   if
 ```
 
+
+---
+
+## 🔗 Verwandte Dokumentation
+
+- **[PRD.md](./PRD.md)** - Product Requirements Document mit Zielen, Anforderungen und Entwicklungsplan
+- **[docs/appStructure.md](./docs/appStructure.md)** - Detaillierte Anwendungsarchitektur
+- **[docs/db_guide.md](./docs/db_guide.md)** - Datenbankschema und Queries
+- **[docs/styleguide.md](./docs/styleguide.md)** - Design System und UI-Richtlinien
+- **[docs/opinionatedFilesystem.md](./docs/opinionatedFilesystem.md)** - Dateisystem-Standards und Best Practices
+- **[system_requirements.md](./system_requirements.md)** - Systemanforderungen und Module
+
+---
 
 # Revision history
