@@ -60,12 +60,17 @@ Entwicklung einer digitalen Webapp für die Auditierung von Ausschreibungsunterl
 - [x] **Dokumenten-Upload**: Konsolidiertes Upload-System mit Drag & Drop
 - [x] **Datei-Browser**: Vollständige Dateiverwaltung und -organisation
 - [x] **KI-Integration**: Grundlegende Dokumentenanalyse mit Gemini AI
+- [x] **Office Document Preview**: DOCX/XLSX Vorschau mit mammoth.js und SheetJS
+- [x] **Upload Logic Consolidation**: Zentrale Hooks und wiederverwendbare Komponenten
 
 ### 🔄 Phase 2: Kernfunktionen (In Bearbeitung)
 
 #### Analyse und Bewertung
+- [x] **AI-gestützte Dokumentenanalyse**: Automatische Extraktion von Projektinformationen und Kriterien
+- [x] **Worker-System**: Asynchrone Verarbeitung mit API-Routen für Jobs, Status und Worker-Typen
 - [ ] **Kriterien-Optimierung**: Überarbeitung umfangreicher allgemeiner Kriterien
-- [ ] **Anonymisierung**: Automatische Entfernung sensibler Daten
+- [ ] **Bewertungsmatrix**: Strukturierte Kriterien-Bewertung und Scoring
+- [ ] **Compliance-Tracking**: Automatische Überprüfung von Anforderungserfüllung
 - [ ] **KI-Review-System**: Qualitätskontrolle für Analysen
 - [ ] **Prompt-Engineering**: Verbesserung der KI-Prompts
 
@@ -76,8 +81,13 @@ Entwicklung einer digitalen Webapp für die Auditierung von Ausschreibungsunterl
 
 ### 📋 Phase 3: Skalierung (Geplant)
 
+#### Automatisierung und Integration
+- [ ] **Anonymisierung**: Automatische Entfernung sensibler Daten
+- [ ] **Batch-Verarbeitung**: Massenverarbeitung von Dokumenten
+- [ ] **API-Integration**: Externe Systeme und Datenquellen
+- [ ] **Reporting-Engine**: Automatisierte Berichte und Dashboards
+
 #### Performance und Stabilität
-- [ ] **Worker-System**: Asynchrone Verarbeitung zeitaufwändiger Aufgaben
 - [ ] **Caching-Strategien**: Optimierung der Anwendungsperformance
 - [ ] **Monitoring**: Systemüberwachung und Fehlerbehandlung
 
@@ -151,6 +161,21 @@ Entwicklung einer digitalen Webapp für die Auditierung von Ausschreibungsunterl
 - **Upload Logic Consolidation & Reusable Components**:
     - Code-Duplikation zwischen verschiedenen Upload-Bereichen führt zu Wartungsproblemen und inkonsistenter UX; zentrale Hooks und Komponenten lösen dies effektiv
     - Custom Hooks (`useUpload`) mit konfigurierbaren Callbacks ermöglichen flexible Wiederverwendung bei unterschiedlichen Upload-Kontexten (Projekt, Bieter, Dokumente)
+    - Einheitliche Dialog-Komponenten (`UploadDialog`) mit Props-basierter Konfiguration schaffen konsistente UI-Patterns und reduzieren Entwicklungsaufwand
+    - SWR-Mutation-Funktionen müssen korrekt referenziert werden; `mutate()` vs. `mutateProjects()` - falsche Funktionsnamen führen zu Runtime-Fehlern
+    - Drag-and-Drop-Funktionalität sollte in wiederverwendbaren Komponenten gekapselt werden, um konsistentes Verhalten über alle Upload-Bereiche zu gewährleisten
+- **Worker System Implementation**:
+    - Asynchrone Verarbeitung erfordert robuste API-Struktur mit Jobs, Status-Tracking und Worker-Typen
+    - Modulare API-Routen (`/api/worker/jobs`, `/api/worker/status`) ermöglichen saubere Trennung von Funktionalitäten
+    - Worker-Typen (parsing, anonymization, analysis, fakejob) sollten klar definierte Interfaces haben
+- **AI-gestützte Dokumentenanalyse**:
+    - Parser-Integration (marker, docling, pdfplumber) ermöglicht flexible Dokumentenkonvertierung zu Markdown
+    - Streaming AI-Responses verbessern UX bei längeren Analyseprozessen
+    - Context-Path-Tracking und Debug-Informationen sind essentiell für Entwicklung und Troubleshooting
+- **Office Document Preview System**:
+    - Server-seitige Konvertierung (mammoth.js für DOCX, SheetJS für XLSX) verhindert Client-seitige Sicherheitsrisiken
+    - HTML-Sanitization mit DOMPurify ist kritisch für XSS-Prävention bei konvertierten Inhalten
+    - Separate API-Routen für verschiedene Dokumenttypen ermöglichen modulare Erweiterung
 
 ---
 
@@ -162,15 +187,3 @@ Entwicklung einer digitalen Webapp für die Auditierung von Ausschreibungsunterl
 - **[docs/styleguide.md](./docs/styleguide.md)** - Design System und UI-Richtlinien
 - **[docs/opinionatedFilesystem.md](./docs/opinionatedFilesystem.md)** - Dateisystem-Standards und Best Practices
 - **[system_requirements.md](./system_requirements.md)** - Systemanforderungen und Module
-  - Einheitliche Dialog-Komponenten (`UploadDialog`) mit Props-basierter Konfiguration schaffen konsistente UI-Patterns und reduzieren Entwicklungsaufwand
-  - SWR-Mutation-Funktionen müssen korrekt referenziert werden; `mutate()` vs. `mutateProjects()` - falsche Funktionsnamen führen zu Runtime-Fehlern
-  - Drag-and-Drop-Funktionalität sollte in wiederverwendbaren Komponenten gekapselt werden, um konsistentes Verhalten über alle Upload-Bereiche zu gewährleisten
-- **Office Document Preview System**:
-  - DOCX und XLSX Dateien können jetzt direkt im Browser als formatiertes HTML angezeigt werden
-  - Server-seitige Konvertierung mit mammoth.js (DOCX) und SheetJS (XLSX) für sichere Verarbeitung ohne externe APIs
-  - HTML-Sanitization mit DOMPurify verhindert XSS-Angriffe bei der Anzeige konvertierter Inhalte
-  - Separate API-Routen (`/api/preview/docx`, `/api/preview/xlsx`) für modulare Dokumentenverarbeitung
-  - Loading-States und Fehlerbehandlung für bessere UX bei der Dokumentenkonvertierung
-  - Excel-Dateien zeigen alle Arbeitsblätter mit Styling und Sheet-Navigation
-  - Word-Dokumente behalten semantische Formatierung (Überschriften, Listen, Tabellen) bei
-  - Fallback auf Download-Option bei Konvertierungsfehlern oder nicht unterstützten Formaten
