@@ -1,33 +1,40 @@
-# Kontext1 - WebApp für sicheres digitales Vergabe Auditing
+# kontext.one - Technical Documentation
 
-Kontext1 ist eine moderne Webanwendung für sicheres digitales Vergabe Auditing, entwickelt mit **Next.js**. Die Anwendung bietet eine sichere Plattform für Vergabeverfahren mit integrierter Authentifizierung und Benutzerverwaltung.
+**kontext.one** ist eine Next.js-basierte Webapp für die digitale Auditierung von Ausschreibungsunterlagen. Diese Dokumentation beschreibt die technische Implementierung, Installation und API-Referenz.
 
-## Scope
+*Für Produktanforderungen und Entwicklungsplanung siehe [PRD.md](./PRD.md)*
 
-Build Kontext1, a webapp for tender document auditing. Webapp language is German.
+## 📋 Inhaltsverzeichnis
 
-## Features
+1. [🛠️ Technische Features](#-technische-features)
+2. [⚡ Tech Stack](#-tech-stack)
+3. [👤 User Authentication and Roles](#-user-authentication-and-roles)
+4. [🛡️ Middleware](#-middleware)
+5. [📁 Filesystem](#-filesystem)
+6. [☁️ Remote Storage](#-remote-storage)
+7. [🚀 Installation & Setup](#-installation--setup)
+8. [🗄️ Datenbankschema anpassen](#-datenbankschema-anpassen)
+9. [🔑 Standardzugangsdaten](#-standardzugangsdaten)
+10. [🚀 Produktivbetrieb](#-produktivbetrieb)
+11. [🤖 AI-gestützte Dokumentenanalyse](#-ai-gestützte-dokumentenanalyse)
+12. [📁 Dateisystem-Struktur](#-dateisystem-struktur)
+13. [🔧 Abstracted Filesystem Layer](#-abstracted-filesystem-layer)
+14. [🌐 API Routes](#-api-routes)
+15. [💻 Frontend Integration Guide](#-frontend-integration-guide)
 
-- Sichere Benutzerauthentifizierung mit JWT
-- Rollenbasierte Zugriffskontrolle (RBAC) für Auditoren und Administratoren
-- Dokumentenmanagement für Vergabeverfahren
-- Audit-Trail für alle Benutzeraktionen
-- Integrierte Berichtsfunktionen
-- Benutzerfreundliche Oberfläche mit modernem Design
-- AI-gestützte Dokumentenanalyse mit automatischer Metadatenextraktion
-- Automatische AAB-PDF-Dokumentenerkennung und Parser-Auswahl
-- Strukturierte Dokumentenverarbeitung mit Markdown-Konvertierung
+---
 
-## Einstellungen
+## 🛠️ Technische Features
 
-### Admin
+- **Sichere Authentifizierung**: JWT-basierte Session-Cookies mit bcryptjs-Hashing
+- **Rollenbasierte Zugriffskontrolle**: Team-Management und Berechtigungssystem
+- **Dokumentenmanagement**: Upload, Verwaltung und Analyse von Ausschreibungsunterlagen
+- **KI-Integration**: Automatische Dokumentenanalyse mit Gemini AI
+- **WebDAV-Unterstützung**: Abstrakte Dateisystem-Schicht für lokale und entfernte Speicher
+- **Worker-System**: Asynchrone Verarbeitung zeitaufwändiger Aufgaben
+- **Audit-Trail**: Vollständige Protokollierung aller Benutzeraktionen
 
-Dateisystem
-Lokales Dateisystem
-Klark0FS
-OCI Bucket
-
-## Tech Stack
+## ⚡ Tech Stack
 
 - **Framework**: [Next.js](https://nextjs.org/)
 - **Language**: TypeScript
@@ -38,7 +45,7 @@ OCI Bucket
 - **Payments**: Stripe
 - **Authentication**: JWT with session cookies
 
-## User Authentication and Roles
+## 👤 User Authentication and Roles
 
 Klark0 implements a secure user authentication system with role-based access control to manage permissions effectively:
 
@@ -64,20 +71,20 @@ Klark0 implements a secure user authentication system with role-based access con
 - **Activity Logging**:
   - User actions (sign-in, sign-up, team management) are logged for audit purposes, linked to specific users and teams.
 
-## Middleware
+## 🛡️ Middleware
 
 - Global middleware to protect logged-in routes
 - Local middleware to protect Server Actions or validate Zod schemas
 
-## Filesystem
+## 📁 Filesystem
 
 Access to documents via filesystem, configured in Einstellungen.
 
-## Remote Storage
+## ☁️ Remote Storage
 
 Support for remote storage via WebDAV (Other options will be implemented later).
 
-## Installation
+## 🚀 Installation & Setup
 
 1. Repository klonen:
 
@@ -113,7 +120,7 @@ pnpm dev
 
 Die Anwendung ist dann unter [http://localhost:3000](http://localhost:3000) erreichbar.
 
-## Datenbankschema anpassen
+## 🗄️ Datenbankschema anpassen
 
 Um das Datenbankschema zu ändern (z.B. neue Tabellen hinzufügen oder bestehende Tabellen modifizieren), sind folgende Schritte notwendig:
 
@@ -171,16 +178,16 @@ Um das Datenbankschema zu ändern (z.B. neue Tabellen hinzufügen oder bestehend
 
 Stellen Sie sicher, dass Ihre Datenbankverbindung korrekt konfiguriert ist (in der Regel über Umgebungsvariablen wie `POSTGRES_URL` in Ihrer `.env` Datei), bevor Sie die Migrationsbefehle ausführen.
 
-## Standardzugangsdaten
+## 🔑 Standardzugangsdaten
 
 - Benutzer: `admin@klark0.de`
 - Passwort: `admin123`
 
-## Produktivbetrieb
+## 🚀 Produktivbetrieb
 
 Für den Produktiveinsatz empfehlen wir eine Bereitstellung auf [Vercel](https://vercel.com/) oder einer ähnlichen Plattform. Stellen Sie sicher, dass alle erforderlichen Umgebungsvariablen für die Produktionsumgebung gesetzt sind.
 
-## AI-gestützte Dokumentenanalyse
+## 🤖 AI-gestützte Dokumentenanalyse
 
 ### Ausschreibungsprojekt-Info (ainfo)
 
@@ -204,28 +211,34 @@ Die ainfo-Komponente bietet intelligente Analyse von Ausschreibungsdokumenten:
 4. Extrahierte Metadaten werden automatisch in die Felder eingetragen
 5. Speichern Sie die Informationen mit "Speichern"
 
-## Versionierung
+## 📁 Dateisystem-Struktur
 
-v0.0 initiale Version in deutsch. Boilperplate webapp mit Basis Layout und Design.
-v0.1 AI-gestützte Dokumentenanalyse für Ausschreibungsprojekte hinzugefügt.
+Das System verwendet eine strukturierte Ordnerorganisation für Ausschreibungsprojekte:
 
-## Opinionated Filesystem
+### 🏗️ Projektstruktur
+```
+PROJEKTNAME/                    # Hauptprojektordner
+├── ausschreibung.json         # Projektmetadaten (Datum, Status, etc.)
+├── A/                         # Ausschreibungsdokumente
+│   └── md/                    # Markdown-Versionen der Dokumente
+├── B/                         # Bieterordner
+│   ├── BIETER1/              # Einzelner Bieterordner
+│   │   ├── dokumente/        # Bieterdokumente
+│   │   └── md/               # Markdown-Versionen
+│   └── BIETER2/              # Weitere Bieter...
+└── archiv/                   # Archivierte Dateien
+```
 
-Dateiordnersystem
-
-ORDNERNAME: Im Root Ordner ist es ein Ordner eine Ausschreibung - ausschreibung.json - holds info about the ausschreibungs project - Datum, Status, etc - A: hält die unterschiedlichen Vergabe/Ausschreibungs Dokumente
-md: kann md ordner enthalten mit markdown versionen der dokumente - B: Hält die unterschiedlichen Bieterordner - BIETERORDNER: Ordner für Bieterdokumente - md: kann md ordner enthalten mit markdown versionen der dokumente
-
-archiv: Ordner, reservierte für archivierte projekte
-.NAME: versteckte ordner sind reserviert für system
-.processed: reservierter ordner für processed dateien
-.md: reservierter ordnername für markdown files
-md: reservierter ordnername der markdown files enthält
+### 📂 Reservierte Ordner
+- `.NAME`: Versteckte Systemordner
+- `.processed`: Verarbeitete Dateien
+- `.md`: Reserviert für Markdown-Dateien
+- `md/`: Markdown-Versionen von Dokumenten
 
 Dateiendungen
 .md: Markdown Files
 
-## Abstracted Filesystem Layer
+## 🔧 Abstracted Filesystem Layer
 
 Um die opinionated Dateistruktur zu abstrahieren, wurde eine Middleware-Schicht entwickelt, die zwischen den physischen Dateien/Ordnern und ihrer logischen Darstellung vermittelt. Diese Schicht:
 
@@ -235,7 +248,7 @@ Um die opinionated Dateistruktur zu abstrahieren, wurde eine Middleware-Schicht 
 
 Diese Abstraktion ermöglicht eine einheitliche API und eine flexible Darstellung des Dateisystems.
 
-## API Routes
+## 🌐 API Routes
 
 Klark0 stellt REST-Endpunkte unter `/api/fs/*` zur Verfügung, um Dateien per WebDAV zu verwalten. Alle Endpunkte verwenden die WebDAV-Konfiguration aus der Datenbank (Einstellungen-Seite) und sind team-aware. Authentifizierung erfolgt über die Session des angemeldeten Benutzers.
 
@@ -324,7 +337,7 @@ curl -X POST "http://localhost:3000/api/fs/upload?path=/klark0/neuer-ordner/" \
   -F "files=@/pfad/zur/lokalen/datei2.txt"
 ```
 
-## Frontend Integration Guide
+## 💻 Frontend Integration Guide
 
 ### Filesystem API Integration in React Components
 
@@ -492,5 +505,18 @@ export default function FileManager({ basePath }: { basePath: string }) {
   if
 ```
 
+
+---
+
+## 🔗 Verwandte Dokumentation
+
+- **[PRD.md](./PRD.md)** - Product Requirements Document mit Zielen, Anforderungen und Entwicklungsplan
+- **[docs/appStructure.md](./docs/appStructure.md)** - Detaillierte Anwendungsarchitektur
+- **[docs/db_guide.md](./docs/db_guide.md)** - Datenbankschema und Queries
+- **[docs/styleguide.md](./docs/styleguide.md)** - Design System und UI-Richtlinien
+- **[docs/opinionatedFilesystem.md](./docs/opinionatedFilesystem.md)** - Dateisystem-Standards und Best Practices
+- **[system_requirements.md](./system_requirements.md)** - Systemanforderungen und Module
+
+---
 
 # Revision history

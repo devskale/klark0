@@ -53,3 +53,5 @@ stripe/
 *.swp
 tmp/
 *.zip
+disk/
+.dir

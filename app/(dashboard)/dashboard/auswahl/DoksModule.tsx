@@ -1,6 +1,14 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Loader2, MoreHorizontal, Folder, FileText, Image, Upload } from "lucide-react";
+import {
+  Loader2,
+  MoreHorizontal,
+  Folder,
+  FileText,
+  Image,
+  Upload,
+  FileSpreadsheet,
+} from "lucide-react";
 import useSWR from "swr";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,7 +31,10 @@ interface DoksModuleProps {
   setIsUploadDialogOpen?: (open: boolean) => void;
 }
 
-export default function DoksModule({ isUploadDialogOpen: externalUploadDialogOpen, setIsUploadDialogOpen: externalSetUploadDialogOpen }: DoksModuleProps = {}) {
+export default function DoksModule({
+  isUploadDialogOpen: externalUploadDialogOpen,
+  setIsUploadDialogOpen: externalSetUploadDialogOpen,
+}: DoksModuleProps = {}) {
   const {
     selectedProject: projectPath,
     selectedBieter: bieterPath,
@@ -54,12 +65,15 @@ export default function DoksModule({ isUploadDialogOpen: externalUploadDialogOpe
 
   const [selectedDocs, setSelectedDocs] = useState<string[]>([]);
   const [metadataMap, setMetadataMap] = useState<Record<string, any>>({});
-  
+
   // Upload state management
-  const [internalUploadDialogOpen, setInternalUploadDialogOpen] = useState(false);
-  const isUploadDialogOpen = externalUploadDialogOpen ?? internalUploadDialogOpen;
-  const setIsUploadDialogOpen = externalSetUploadDialogOpen ?? setInternalUploadDialogOpen;
-  
+  const [internalUploadDialogOpen, setInternalUploadDialogOpen] =
+    useState(false);
+  const isUploadDialogOpen =
+    externalUploadDialogOpen ?? internalUploadDialogOpen;
+  const setIsUploadDialogOpen =
+    externalSetUploadDialogOpen ?? setInternalUploadDialogOpen;
+
   // Use consolidated upload hook
   const upload = useUpload({
     onSuccess: () => {
@@ -67,8 +81,8 @@ export default function DoksModule({ isUploadDialogOpen: externalUploadDialogOpe
       mutate(); // Refresh document list
     },
     onError: (error) => {
-      console.error('Upload error:', error);
-    }
+      console.error("Upload error:", error);
+    },
   });
 
   // clear selection on project/bieter change
@@ -83,7 +97,7 @@ export default function DoksModule({ isUploadDialogOpen: externalUploadDialogOpe
   // Ensure selectedDocs includes selectedDok when restored from localStorage
   useEffect(() => {
     if (selectedDok && !selectedDocs.includes(selectedDok)) {
-      setSelectedDocs(prev => [...prev, selectedDok]);
+      setSelectedDocs((prev) => [...prev, selectedDok]);
     }
   }, [selectedDok, selectedDocs]);
   // clear and fetch index metadata when docs change
@@ -161,11 +175,11 @@ export default function DoksModule({ isUploadDialogOpen: externalUploadDialogOpe
   };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return "0 Bytes";
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
   // pick an icon based on file extension
@@ -173,7 +187,11 @@ export default function DoksModule({ isUploadDialogOpen: externalUploadDialogOpe
     const ext = name.split(".").pop()?.toLowerCase();
     if (ext === "pdf")
       return <FileText className="mr-2 h-4 w-4 text-red-500 flex-shrink-0" />;
-    if (ext && ["doc", "docx", "ppt", "pptx", "xls", "xlsx"].includes(ext))
+    if (ext && ["xls", "xlsx"].includes(ext))
+      return (
+        <FileSpreadsheet className="mr-2 h-4 w-4 text-green-500 flex-shrink-0" />
+      );
+    if (ext && ["doc", "docx", "ppt", "pptx"].includes(ext))
       return <FileText className="mr-2 h-4 w-4 text-blue-500 flex-shrink-0" />;
     if (ext && ["png", "jpg", "jpeg", "gif", "svg"].includes(ext))
       return <Image className="mr-2 h-4 w-4 text-green-500 flex-shrink-0" />;
@@ -200,9 +218,6 @@ export default function DoksModule({ isUploadDialogOpen: externalUploadDialogOpe
   }
   return (
     <div>
-      
-
-
       {docs && docs.length > 0 ? (
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -234,7 +249,9 @@ export default function DoksModule({ isUploadDialogOpen: externalUploadDialogOpe
                 <tr
                   key={f.path}
                   className={`cursor-pointer ${
-                    selectedDocs.includes(f.path) || selectedDok === f.path ? "bg-gray-100" : ""
+                    selectedDocs.includes(f.path) || selectedDok === f.path
+                      ? "bg-gray-100"
+                      : ""
                   }`}
                   onClick={() => toggleSelect(f.path)}>
                   <td className="px-4 py-2 w-1/2">
@@ -244,7 +261,9 @@ export default function DoksModule({ isUploadDialogOpen: externalUploadDialogOpe
                       ) : (
                         getFileIcon(f.name)
                       )}
-                      <span className="truncate" title={metadataMap[f.path]?.name ?? f.name}>
+                      <span
+                        className="truncate"
+                        title={metadataMap[f.path]?.name ?? f.name}>
                         {metadataMap[f.path]?.name ?? f.name}
                       </span>
                       {f.type === "file" && f.hasParser && (
@@ -258,7 +277,9 @@ export default function DoksModule({ isUploadDialogOpen: externalUploadDialogOpe
                     {f.parserStatus || "-"}
                   </td>
                   <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500 w-24">
-                    <span className="truncate block" title={metadataMap[f.path]?.kategorie ?? "-"}>
+                    <span
+                      className="truncate block"
+                      title={metadataMap[f.path]?.kategorie ?? "-"}>
                       {metadataMap[f.path]?.kategorie ?? "-"}
                     </span>
                   </td>
@@ -297,31 +318,30 @@ export default function DoksModule({ isUploadDialogOpen: externalUploadDialogOpe
           <Button
             variant="outline"
             onClick={() => setIsUploadDialogOpen(true)}
-            disabled={!docsPath}
-          >
+            disabled={!docsPath}>
             Dateien auswählen
           </Button>
         </div>
       )}
-      
+
       {/* Upload Dialog */}
       <UploadDialog
-         open={isUploadDialogOpen}
-         onOpenChange={setIsUploadDialogOpen}
-         title={`Upload zu ${bieterPath ? "Bieter" : "Ausschreibung"}`}
-         files={upload.files}
-         uploading={upload.uploading}
-         isDragging={upload.isDragging}
-         onFilesChange={upload.setFiles}
-         onRemoveFile={upload.removeFile}
-         onUpload={handleUpload}
-         onDragEnter={upload.handleFileDrag}
-         onDragLeave={upload.handleFileDrag}
-         onDragOver={upload.handleFileDrag}
-         onDrop={upload.handleFileDrop}
-         uploadButtonText="Upload"
-         disabled={!docsPath}
-       />
+        open={isUploadDialogOpen}
+        onOpenChange={setIsUploadDialogOpen}
+        title={`Upload zu ${bieterPath ? "Bieter" : "Ausschreibung"}`}
+        files={upload.files}
+        uploading={upload.uploading}
+        isDragging={upload.isDragging}
+        onFilesChange={upload.setFiles}
+        onRemoveFile={upload.removeFile}
+        onUpload={handleUpload}
+        onDragEnter={upload.handleFileDrag}
+        onDragLeave={upload.handleFileDrag}
+        onDragOver={upload.handleFileDrag}
+        onDrop={upload.handleFileDrop}
+        uploadButtonText="Upload"
+        disabled={!docsPath}
+      />
     </div>
   );
 }

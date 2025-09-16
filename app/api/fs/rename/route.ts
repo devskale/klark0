@@ -50,25 +50,28 @@ async function handleRenameRequest(request: RequestWithTeam) {
             ? fsSettings.host!
             : fsSettings.host! + "/"
         ).toString();
+        
+        // Construct full destination URL for WebDAV MOVE operation
         const destinationUrl = new URL(
           destination,
           fsSettings.host!.endsWith("/")
             ? fsSettings.host!
             : fsSettings.host! + "/"
         ).toString();
+        
         const resp = await fetch(sourceUrl, {
           method: "MOVE",
           headers: {
             Authorization: `Basic ${Buffer.from(
               `${fsSettings.username!}:${fsSettings.password!}`
             ).toString("base64")}`,
-            Destination: destinationUrl,
+            Destination: destinationUrl, // Use full URL for destination header
             Overwrite: "T",
           },
         });
         return {
           path: p,
-          destination: destinationUrl,
+          destination: destination, // Return path in response
           status: resp.status,
           ok: resp.ok,
         };

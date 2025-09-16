@@ -1,150 +1,129 @@
-# Produktanforderungsdokument (PRD) für kontext.one
+# kontext.one - Product Requirements Document
 
-## ZIEL & ANFORDERUNGEN
+## 📋 Inhaltsverzeichnis
 
-kontext.one ist eine Webapplikation für die digitale Prüfung von Ausschreibungsdokumenten. Die Anwendung unterstützt den gesamten Lebenszyklus eines Ausschreibungsprojekts mit Fokus auf Transparenz, Effizienz und Automatisierung.
+1. [🎯 Ziel](#ziel)
+2. [📋 Anforderungen](#anforderungen)
+3. [🚀 Produktvision](#produktvision)
+4. [📈 Entwicklungsplan & Status](#entwicklungsplan--status)
+5. [🏗️ Projektstruktur](#projektstruktur)
+6. [🔐 Authentifizierung & Session-Management](#authentifizierung--session-management)
+7. [📚 Lessons Learned & Best Practices](#lessons-learned--best-practices)
 
-Anforderungen:
+---
 
-- Digitale Prüfung von Ausschreibungsdokumenten
-- Unterstützung des gesamten Projekt-Lebenszyklus
-- Transparenz, Effizienz und Automatisierung
+## 🎯 Ziel
 
-## IDEENFINDUNG
+Entwicklung einer digitalen Webapp für die Auditierung von Ausschreibungsunterlagen (Tender Documents). Die Anwendung soll Transparenz, Effizienz und Automatisierung in den Bewertungsprozess von Ausschreibungen bringen.
 
-- **Technologie-Stack**: Next.js für serverseitiges Rendering und API-Routen, Drizzle ORM für typsichere Datenbankinteraktionen, shadcn/ui für ein modernes und anpassbares UI, Stripe für Zahlungsabwicklung.
-- **Architektur**: Modulare Architektur mit Trennung von Anliegen (API, UI, Lib). Klare API-Struktur für Frontend-Backend-Kommunikation.
-- **KI-Integration**: Nutzung von Modellen wie Gemini und offenen Inferenz-Endpunkten (uniinfer) für Dokumentenanalyse, Kriterienextraktion und Anonymisierung.
-- **Filesystem**: Abstraktion des Dateisystems, um lokale und entfernte Speicher (via WebDAV) nahtlos zu unterstützen.
+## 📋 Anforderungen
 
-## ENTWICKLUNGSPLAN / STATUS
+### ⚙️ Funktionale Anforderungen
+- **Dokumenten-Upload und -Verwaltung**: Sichere Speicherung und Organisation von Ausschreibungsunterlagen
+- **KI-gestützte Analyse**: Automatische Extraktion und Bewertung von Kriterien aus Dokumenten
+- **Benutzer- und Teamverwaltung**: Rollenbasierte Zugriffskontrolle und Teamzusammenarbeit
+- **Transparente Bewertung**: Nachvollziehbare Kriterien und Bewertungsprozesse
+- **Sicherheit**: Schutz sensibler Ausschreibungsdaten
 
-- [x] **Grund-Setup**: Next.js Projekt mit TypeScript, Drizzle ORM (PostgreSQL) und shadcn/ui/Tailwind CSS Integration
-- [x] **Authentifizierung & Benutzerverwaltung**: JWT-basierte Authentifizierung mit Session-Cookies, geschützte Routen via Middleware, Anmelde-/Registrierungsseiten
-- [x] **Kernfunktionen**: Projektmanagement, Dokumenten-Upload, WebDAV-Integration, Dokumentenkonvertierung (DOC/PDF zu Markdown)
-  - [x] **Context-Sensitive Navigation**: Automatisches Umschalten zur "Docs"-Ansicht bei Dokumentauswahl, Persistierung des selectedDok-Status über localStorage, Breadcrumb-Navigation mit Dokumentkontext
-  - [x] **Consolidated Upload Functionality**: Einheitliche Upload-Funktionalität in DoksModule mit Drag-and-Drop, Dialog-basiertem Upload, automatischer Pfad-Erkennung (Bieter vs. Ausschreibung), Dateigrößen-Anzeige und Fehlerbehandlung
-  - [x] **UI Layout Optimization**: Upload-Button aus DoksModule in die Top-Menüleiste verschoben (neben Refresh-Button), "Dokumente"-Header entfernt für sauberere UI
-  - [x] **Upload Logic Consolidation**: Einheitliche Upload-Funktionalität durch `useUpload` Hook und `UploadDialog` Komponente - eliminiert Code-Duplikation zwischen DoksModule, Projekt- und Bieter-Uploads, verbesserte Wartbarkeit und konsistente UX
-    - [x] **Reusable Upload Components**: `hooks/use-upload.ts` Hook für Upload-State-Management und `components/UploadDialog.tsx` für einheitliche Upload-UI
-    - [x] **Consolidated Upload Logic**: Alle Upload-Funktionen (Projekt, Bieter, Dokumente) nutzen dieselbe Basis-Implementierung mit konfigurierbaren Callbacks
-    - [x] **Improved Error Handling**: Einheitliche Fehlerbehandlung und Benachrichtigungen über alle Upload-Bereiche hinweg
-    - [x] **Type Safety**: Vollständig typisierte Upload-Funktionen mit TypeScript für bessere Entwicklererfahrung
-    - [x] **UI Fix**: Visuellen Overflow-Bug bei langen Dateinamen im Upload-Dialog durch Text-Truncation behoben
-  - [x] **Enhanced File Preview System**: Erweiterte Dokumentenvorschau für multiple Dateitypen in der dinfo-Route
-    - [x] **Multi-Format Support**: PDF-Vorschau (bestehend), Bild-Vorschau (JPG, PNG, GIF, BMP, WebP, SVG), Office-Dokumente (DOCX, XLSX, PPTX) mit Download-Option
-    - [x] **File Type Detection**: Automatische Erkennung des Dateityps basierend auf Dateiendung mit entsprechender Vorschau-Komponente
-    - [x] **Responsive Preview Components**: Separate Komponenten für verschiedene Dateitypen mit einheitlichem Card-Layout und Fehlerbehandlung
-    - [x] **Download Functionality**: Download-Buttons für nicht-vorschaubare Dateien (Office-Dokumente, nicht unterstützte Formate)
-    - [x] **Error Handling**: Robuste Fehlerbehandlung für fehlgeschlagene Bild-Ladevorgänge und nicht unterstützte Dateitypen
-  - [ ] **Anonymisierung**: Schutz sensibler Daten durch KI-basierte NER.
-- [ ] **Erweiterte Funktionen (unsortiert)**
-  - [ ] enhance prompt definition with, maxInputLength (chars), maxOutputTokens
-  - [ ] Prompt Templating mit Platzhaltern und Kontexten
-  - [ ] **Basispfad-Konsolidierung**: Code-Anpassung zur Nutzung eines konsistenten Basispfads (z.B. `/dev` oder `/v1`), in git dev/basepath branch
-  - [ ] **Benutzerrollen-Konsolidierung**: Überprüfung und Analyse des Benutzerflusses, Login, Teamauswahl, gemeinsame Team-Einstellungen
-  - [x] **Startbildschirm-Icons hinzufügen**: FFG, TU Wien, HPCC Logos
-  - [ ] **Dokumentenserver**: Worker-Management (automatisches Parsen hochgeladener Dokumente)
-  - [ ] Projektansicht: Sortieren der Projekte
-  - [ ] Auswahl Browser: Multiple File Uploads, Zip uploads, Big file uploads, Downloads.
-  - [ ] Safety: füge Privatparameter zu doks, bieter oder projekte. solche dokumente sollten nicht öffentlich zugänglich sein.
-  - [ ] project images: preview and generative image gen.  
-- [ ] Kriterienliste
-  - [ ] Vorauswahl Detektion: wurden alle Dokumente abgegeben. Alleine, subunternehmer ider Bietergemeinschaft? wurden alle formblätter abgegeben?
-  - [ ] Pflicht, Optional, Oder Kriterien
-  - [ ] Allgemeine Kriterien sind zu umfangreich.
-- [ ] Bieterinfo
-  - [ ] Preis, Preisspiegel
-- [ ] Ausschreiber Info
-  - [ ] Preisspiegel, wieviele Lose wurden wie oft abegeben, welche lose nicht.
-- [ ] **KI-Funktionen**
-  - [x] **KI-Funktionen**: Metadaten- und Kriterien-Extraktion, Kontextlängen-Management (10k/500k Zeichen Limits) mit automatischer Kürzung und Logging
-    - [x] **Dokumenttyp-spezifische Prompts**: Automatische Erkennung und Verarbeitung von Bieter-/Ausschreibungsdokumenten mit spezifischen Prompts
-    - [x] **Prompt Integration**: KRITERIEN_EXTRAKTION Query mit JSON-Schema Validierung, erweiterten Token-Limits (32k) und Integrationstests
-    - [x] **UI Visualisierung**: Kriterienliste mit Markdown-Viewer, automatischer PDF-Erkennung, Tab-Navigation und robustem Error Handling
-      - [x] **AI-Extraktion Workflow**: UI-Integration mit Extraktions-Button, Loading States und Error Handling
-      - [x] **JSON Response Verarbeitung**: Strukturierte Darstellung aller Kriterien-Typen (Eignung, Zuschlag, Subunternehmer, formale Anforderungen)
-        - [x] **UI-Optimierungen**: Migration zu Tabellen-Layout für alle Kriterien-Typen mit Status-Tracking und Erweiterbarkeit
-      - [ ] **Review-System**: AI- und Human-Review Funktionalität
-        - [x] Review-Status Felder für jedes Kriterium vorbereitet (AI-reviewed, Human-reviewed)
-        - [ ] Bearbeitungs-Modi für manuelle Kriterien-Anpassungen
-        - [ ] Validierungs-Workflow für Human-in-the-Loop Prozesse
-        - [ ] Änderungshistorie und Audit-Trail für Reviews
-      - [x] **Table Layout Improvements**: Responsive Tabellen mit Nummerierung, anpassbaren Spalten, Text-Truncation und konsistentem Design
-    - [x] **Persistierung**: Filesystem-basierte Speicherung mit SWR-integration, Review-Status Tracking und WebDAV-Kompatibilität
-  - [ ] **Bieterdokumenten-Analyse**: Abgleich von Bieterdokumenten mit Kriterien.
-  - [x] **Dateikategorisierung**: Automatische Kategorisierung von Dokumenten.
-  - [ ] **Human-in-the-Loop**: UI zur Validierung und Korrektur von KI-Ergebnissen.
-- [ ] **Weitere technische Aufgaben**
-  - [x] **Stripe-Integration**: Zahlungspläne und Checkout-Funktionalität
-  - [ ] **Worker-System**: Implementierung eines Job-Queues für langlaufende Aufgaben (Parsing, Analyse).
-  - [ ] **Testing**: Entwicklung von Unit-, Integrations- und E2E-Tests.
-  - [ ] **Performance-Optimierung**: Code-Splitting, Caching und PWA-Features.
+### 🛠️ Technische Anforderungen
+- **Framework**: Next.js mit TypeScript
+- **Datenbank**: PostgreSQL mit Drizzle ORM
+- **UI**: shadcn/ui Komponenten
+- **Zahlungen**: Stripe Integration
+- **Authentifizierung**: JWT-basierte Session-Cookies
 
-## PROJEKTSTRUKTUR
+*Detaillierte technische Implementierung siehe [README.md](./README.md)*
 
-Die Projektstruktur folgt den Konventionen von Next.js und ist auf Skalierbarkeit und Wartbarkeit ausgelegt:
+## 🚀 Produktvision
 
-```
-.
-├── app/                  # Next.js App Router (Seiten, Layouts, API-Routen)
-│   ├── (dashboard)/      # Geschützte Dashboard-Seiten
-│   ├── (login)/          # Authentifizierungs-Seiten
-│   └── api/              # API-Endpunkte (fs, ai, worker, stripe)
-├── components/           # Wiederverwendbare UI-Komponenten (shadcn/ui)
-├── lib/                  # Kernlogik und Hilfsfunktionen
-├── docs/                 # Dokumentation
-├── public/               # Statische Assets
-└── tests/                # Test-Dateien
-```
+### 🎯 Kernfunktionalitäten
+- **Projektmanagement**: Strukturierte Organisation von Ausschreibungsprojekten
+- **Dokumentenanalyse**: KI-gestützte Extraktion von Bewertungskriterien
+- **Kollaborative Bewertung**: Teambasierte Prüfung und Bewertung
+- **Compliance-Tracking**: Nachverfolgung von Anforderungserfüllung
+- **Reporting**: Automatisierte Berichte und Auswertungen
 
-## AUTHENTIFIZIERUNG & SESSION-MANAGEMENT
+### 👥 Zielgruppen
+- **Öffentliche Auftraggeber**: Behörden und öffentliche Institutionen
+- **Beratungsunternehmen**: Spezialisierte Ausschreibungsberater
+- **Compliance-Teams**: Interne Prüfungsabteilungen
+- **Projektmanager**: Verantwortliche für Ausschreibungsprozesse
 
-### Anmelde-System (Sign-In/Sign-Out)
+## 📈 Entwicklungsplan & Status
 
-Das Authentifizierungssystem verwendet JWT-basierte Session-Cookies mit folgender Architektur:
+### ✅ Phase 1: Grundlagen (Abgeschlossen)
 
-#### **Sign-In Prozess**
-- **Frontend**: `app/(login)/login.tsx` bietet Anmeldeformular mit E-Mail/Passwort
-- **Backend Action**: `app/(login)/actions.ts` → `signIn()` Server Action
-  - Validierung via Zod Schema (`signInSchema`)
-  - Passwort-Hashing mit bcryptjs (10 Rounds)
-  - Datenbankabfrage: User + Team Join via Drizzle ORM
-  - Session-Cookie Erstellung: JWT Token mit 24h Gültigkeit
-  - Activity Logging: `SIGN_IN` Events werden in `activityLogs` gespeichert
-  - Redirect nach erfolgreicher Anmeldung: `/dashboard`
+#### MVP-Funktionalitäten
+- [x] **Benutzer-Authentifizierung**: Registrierung, Anmeldung, Session-Management
+- [x] **Team-Kollaboration**: Team-Erstellung, Mitgliederverwaltung, Rollensystem
+- [x] **Projekt-Management**: Projektauswahl und -organisation
+- [x] **Dokumenten-Upload**: Konsolidiertes Upload-System mit Drag & Drop
+- [x] **Datei-Browser**: Vollständige Dateiverwaltung und -organisation
+- [x] **KI-Integration**: Grundlegende Dokumentenanalyse mit Gemini AI
+- [x] **Office Document Preview**: DOCX/XLSX Vorschau mit mammoth.js und SheetJS
+- [x] **Upload Logic Consolidation**: Zentrale Hooks und wiederverwendbare Komponenten
 
-#### **Sign-Out Prozess**
-- **Frontend**: Mehrere UI-Integrationen:
-  - `app/(dashboard)/layout.tsx`: User-Dropdown-Menü mit Sign-Out Button
-  - `app/(dashboard)/dashboard/layout.tsx`: Dashboard-spezifische Navigation
-- **Backend Action**: `app/(login)/actions.ts` → `signOut()` Server Action
-  - Activity Logging: `SIGN_OUT` Event wird geloggt
-  - Session-Cookie Löschung: `cookies().delete('session')`
-  - Kein Redirect - Frontend handelt Navigation
+### 🔄 Phase 2: Kernfunktionen (In Bearbeitung)
 
-#### **Session-Management**
-- **Cookie**: `session` JWT Token (httpOnly, secure, sameSite: lax)
-- **Middleware**: `middleware.ts` schützt `/dashboard` Routen
-  - Prüft Session-Cookie bei jedem Request
-  - Automatische Session-Verlängerung bei GET-Requests
-  - Redirect zu `/sign-in` bei fehlender/ungültiger Session
-- **Token-Verifizierung**: `lib/auth/session.ts` bietet:
-  - `getSession()`: Aktuelle Session abrufen
-  - `setSession()`: Neue Session erstellen
-  - `verifyToken()`: JWT Token validieren
+#### Analyse und Bewertung
+- [x] **AI-gestützte Dokumentenanalyse**: Automatische Extraktion von Projektinformationen und Kriterien
+- [x] **Worker-System**: Asynchrone Verarbeitung mit API-Routen für Jobs, Status und Worker-Typen
+- [ ] **Kriterien-Optimierung**: Überarbeitung umfangreicher allgemeiner Kriterien
+- [ ] **Bewertungsmatrix**: Strukturierte Kriterien-Bewertung und Scoring
+- [ ] **Compliance-Tracking**: Automatische Überprüfung von Anforderungserfüllung
+- [ ] **KI-Review-System**: Qualitätskontrolle für Analysen
+- [ ] **Prompt-Engineering**: Verbesserung der KI-Prompts
 
-#### **Sicherheitsmerkmale**
-- Passwort-Hashing mit bcryptjs
-- HTTP-Only Cookies (JS Zugriff verhindert)
-- Secure Flag in Production
-- Session-Timeout nach 24 Stunden
-- Activity-Logging für Audit-Trail
-- Team-basierte Autorisierung über `teamMembers` Tabelle
+#### Sicherheit und Compliance
+- [ ] **Erweiterte Benutzerrollen**: Admin, Prüfer, Viewer-Rollen
+- [ ] **Audit-Logging**: Umfassende Aktivitätsverfolgung
+- [ ] **Datenschutz-Features**: DSGVO-konforme Datenverarbeitung
 
-## LERNERFOLGE, CODING-RICHTLINIEN & REGELN & BEST PRACTICES
+### 📋 Phase 3: Skalierung (Geplant)
 
-### Coding-Richtlinien
+#### Automatisierung und Integration
+- [ ] **Anonymisierung**: Automatische Entfernung sensibler Daten
+- [ ] **Batch-Verarbeitung**: Massenverarbeitung von Dokumenten
+- [ ] **API-Integration**: Externe Systeme und Datenquellen
+- [ ] **Reporting-Engine**: Automatisierte Berichte und Dashboards
+
+#### Performance und Stabilität
+- [ ] **Caching-Strategien**: Optimierung der Anwendungsperformance
+- [ ] **Monitoring**: Systemüberwachung und Fehlerbehandlung
+
+#### Testing und Qualitätssicherung
+- [ ] **Automatisierte Tests**: Unit-, Integration- und E2E-Tests
+- [ ] **Performance-Tests**: Lastests und Optimierung
+- [ ] **Security-Audits**: Sicherheitsprüfungen und Penetrationstests
+
+## 🏗️ Projektstruktur
+
+*Detaillierte Projektstruktur und technische Architektur siehe [README.md](./README.md)*
+
+### 📐 Organisationsprinzipien
+- **Modulare Architektur**: Klare Trennung von Geschäftslogik, UI und Datenebene
+- **Feature-basierte Organisation**: Zusammengehörige Funktionen in gemeinsamen Verzeichnissen
+- **Wiederverwendbarkeit**: Zentrale Komponenten und Hooks für konsistente UX
+- **Skalierbarkeit**: Struktur unterstützt Wachstum und Erweiterungen
+
+## 🔐 Authentifizierung & Session-Management
+
+### 🛡️ Sicherheitsanforderungen
+- **Sichere Authentifizierung**: JWT-basierte Session-Cookies mit bcryptjs-Hashing
+- **Rollenbasierte Zugriffskontrolle**: Team-Mitgliedschaften und Berechtigungen
+- **Session-Sicherheit**: Automatische Validierung und sichere Cookie-Übertragung
+- **Audit-Trail**: Vollständige Protokollierung von Anmelde-Aktivitäten
+
+### ✅ Compliance-Features
+- **DSGVO-Konformität**: Datenschutzkonforme Benutzerregistrierung und -verwaltung
+- **Sicherheitsstandards**: HTTPS-only, CSRF-Schutz, Rate Limiting
+- **Transparenz**: Nachvollziehbare Zugriffs- und Aktivitätsprotokolle
+
+*Technische Implementierungsdetails siehe [README.md](./README.md)*
+
+## 📚 Lessons Learned & Best Practices
+
+### 💻 Coding-Richtlinien
 
 - Typsicherheit: TypeScript konsequent nutzen.
 - Modularität: Code in logische und wiederverwendbare Module aufteilen.
@@ -152,7 +131,7 @@ Das Authentifizierungssystem verwendet JWT-basierte Session-Cookies mit folgende
 - Kommentare: Komplexe Logik und Funktionen klar dokumentieren.
 - Umweltvariablen: Sensible Daten und Konfigurationen in .env Dateien speichern.
 
-### Lernerfolge
+### 🎓 Lernerfolge
 
 - Die Abstraktion des Dateisystems ist entscheidend für die Unterstützung verschiedener Speicherorte.
 - KI-gestützte Analysen erfordern robuste "Human-in-the-Loop"-Prozesse, um die Genauigkeit zu gewährleisten.
@@ -180,17 +159,31 @@ Das Authentifizierungssystem verwendet JWT-basierte Session-Cookies mit folgende
   - Highlighting-Logic muss sowohl selectedDocs Array als auch einzelnen selectedDok-State berücksichtigen für konsistente UI-Darstellung
   - Navigation zwischen Detail- und Auswahlansichten erfordert koordinierte State-Management-Strategien zwischen verschiedenen Komponenten
 - **Upload Logic Consolidation & Reusable Components**:
-  - Code-Duplikation zwischen verschiedenen Upload-Bereichen führt zu Wartungsproblemen und inkonsistenter UX; zentrale Hooks und Komponenten lösen dies effektiv
-  - Custom Hooks (`useUpload`) mit konfigurierbaren Callbacks ermöglichen flexible Wiederverwendung bei unterschiedlichen Upload-Kontexten (Projekt, Bieter, Dokumente)
-  - Einheitliche Dialog-Komponenten (`UploadDialog`) mit Props-basierter Konfiguration schaffen konsistente UI-Patterns und reduzieren Entwicklungsaufwand
-  - SWR-Mutation-Funktionen müssen korrekt referenziert werden; `mutate()` vs. `mutateProjects()` - falsche Funktionsnamen führen zu Runtime-Fehlern
-  - Drag-and-Drop-Funktionalität sollte in wiederverwendbaren Komponenten gekapselt werden, um konsistentes Verhalten über alle Upload-Bereiche zu gewährleisten
+    - Code-Duplikation zwischen verschiedenen Upload-Bereichen führt zu Wartungsproblemen und inkonsistenter UX; zentrale Hooks und Komponenten lösen dies effektiv
+    - Custom Hooks (`useUpload`) mit konfigurierbaren Callbacks ermöglichen flexible Wiederverwendung bei unterschiedlichen Upload-Kontexten (Projekt, Bieter, Dokumente)
+    - Einheitliche Dialog-Komponenten (`UploadDialog`) mit Props-basierter Konfiguration schaffen konsistente UI-Patterns und reduzieren Entwicklungsaufwand
+    - SWR-Mutation-Funktionen müssen korrekt referenziert werden; `mutate()` vs. `mutateProjects()` - falsche Funktionsnamen führen zu Runtime-Fehlern
+    - Drag-and-Drop-Funktionalität sollte in wiederverwendbaren Komponenten gekapselt werden, um konsistentes Verhalten über alle Upload-Bereiche zu gewährleisten
+- **Worker System Implementation**:
+    - Asynchrone Verarbeitung erfordert robuste API-Struktur mit Jobs, Status-Tracking und Worker-Typen
+    - Modulare API-Routen (`/api/worker/jobs`, `/api/worker/status`) ermöglichen saubere Trennung von Funktionalitäten
+    - Worker-Typen (parsing, anonymization, analysis, fakejob) sollten klar definierte Interfaces haben
+- **AI-gestützte Dokumentenanalyse**:
+    - Parser-Integration (marker, docling, pdfplumber) ermöglicht flexible Dokumentenkonvertierung zu Markdown
+    - Streaming AI-Responses verbessern UX bei längeren Analyseprozessen
+    - Context-Path-Tracking und Debug-Informationen sind essentiell für Entwicklung und Troubleshooting
 - **Office Document Preview System**:
-  - DOCX und XLSX Dateien können jetzt direkt im Browser als formatiertes HTML angezeigt werden
-  - Server-seitige Konvertierung mit mammoth.js (DOCX) und SheetJS (XLSX) für sichere Verarbeitung ohne externe APIs
-  - HTML-Sanitization mit DOMPurify verhindert XSS-Angriffe bei der Anzeige konvertierter Inhalte
-  - Separate API-Routen (`/api/preview/docx`, `/api/preview/xlsx`) für modulare Dokumentenverarbeitung
-  - Loading-States und Fehlerbehandlung für bessere UX bei der Dokumentenkonvertierung
-  - Excel-Dateien zeigen alle Arbeitsblätter mit Styling und Sheet-Navigation
-  - Word-Dokumente behalten semantische Formatierung (Überschriften, Listen, Tabellen) bei
-  - Fallback auf Download-Option bei Konvertierungsfehlern oder nicht unterstützten Formaten
+    - Server-seitige Konvertierung (mammoth.js für DOCX, SheetJS für XLSX) verhindert Client-seitige Sicherheitsrisiken
+    - HTML-Sanitization mit DOMPurify ist kritisch für XSS-Prävention bei konvertierten Inhalten
+    - Separate API-Routen für verschiedene Dokumenttypen ermöglichen modulare Erweiterung
+
+---
+
+## 🔗 Verwandte Dokumentation
+
+- **[README.md](./README.md)** - Technische Dokumentation, Installation und API-Referenz
+- **[docs/appStructure.md](./docs/appStructure.md)** - Detaillierte Anwendungsarchitektur
+- **[docs/db_guide.md](./docs/db_guide.md)** - Datenbankschema und Queries
+- **[docs/styleguide.md](./docs/styleguide.md)** - Design System und UI-Richtlinien
+- **[docs/opinionatedFilesystem.md](./docs/opinionatedFilesystem.md)** - Dateisystem-Standards und Best Practices
+- **[system_requirements.md](./system_requirements.md)** - Systemanforderungen und Module
