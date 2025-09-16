@@ -1,148 +1,103 @@
-# Produktanforderungsdokument (PRD) für kontext.one
+# kontext.one - Product Requirements Document
 
-## ZIEL & ANFORDERUNGEN
+## Ziel
 
-kontext.one ist eine Webapplikation für die digitale Prüfung von Ausschreibungsdokumenten. Die Anwendung unterstützt den gesamten Lebenszyklus eines Ausschreibungsprojekts mit Fokus auf Transparenz, Effizienz und Automatisierung.
+Entwicklung einer digitalen Webapp für die Auditierung von Ausschreibungsunterlagen (Tender Documents). Die Anwendung soll Transparenz, Effizienz und Automatisierung in den Bewertungsprozess von Ausschreibungen bringen.
 
-Anforderungen:
+## Anforderungen
 
-- Digitale Prüfung von Ausschreibungsdokumenten
-- Unterstützung des gesamten Projekt-Lebenszyklus
-- Transparenz, Effizienz und Automatisierung
+### Funktionale Anforderungen
+- **Dokumenten-Upload und -Verwaltung**: Sichere Speicherung und Organisation von Ausschreibungsunterlagen
+- **KI-gestützte Analyse**: Automatische Extraktion und Bewertung von Kriterien aus Dokumenten
+- **Benutzer- und Teamverwaltung**: Rollenbasierte Zugriffskontrolle und Teamzusammenarbeit
+- **Transparente Bewertung**: Nachvollziehbare Kriterien und Bewertungsprozesse
+- **Sicherheit**: Schutz sensibler Ausschreibungsdaten
 
-## IDEENFINDUNG
+### Technische Anforderungen
+- **Framework**: Next.js mit TypeScript
+- **Datenbank**: PostgreSQL mit Drizzle ORM
+- **UI**: shadcn/ui Komponenten
+- **Zahlungen**: Stripe Integration
+- **Authentifizierung**: JWT-basierte Session-Cookies
 
-- **Technologie-Stack**: Next.js für serverseitiges Rendering und API-Routen, Drizzle ORM für typsichere Datenbankinteraktionen, shadcn/ui für ein modernes und anpassbares UI, Stripe für Zahlungsabwicklung.
-- **Architektur**: Modulare Architektur mit Trennung von Anliegen (API, UI, Lib). Klare API-Struktur für Frontend-Backend-Kommunikation.
-- **KI-Integration**: Nutzung von Modellen wie Gemini und offenen Inferenz-Endpunkten (uniinfer) für Dokumentenanalyse, Kriterienextraktion und Anonymisierung.
-- **Filesystem**: Abstraktion des Dateisystems, um lokale und entfernte Speicher (via WebDAV) nahtlos zu unterstützen.
+*Detaillierte technische Implementierung siehe [README.md](./README.md)*
+
+## Produktvision
+
+### Kernfunktionalitäten
+- **Projektmanagement**: Strukturierte Organisation von Ausschreibungsprojekten
+- **Dokumentenanalyse**: KI-gestützte Extraktion von Bewertungskriterien
+- **Kollaborative Bewertung**: Teambasierte Prüfung und Bewertung
+- **Compliance-Tracking**: Nachverfolgung von Anforderungserfüllung
+- **Reporting**: Automatisierte Berichte und Auswertungen
+
+### Zielgruppen
+- **Öffentliche Auftraggeber**: Behörden und öffentliche Institutionen
+- **Beratungsunternehmen**: Spezialisierte Ausschreibungsberater
+- **Compliance-Teams**: Interne Prüfungsabteilungen
+- **Projektmanager**: Verantwortliche für Ausschreibungsprozesse
 
 ## ENTWICKLUNGSPLAN / STATUS
 
-- [x] **Grund-Setup**: Next.js Projekt mit TypeScript, Drizzle ORM (PostgreSQL) und shadcn/ui/Tailwind CSS Integration
-- [x] **Authentifizierung & Benutzerverwaltung**: JWT-basierte Authentifizierung mit Session-Cookies, geschützte Routen via Middleware, Anmelde-/Registrierungsseiten
-- [x] **Kernfunktionen**: Projektmanagement, Dokumenten-Upload, WebDAV-Integration, Dokumentenkonvertierung (DOC/PDF zu Markdown)
-  - [x] **Context-Sensitive Navigation**: Automatisches Umschalten zur "Docs"-Ansicht bei Dokumentauswahl, Persistierung des selectedDok-Status über localStorage, Breadcrumb-Navigation mit Dokumentkontext
-  - [x] **Consolidated Upload Functionality**: Einheitliche Upload-Funktionalität in DoksModule mit Drag-and-Drop, Dialog-basiertem Upload, automatischer Pfad-Erkennung (Bieter vs. Ausschreibung), Dateigrößen-Anzeige und Fehlerbehandlung
-  - [x] **UI Layout Optimization**: Upload-Button aus DoksModule in die Top-Menüleiste verschoben (neben Refresh-Button), "Dokumente"-Header entfernt für sauberere UI
-  - [x] **Upload Logic Consolidation**: Einheitliche Upload-Funktionalität durch `useUpload` Hook und `UploadDialog` Komponente - eliminiert Code-Duplikation zwischen DoksModule, Projekt- und Bieter-Uploads, verbesserte Wartbarkeit und konsistente UX
-    - [x] **Reusable Upload Components**: `hooks/use-upload.ts` Hook für Upload-State-Management und `components/UploadDialog.tsx` für einheitliche Upload-UI
-    - [x] **Consolidated Upload Logic**: Alle Upload-Funktionen (Projekt, Bieter, Dokumente) nutzen dieselbe Basis-Implementierung mit konfigurierbaren Callbacks
-    - [x] **Improved Error Handling**: Einheitliche Fehlerbehandlung und Benachrichtigungen über alle Upload-Bereiche hinweg
-    - [x] **Type Safety**: Vollständig typisierte Upload-Funktionen mit TypeScript für bessere Entwicklererfahrung
-    - [x] **UI Fix**: Visuellen Overflow-Bug bei langen Dateinamen im Upload-Dialog durch Text-Truncation behoben
-  - [x] **Enhanced File Preview System**: Erweiterte Dokumentenvorschau für multiple Dateitypen in der dinfo-Route
-    - [x] **Multi-Format Support**: PDF-Vorschau (bestehend), Bild-Vorschau (JPG, PNG, GIF, BMP, WebP, SVG), Office-Dokumente (DOCX, XLSX, PPTX) mit Download-Option
-    - [x] **File Type Detection**: Automatische Erkennung des Dateityps basierend auf Dateiendung mit entsprechender Vorschau-Komponente
-    - [x] **Responsive Preview Components**: Separate Komponenten für verschiedene Dateitypen mit einheitlichem Card-Layout und Fehlerbehandlung
-    - [x] **Download Functionality**: Download-Buttons für nicht-vorschaubare Dateien (Office-Dokumente, nicht unterstützte Formate)
-    - [x] **Error Handling**: Robuste Fehlerbehandlung für fehlgeschlagene Bild-Ladevorgänge und nicht unterstützte Dateitypen
-  - [ ] **Anonymisierung**: Schutz sensibler Daten durch KI-basierte NER.
-- [ ] **Erweiterte Funktionen (unsortiert)**
-  - [x] **Archivierungsfunktion für Projekte und Bieter**: Ermöglicht das sichere Archivieren von Projekt- und Bieterverzeichnissen über WebDAV-Rename-Operationen.
-    - [x] **Fix**: Die `Destination`-URL für WebDAV `MOVE`-Operationen wurde korrigiert, um die Kompatibilität mit strikteren Server-Implementierungen zu gewährleisten.
-  - [ ] enhance prompt definition with, maxInputLength (chars), maxOutputTokens
-  - [ ] Prompt Templating mit Platzhaltern und Kontexten
-  - [ ] **Basispfad-Konsolidierung**: Code-Anpassung zur Nutzung eines konsistenten Basispfads (z.B. `/dev` oder `/v1`), in git dev/basepath branch
-  - [ ] **Benutzerrollen-Konsolidierung**: Überprüfung und Analyse des Benutzerflusses, Login, Teamauswahl, gemeinsame Team-Einstellungen
-  - [x] **Startbildschirm-Icons hinzufügen**: FFG, TU Wien, HPCC Logos
-  - [ ] **Dokumentenserver**: Worker-Management (automatisches Parsen hochgeladener Dokumente)
-  - [ ] Projektansicht: Sortieren der Projekte
-  - [ ] Auswahl Browser: Multiple File Uploads, Zip uploads, Big file uploads, Downloads.
-  - [ ] Safety: füge Privatparameter zu doks, bieter oder projekte. solche dokumente sollten nicht öffentlich zugänglich sein.
-  - [ ] project images: preview and generative image gen.  
-- [ ] Kriterienliste
-  - [ ] Vorauswahl Detektion: wurden alle Dokumente abgegeben. Alleine, subunternehmer ider Bietergemeinschaft? wurden alle formblätter abgegeben?
-  - [ ] Pflicht, Optional, Oder Kriterien
-  - [ ] Allgemeine Kriterien sind zu umfangreich.
-- [ ] Bieterinfo
-  - [ ] Preis, Preisspiegel
-- [ ] Ausschreiber Info
-  - [ ] Preisspiegel, wieviele Lose wurden wie oft abegeben, welche lose nicht.
-- [ ] **KI-Funktionen**
-  - [x] **KI-Funktionen**: Metadaten- und Kriterien-Extraktion, Kontextlängen-Management (10k/500k Zeichen Limits) mit automatischer Kürzung und Logging
-    - [x] **Dokumenttyp-spezifische Prompts**: Automatische Erkennung und Verarbeitung von Bieter-/Ausschreibungsdokumenten mit spezifischen Prompts
-    - [x] **Prompt Integration**: KRITERIEN_EXTRAKTION Query mit JSON-Schema Validierung, erweiterten Token-Limits (32k) und Integrationstests
-    - [x] **UI Visualisierung**: Kriterienliste mit Markdown-Viewer, automatischer PDF-Erkennung, Tab-Navigation und robustem Error Handling
-      - [x] **AI-Extraktion Workflow**: UI-Integration mit Extraktions-Button, Loading States und Error Handling
-      - [x] **JSON Response Verarbeitung**: Strukturierte Darstellung aller Kriterien-Typen (Eignung, Zuschlag, Subunternehmer, formale Anforderungen)
-        - [x] **UI-Optimierungen**: Migration zu Tabellen-Layout für alle Kriterien-Typen mit Status-Tracking und Erweiterbarkeit
-      - [ ] **Review-System**: AI- und Human-Review Funktionalität
-        - [x] Review-Status Felder für jedes Kriterium vorbereitet (AI-reviewed, Human-reviewed)
-        - [ ] Bearbeitungs-Modi für manuelle Kriterien-Anpassungen
-        - [ ] Validierungs-Workflow für Human-in-the-Loop Prozesse
-        - [ ] Änderungshistorie und Audit-Trail für Reviews
-      - [x] **Table Layout Improvements**: Responsive Tabellen mit Nummerierung, anpassbaren Spalten, Text-Truncation und konsistentem Design
-    - [x] **Persistierung**: Filesystem-basierte Speicherung mit SWR-integration, Review-Status Tracking und WebDAV-Kompatibilität
-  - [ ] **Bieterdokumenten-Analyse**: Abgleich von Bieterdokumenten mit Kriterien.
-  - [x] **Dateikategorisierung**: Automatische Kategorisierung von Dokumenten.
-  - [ ] **Human-in-the-Loop**: UI zur Validierung und Korrektur von KI-Ergebnissen.
-- [ ] **Weitere technische Aufgaben**
-  - [x] **Stripe-Integration**: Zahlungspläne und Checkout-Funktionalität
-  - [ ] **Worker-System**: Implementierung eines Job-Queues für langlaufende Aufgaben (Parsing, Analyse).
-  - [ ] **Testing**: Entwicklung von Unit-, Integrations- und E2E-Tests.
-  - [ ] **Performance-Optimierung**: Code-Splitting, Caching und PWA-Features.
+### ✅ Phase 1: Grundlagen (Abgeschlossen)
+
+#### MVP-Funktionalitäten
+- [x] **Benutzer-Authentifizierung**: Registrierung, Anmeldung, Session-Management
+- [x] **Team-Kollaboration**: Team-Erstellung, Mitgliederverwaltung, Rollensystem
+- [x] **Projekt-Management**: Projektauswahl und -organisation
+- [x] **Dokumenten-Upload**: Konsolidiertes Upload-System mit Drag & Drop
+- [x] **Datei-Browser**: Vollständige Dateiverwaltung und -organisation
+- [x] **KI-Integration**: Grundlegende Dokumentenanalyse mit Gemini AI
+
+### 🔄 Phase 2: Kernfunktionen (In Bearbeitung)
+
+#### Analyse und Bewertung
+- [ ] **Kriterien-Optimierung**: Überarbeitung umfangreicher allgemeiner Kriterien
+- [ ] **Anonymisierung**: Automatische Entfernung sensibler Daten
+- [ ] **KI-Review-System**: Qualitätskontrolle für Analysen
+- [ ] **Prompt-Engineering**: Verbesserung der KI-Prompts
+
+#### Sicherheit und Compliance
+- [ ] **Erweiterte Benutzerrollen**: Admin, Prüfer, Viewer-Rollen
+- [ ] **Audit-Logging**: Umfassende Aktivitätsverfolgung
+- [ ] **Datenschutz-Features**: DSGVO-konforme Datenverarbeitung
+
+### 📋 Phase 3: Skalierung (Geplant)
+
+#### Performance und Stabilität
+- [ ] **Worker-System**: Asynchrone Verarbeitung zeitaufwändiger Aufgaben
+- [ ] **Caching-Strategien**: Optimierung der Anwendungsperformance
+- [ ] **Monitoring**: Systemüberwachung und Fehlerbehandlung
+
+#### Testing und Qualitätssicherung
+- [ ] **Automatisierte Tests**: Unit-, Integration- und E2E-Tests
+- [ ] **Performance-Tests**: Lastests und Optimierung
+- [ ] **Security-Audits**: Sicherheitsprüfungen und Penetrationstests
 
 ## PROJEKTSTRUKTUR
 
-Die Projektstruktur folgt den Konventionen von Next.js und ist auf Skalierbarkeit und Wartbarkeit ausgelegt:
+*Detaillierte Projektstruktur und technische Architektur siehe [README.md](./README.md)*
 
-```
-.
-├── app/                  # Next.js App Router (Seiten, Layouts, API-Routen)
-│   ├── (dashboard)/      # Geschützte Dashboard-Seiten
-│   ├── (login)/          # Authentifizierungs-Seiten
-│   └── api/              # API-Endpunkte (fs, ai, worker, stripe)
-├── components/           # Wiederverwendbare UI-Komponenten (shadcn/ui)
-├── lib/                  # Kernlogik und Hilfsfunktionen
-├── docs/                 # Dokumentation
-├── public/               # Statische Assets
-└── tests/                # Test-Dateien
-```
+### Organisationsprinzipien
+- **Modulare Architektur**: Klare Trennung von Geschäftslogik, UI und Datenebene
+- **Feature-basierte Organisation**: Zusammengehörige Funktionen in gemeinsamen Verzeichnissen
+- **Wiederverwendbarkeit**: Zentrale Komponenten und Hooks für konsistente UX
+- **Skalierbarkeit**: Struktur unterstützt Wachstum und Erweiterungen
 
 ## AUTHENTIFIZIERUNG & SESSION-MANAGEMENT
 
-### Anmelde-System (Sign-In/Sign-Out)
+### Sicherheitsanforderungen
+- **Sichere Authentifizierung**: JWT-basierte Session-Cookies mit bcryptjs-Hashing
+- **Rollenbasierte Zugriffskontrolle**: Team-Mitgliedschaften und Berechtigungen
+- **Session-Sicherheit**: Automatische Validierung und sichere Cookie-Übertragung
+- **Audit-Trail**: Vollständige Protokollierung von Anmelde-Aktivitäten
 
-Das Authentifizierungssystem verwendet JWT-basierte Session-Cookies mit folgender Architektur:
+### Compliance-Features
+- **DSGVO-Konformität**: Datenschutzkonforme Benutzerregistrierung und -verwaltung
+- **Sicherheitsstandards**: HTTPS-only, CSRF-Schutz, Rate Limiting
+- **Transparenz**: Nachvollziehbare Zugriffs- und Aktivitätsprotokolle
 
-#### **Sign-In Prozess**
-- **Frontend**: `app/(login)/login.tsx` bietet Anmeldeformular mit E-Mail/Passwort
-- **Backend Action**: `app/(login)/actions.ts` → `signIn()` Server Action
-  - Validierung via Zod Schema (`signInSchema`)
-  - Passwort-Hashing mit bcryptjs (10 Rounds)
-  - Datenbankabfrage: User + Team Join via Drizzle ORM
-  - Session-Cookie Erstellung: JWT Token mit 24h Gültigkeit
-  - Activity Logging: `SIGN_IN` Events werden in `activityLogs` gespeichert
-  - Redirect nach erfolgreicher Anmeldung: `/dashboard`
-
-#### **Sign-Out Prozess**
-- **Frontend**: Mehrere UI-Integrationen:
-  - `app/(dashboard)/layout.tsx`: User-Dropdown-Menü mit Sign-Out Button
-  - `app/(dashboard)/dashboard/layout.tsx`: Dashboard-spezifische Navigation
-- **Backend Action**: `app/(login)/actions.ts` → `signOut()` Server Action
-  - Activity Logging: `SIGN_OUT` Event wird geloggt
-  - Session-Cookie Löschung: `cookies().delete('session')`
-  - Kein Redirect - Frontend handelt Navigation
-
-#### **Session-Management**
-- **Cookie**: `session` JWT Token (httpOnly, secure, sameSite: lax)
-- **Middleware**: `middleware.ts` schützt `/dashboard` Routen
-  - Prüft Session-Cookie bei jedem Request
-  - Automatische Session-Verlängerung bei GET-Requests
-  - Redirect zu `/sign-in` bei fehlender/ungültiger Session
-- **Token-Verifizierung**: `lib/auth/session.ts` bietet:
-  - `getSession()`: Aktuelle Session abrufen
-  - `setSession()`: Neue Session erstellen
-  - `verifyToken()`: JWT Token validieren
-
-#### **Sicherheitsmerkmale**
-- Passwort-Hashing mit bcryptjs
-- HTTP-Only Cookies (JS Zugriff verhindert)
-- Secure Flag in Production
-- Session-Timeout nach 24 Stunden
-- Activity-Logging für Audit-Trail
-- Team-basierte Autorisierung über `teamMembers` Tabelle
+*Technische Implementierungsdetails siehe [README.md](./README.md)*
 
 ## LERNERFOLGE, CODING-RICHTLINIEN & REGELN & BEST PRACTICES
 

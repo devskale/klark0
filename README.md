@@ -1,31 +1,18 @@
-# Kontext1 - WebApp für sicheres digitales Vergabe Auditing
+# kontext.one - Technical Documentation
 
-Kontext1 ist eine moderne Webanwendung für sicheres digitales Vergabe Auditing, entwickelt mit **Next.js**. Die Anwendung bietet eine sichere Plattform für Vergabeverfahren mit integrierter Authentifizierung und Benutzerverwaltung.
+**kontext.one** ist eine Next.js-basierte Webapp für die digitale Auditierung von Ausschreibungsunterlagen. Diese Dokumentation beschreibt die technische Implementierung, Installation und API-Referenz.
 
-## Scope
+*Für Produktanforderungen und Entwicklungsplanung siehe [PRD.md](./PRD.md)*
 
-Build Kontext1, a webapp for tender document auditing. Webapp language is German.
+## Technische Features
 
-## Features
-
-- Sichere Benutzerauthentifizierung mit JWT
-- Rollenbasierte Zugriffskontrolle (RBAC) für Auditoren und Administratoren
-- Dokumentenmanagement für Vergabeverfahren
-- Audit-Trail für alle Benutzeraktionen
-- Integrierte Berichtsfunktionen
-- Benutzerfreundliche Oberfläche mit modernem Design
-- AI-gestützte Dokumentenanalyse mit automatischer Metadatenextraktion
-- Automatische AAB-PDF-Dokumentenerkennung und Parser-Auswahl
-- Strukturierte Dokumentenverarbeitung mit Markdown-Konvertierung
-
-## Einstellungen
-
-### Admin
-
-Dateisystem
-Lokales Dateisystem
-Klark0FS
-OCI Bucket
+- **Sichere Authentifizierung**: JWT-basierte Session-Cookies mit bcryptjs-Hashing
+- **Rollenbasierte Zugriffskontrolle**: Team-Management und Berechtigungssystem
+- **Dokumentenmanagement**: Upload, Verwaltung und Analyse von Ausschreibungsunterlagen
+- **KI-Integration**: Automatische Dokumentenanalyse mit Gemini AI
+- **WebDAV-Unterstützung**: Abstrakte Dateisystem-Schicht für lokale und entfernte Speicher
+- **Worker-System**: Asynchrone Verarbeitung zeitaufwändiger Aufgaben
+- **Audit-Trail**: Vollständige Protokollierung aller Benutzeraktionen
 
 ## Tech Stack
 
@@ -204,23 +191,29 @@ Die ainfo-Komponente bietet intelligente Analyse von Ausschreibungsdokumenten:
 4. Extrahierte Metadaten werden automatisch in die Felder eingetragen
 5. Speichern Sie die Informationen mit "Speichern"
 
-## Versionierung
+## Dateisystem-Struktur
 
-v0.0 initiale Version in deutsch. Boilperplate webapp mit Basis Layout und Design.
-v0.1 AI-gestützte Dokumentenanalyse für Ausschreibungsprojekte hinzugefügt.
+Das System verwendet eine strukturierte Ordnerorganisation für Ausschreibungsprojekte:
 
-## Opinionated Filesystem
+### Projektstruktur
+```
+PROJEKTNAME/                    # Hauptprojektordner
+├── ausschreibung.json         # Projektmetadaten (Datum, Status, etc.)
+├── A/                         # Ausschreibungsdokumente
+│   └── md/                    # Markdown-Versionen der Dokumente
+├── B/                         # Bieterordner
+│   ├── BIETER1/              # Einzelner Bieterordner
+│   │   ├── dokumente/        # Bieterdokumente
+│   │   └── md/               # Markdown-Versionen
+│   └── BIETER2/              # Weitere Bieter...
+└── archiv/                   # Archivierte Dateien
+```
 
-Dateiordnersystem
-
-ORDNERNAME: Im Root Ordner ist es ein Ordner eine Ausschreibung - ausschreibung.json - holds info about the ausschreibungs project - Datum, Status, etc - A: hält die unterschiedlichen Vergabe/Ausschreibungs Dokumente
-md: kann md ordner enthalten mit markdown versionen der dokumente - B: Hält die unterschiedlichen Bieterordner - BIETERORDNER: Ordner für Bieterdokumente - md: kann md ordner enthalten mit markdown versionen der dokumente
-
-archiv: Ordner, reservierte für archivierte projekte
-.NAME: versteckte ordner sind reserviert für system
-.processed: reservierter ordner für processed dateien
-.md: reservierter ordnername für markdown files
-md: reservierter ordnername der markdown files enthält
+### Reservierte Ordner
+- `.NAME`: Versteckte Systemordner
+- `.processed`: Verarbeitete Dateien
+- `.md`: Reserviert für Markdown-Dateien
+- `md/`: Markdown-Versionen von Dokumenten
 
 Dateiendungen
 .md: Markdown Files
