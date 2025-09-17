@@ -19,6 +19,7 @@ Entwicklung einer digitalen Webapp für die Auditierung von Ausschreibungsunterl
 ## 📋 Anforderungen
 
 ### ⚙️ Funktionale Anforderungen
+
 - **Dokumenten-Upload und -Verwaltung**: Sichere Speicherung und Organisation von Ausschreibungsunterlagen
 - **KI-gestützte Analyse**: Automatische Extraktion und Bewertung von Kriterien aus Dokumenten
 - **Benutzer- und Teamverwaltung**: Rollenbasierte Zugriffskontrolle und Teamzusammenarbeit
@@ -26,17 +27,19 @@ Entwicklung einer digitalen Webapp für die Auditierung von Ausschreibungsunterl
 - **Sicherheit**: Schutz sensibler Ausschreibungsdaten
 
 ### 🛠️ Technische Anforderungen
+
 - **Framework**: Next.js mit TypeScript
 - **Datenbank**: PostgreSQL mit Drizzle ORM
 - **UI**: shadcn/ui Komponenten
 - **Zahlungen**: Stripe Integration
 - **Authentifizierung**: JWT-basierte Session-Cookies
 
-*Detaillierte technische Implementierung siehe [README.md](./README.md)*
+_Detaillierte technische Implementierung siehe [README.md](./README.md)_
 
 ## 🚀 Produktvision
 
 ### 🎯 Kernfunktionalitäten
+
 - **Projektmanagement**: Strukturierte Organisation von Ausschreibungsprojekten
 - **Dokumentenanalyse**: KI-gestützte Extraktion von Bewertungskriterien
 - **Kollaborative Bewertung**: Teambasierte Prüfung und Bewertung
@@ -44,6 +47,7 @@ Entwicklung einer digitalen Webapp für die Auditierung von Ausschreibungsunterl
 - **Reporting**: Automatisierte Berichte und Auswertungen
 
 ### 👥 Zielgruppen
+
 - **Öffentliche Auftraggeber**: Behörden und öffentliche Institutionen
 - **Beratungsunternehmen**: Spezialisierte Ausschreibungsberater
 - **Compliance-Teams**: Interne Prüfungsabteilungen
@@ -54,6 +58,7 @@ Entwicklung einer digitalen Webapp für die Auditierung von Ausschreibungsunterl
 ### ✅ Phase 1: Grundlagen (Abgeschlossen)
 
 #### MVP-Funktionalitäten
+
 - [x] **Benutzer-Authentifizierung**: Registrierung, Anmeldung, Session-Management
 - [x] **Team-Kollaboration**: Team-Erstellung, Mitgliederverwaltung, Rollensystem
 - [x] **Projekt-Management**: Projektauswahl und -organisation
@@ -62,12 +67,21 @@ Entwicklung einer digitalen Webapp für die Auditierung von Ausschreibungsunterl
 - [x] **KI-Integration**: Grundlegende Dokumentenanalyse mit Gemini AI
 - [x] **Office Document Preview**: DOCX/XLSX Vorschau mit mammoth.js und SheetJS
 - [x] **Upload Logic Consolidation**: Zentrale Hooks und wiederverwendbare Komponenten
+- [ ] Inference Provider: Integration verschiedener Inference Provider
+  - [x] **Gemini AI**:
+  - [ ] uniinfer: universal inference von +20 Providern.
 
 ### 🔄 Phase 2: Kernfunktionen (In Bearbeitung)
 
 #### Analyse und Bewertung
+
 - [x] **AI-gestützte Dokumentenanalyse**: Automatische Extraktion von Projektinformationen und Kriterien
 - [x] **Worker-System**: Asynchrone Verarbeitung mit API-Routen für Jobs, Status und Worker-Typen
+- [ ] **OFS Dateistruktur-Modernisierung**: Überarbeitung der Opinionated Filesystem Struktur
+  - [ ] Index-Datei: `.pdf2md_index.json` → `.ofs.index.json` umbenennen
+  - [ ] `kriterien.json` Format und Struktur aktualisieren
+  - [ ] `audit.json` Format und Struktur aktualisieren
+- [ ] Dokumentenvollständigkeitsprüfung: Prüfung ob die geforderten Dokumente vollständig vorhanden sind
 - [ ] **Kriterien-Optimierung**: Überarbeitung umfangreicher allgemeiner Kriterien
 - [ ] **Bewertungsmatrix**: Strukturierte Kriterien-Bewertung und Scoring
 - [ ] **Compliance-Tracking**: Automatische Überprüfung von Anforderungserfüllung
@@ -75,6 +89,7 @@ Entwicklung einer digitalen Webapp für die Auditierung von Ausschreibungsunterl
 - [ ] **Prompt-Engineering**: Verbesserung der KI-Prompts
 
 #### Sicherheit und Compliance
+
 - [ ] **Erweiterte Benutzerrollen**: Admin, Prüfer, Viewer-Rollen
 - [ ] **Audit-Logging**: Umfassende Aktivitätsverfolgung
 - [ ] **Datenschutz-Features**: DSGVO-konforme Datenverarbeitung
@@ -82,25 +97,29 @@ Entwicklung einer digitalen Webapp für die Auditierung von Ausschreibungsunterl
 ### 📋 Phase 3: Skalierung (Geplant)
 
 #### Automatisierung und Integration
+
 - [ ] **Anonymisierung**: Automatische Entfernung sensibler Daten
 - [ ] **Batch-Verarbeitung**: Massenverarbeitung von Dokumenten
 - [ ] **API-Integration**: Externe Systeme und Datenquellen
 - [ ] **Reporting-Engine**: Automatisierte Berichte und Dashboards
 
 #### Performance und Stabilität
+
 - [ ] **Caching-Strategien**: Optimierung der Anwendungsperformance
 - [ ] **Monitoring**: Systemüberwachung und Fehlerbehandlung
 
 #### Testing und Qualitätssicherung
+
 - [ ] **Automatisierte Tests**: Unit-, Integration- und E2E-Tests
 - [ ] **Performance-Tests**: Lastests und Optimierung
 - [ ] **Security-Audits**: Sicherheitsprüfungen und Penetrationstests
 
 ## 🏗️ Projektstruktur
 
-*Detaillierte Projektstruktur und technische Architektur siehe [README.md](./README.md)*
+_Detaillierte Projektstruktur und technische Architektur siehe [README.md](./README.md)_
 
 ### 📐 Organisationsprinzipien
+
 - **Modulare Architektur**: Klare Trennung von Geschäftslogik, UI und Datenebene
 - **Feature-basierte Organisation**: Zusammengehörige Funktionen in gemeinsamen Verzeichnissen
 - **Wiederverwendbarkeit**: Zentrale Komponenten und Hooks für konsistente UX
@@ -109,17 +128,19 @@ Entwicklung einer digitalen Webapp für die Auditierung von Ausschreibungsunterl
 ## 🔐 Authentifizierung & Session-Management
 
 ### 🛡️ Sicherheitsanforderungen
+
 - **Sichere Authentifizierung**: JWT-basierte Session-Cookies mit bcryptjs-Hashing
 - **Rollenbasierte Zugriffskontrolle**: Team-Mitgliedschaften und Berechtigungen
 - **Session-Sicherheit**: Automatische Validierung und sichere Cookie-Übertragung
 - **Audit-Trail**: Vollständige Protokollierung von Anmelde-Aktivitäten
 
 ### ✅ Compliance-Features
+
 - **DSGVO-Konformität**: Datenschutzkonforme Benutzerregistrierung und -verwaltung
 - **Sicherheitsstandards**: HTTPS-only, CSRF-Schutz, Rate Limiting
 - **Transparenz**: Nachvollziehbare Zugriffs- und Aktivitätsprotokolle
 
-*Technische Implementierungsdetails siehe [README.md](./README.md)*
+_Technische Implementierungsdetails siehe [README.md](./README.md)_
 
 ## 📚 Lessons Learned & Best Practices
 
@@ -159,23 +180,23 @@ Entwicklung einer digitalen Webapp für die Auditierung von Ausschreibungsunterl
   - Highlighting-Logic muss sowohl selectedDocs Array als auch einzelnen selectedDok-State berücksichtigen für konsistente UI-Darstellung
   - Navigation zwischen Detail- und Auswahlansichten erfordert koordinierte State-Management-Strategien zwischen verschiedenen Komponenten
 - **Upload Logic Consolidation & Reusable Components**:
-    - Code-Duplikation zwischen verschiedenen Upload-Bereichen führt zu Wartungsproblemen und inkonsistenter UX; zentrale Hooks und Komponenten lösen dies effektiv
-    - Custom Hooks (`useUpload`) mit konfigurierbaren Callbacks ermöglichen flexible Wiederverwendung bei unterschiedlichen Upload-Kontexten (Projekt, Bieter, Dokumente)
-    - Einheitliche Dialog-Komponenten (`UploadDialog`) mit Props-basierter Konfiguration schaffen konsistente UI-Patterns und reduzieren Entwicklungsaufwand
-    - SWR-Mutation-Funktionen müssen korrekt referenziert werden; `mutate()` vs. `mutateProjects()` - falsche Funktionsnamen führen zu Runtime-Fehlern
-    - Drag-and-Drop-Funktionalität sollte in wiederverwendbaren Komponenten gekapselt werden, um konsistentes Verhalten über alle Upload-Bereiche zu gewährleisten
+  - Code-Duplikation zwischen verschiedenen Upload-Bereichen führt zu Wartungsproblemen und inkonsistenter UX; zentrale Hooks und Komponenten lösen dies effektiv
+  - Custom Hooks (`useUpload`) mit konfigurierbaren Callbacks ermöglichen flexible Wiederverwendung bei unterschiedlichen Upload-Kontexten (Projekt, Bieter, Dokumente)
+  - Einheitliche Dialog-Komponenten (`UploadDialog`) mit Props-basierter Konfiguration schaffen konsistente UI-Patterns und reduzieren Entwicklungsaufwand
+  - SWR-Mutation-Funktionen müssen korrekt referenziert werden; `mutate()` vs. `mutateProjects()` - falsche Funktionsnamen führen zu Runtime-Fehlern
+  - Drag-and-Drop-Funktionalität sollte in wiederverwendbaren Komponenten gekapselt werden, um konsistentes Verhalten über alle Upload-Bereiche zu gewährleisten
 - **Worker System Implementation**:
-    - Asynchrone Verarbeitung erfordert robuste API-Struktur mit Jobs, Status-Tracking und Worker-Typen
-    - Modulare API-Routen (`/api/worker/jobs`, `/api/worker/status`) ermöglichen saubere Trennung von Funktionalitäten
-    - Worker-Typen (parsing, anonymization, analysis, fakejob) sollten klar definierte Interfaces haben
+  - Asynchrone Verarbeitung erfordert robuste API-Struktur mit Jobs, Status-Tracking und Worker-Typen
+  - Modulare API-Routen (`/api/worker/jobs`, `/api/worker/status`) ermöglichen saubere Trennung von Funktionalitäten
+  - Worker-Typen (parsing, anonymization, analysis, fakejob) sollten klar definierte Interfaces haben
 - **AI-gestützte Dokumentenanalyse**:
-    - Parser-Integration (marker, docling, pdfplumber) ermöglicht flexible Dokumentenkonvertierung zu Markdown
-    - Streaming AI-Responses verbessern UX bei längeren Analyseprozessen
-    - Context-Path-Tracking und Debug-Informationen sind essentiell für Entwicklung und Troubleshooting
+  - Parser-Integration (marker, docling, pdfplumber) ermöglicht flexible Dokumentenkonvertierung zu Markdown
+  - Streaming AI-Responses verbessern UX bei längeren Analyseprozessen
+  - Context-Path-Tracking und Debug-Informationen sind essentiell für Entwicklung und Troubleshooting
 - **Office Document Preview System**:
-    - Server-seitige Konvertierung (mammoth.js für DOCX, SheetJS für XLSX) verhindert Client-seitige Sicherheitsrisiken
-    - HTML-Sanitization mit DOMPurify ist kritisch für XSS-Prävention bei konvertierten Inhalten
-    - Separate API-Routen für verschiedene Dokumenttypen ermöglichen modulare Erweiterung
+  - Server-seitige Konvertierung (mammoth.js für DOCX, SheetJS für XLSX) verhindert Client-seitige Sicherheitsrisiken
+  - HTML-Sanitization mit DOMPurify ist kritisch für XSS-Prävention bei konvertierten Inhalten
+  - Separate API-Routen für verschiedene Dokumenttypen ermöglichen modulare Erweiterung
 
 ---
 
