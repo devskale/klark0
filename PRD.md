@@ -76,12 +76,15 @@ _Detaillierte technische Implementierung siehe [README.md](./README.md)_
 #### Analyse und Bewertung
 
 - [x] **AI-gestützte Dokumentenanalyse**: Automatische Extraktion von Projektinformationen und Kriterien
-- [x] **Worker-System**: Asynchrone Verarbeitung mit API-Routen für Jobs, Status und Worker-Typen
+- [ ] **Worker-System**: Asynchrone Verarbeitung mit API-Routen für Jobs, Status und Worker-Typen
 - [ ] **OFS Dateistruktur-Modernisierung**: Überarbeitung der Opinionated Filesystem Struktur
   - [ ] Index-Datei: `.pdf2md_index.json` → `.ofs.index.json` umbenennen
   - [ ] `kriterien.json` Format und Struktur aktualisieren
   - [ ] `audit.json` Format und Struktur aktualisieren
-- [ ] Dokumentenvollständigkeitsprüfung: Prüfung ob die geforderten Dokumente vollständig vorhanden sind
+  - [ ] Dokumentenvollständigkeitsprüfung: Prüfung ob die geforderten Dokumente vollständig vorhanden sind
+- [ ] Query Feature
+  - [ ] RAG Suche über alle Dokumente
+  - [ ] Filtern von Dokumenten
 - [ ] **Kriterien-Optimierung**: Überarbeitung umfangreicher allgemeiner Kriterien
 - [ ] **Bewertungsmatrix**: Strukturierte Kriterien-Bewertung und Scoring
 - [ ] **Compliance-Tracking**: Automatische Überprüfung von Anforderungserfüllung
