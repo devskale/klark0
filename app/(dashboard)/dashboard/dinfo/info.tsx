@@ -9,7 +9,7 @@ import useSWR from "swr";
 import {
   fileTreeFetcher,
   normalizePath,
-  PDF2MD_INDEX_FILE_NAME,
+  OFS_INDEX_FILE_NAME,
 } from "@/lib/fs/fileTreeUtils";
 import { EditableText } from "@/components/ui/editable-text";
 import { AI_QUERIES } from "@/app/api/ai/config";
@@ -72,7 +72,7 @@ export default function Info() {
 
   // fetch index JSON
   const { data: idxJson, mutate: mutateIndex } = useSWR(
-    parentDir ? parentDir + PDF2MD_INDEX_FILE_NAME : null,
+    parentDir ? parentDir + OFS_INDEX_FILE_NAME : null,
     async (path) => {
       const params = new URLSearchParams({ path });
       const res = await fetch(`/api/fs?${params.toString()}`);
@@ -151,9 +151,9 @@ export default function Info() {
         mutateMeta(() => json.metadata, false);
       }
 
-      // update .pdf2md_index.json
+      // update .ofs.index.json
       if (parentDir) {
-        const idxPath = parentDir + PDF2MD_INDEX_FILE_NAME;
+        const idxPath = parentDir + OFS_INDEX_FILE_NAME;
         await fetch("/api/fs/index", {
           method: "POST",
           headers: { "Content-Type": "application/json" },

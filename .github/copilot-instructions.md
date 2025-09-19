@@ -27,7 +27,7 @@ klark0 is a Next.js webapp for auditing tender documents ("Ausschreibungen"). Th
   - Read: `POST /api/fs/read` with `{ path }`
   - Metadata: `GET/POST /api/fs/metadata`
 - **Document Metadata**: Each document has a `.meta.json` sidecar file for metadata.
-- **Indexing**: Directory index files are named `.pdf2md_index.json`.
+- **Indexing**: Directory index files are named `.ofs.index.json`.
 - **AI Integration**: AI services via `/api/ai/gem/*` endpoints. Document analysis uses streamed responses.
 - **Worker System**: Jobs for parsing, anonymization, analysis, etc. via `/api/worker/jobs`.
 - **UI Language**: All UI and docs must be in German.

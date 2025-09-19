@@ -9,7 +9,7 @@ import useSWR from "swr";
 import {
   fileTreeFetcher,
   normalizePath,
-  PDF2MD_INDEX_FILE_NAME,
+  OFS_INDEX_FILE_NAME,
 } from "@/lib/fs/fileTreeUtils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -60,7 +60,7 @@ export default function Aidok() {
     : null;
 
   const { data: indexData, mutate: mutateIndex } = useSWR(
-    parentDir ? parentDir + PDF2MD_INDEX_FILE_NAME : null,
+    parentDir ? parentDir + OFS_INDEX_FILE_NAME : null,
     async (path) => {
       const params = new URLSearchParams({ path });
       const res = await fetch(`/api/fs?${params.toString()}`);
@@ -581,7 +581,7 @@ export default function Aidok() {
   const handleSaveDefaultParser = async () => {
     if (!parentDir || !selectedDok || !selectedVariant) return;
     const fileBase = decodeURIComponent(selectedDok.split("/").pop()!);
-    const idxPath = parentDir + PDF2MD_INDEX_FILE_NAME;
+    const idxPath = parentDir + OFS_INDEX_FILE_NAME;
 
     const parserKey = selectedVariant.split(" ")[0].toLowerCase();
 

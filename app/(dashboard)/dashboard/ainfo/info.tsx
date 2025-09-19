@@ -7,7 +7,7 @@ import useSWR from "swr";
 import {
   fileTreeFetcher,
   normalizePath,
-  PDF2MD_INDEX_FILE_NAME,
+  OFS_INDEX_FILE_NAME,
 } from "@/lib/fs/fileTreeUtils";
 import { EditableText } from "@/components/ui/editable-text";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";

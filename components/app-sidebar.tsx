@@ -108,7 +108,7 @@ export function AppSidebar({ versions, navMain, ...props }: AppSidebarProps) {
               kontext<sup>one</sup>
             </div>
             <span className="text-xs text-gray-500 mt-1">
-              Digitale Vergabeaudits Wien
+              Digitale Vergabeaudits
             </span>
           </div>
         )}

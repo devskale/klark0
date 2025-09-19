@@ -3,7 +3,7 @@ import { parseStringPromise } from "xml2js"; // Use xml2js for XML parsing
 import { getFileSystemSettings } from "@/lib/db/settings";
 import { withTeamContext, RequestWithTeam } from "@/lib/auth/team-context";
 
-const PDF2MD_INDEX_FILE_NAME = ".pdf2md_index.json";
+const OFS_INDEX_FILE_NAME = ".ofs.index.json";
 
 async function handleFileSystemRequest(request: RequestWithTeam) {
   const url = new URL(request.url);
@@ -75,7 +75,7 @@ async function handleFileSystemRequest(request: RequestWithTeam) {
         fsSettings.host.endsWith("/") ? fsSettings.host : `${fsSettings.host}/`
       ).toString();
       console.log("Constructed WebDAV URL:", webdavUrl); // Check if the request is for the specific index file content
-      if (path.endsWith(PDF2MD_INDEX_FILE_NAME)) {
+      if (path.endsWith(OFS_INDEX_FILE_NAME)) {
         console.log(`Fetching content for index file: ${webdavUrl}`);
         const response = await fetch(webdavUrl, {
           method: "GET",

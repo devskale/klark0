@@ -78,7 +78,7 @@ _Detaillierte technische Implementierung siehe [README.md](./README.md)_
 - [x] **AI-gestützte Dokumentenanalyse**: Automatische Extraktion von Projektinformationen und Kriterien
 - [ ] **Worker-System**: Asynchrone Verarbeitung mit API-Routen für Jobs, Status und Worker-Typen
 - [ ] **OFS Dateistruktur-Modernisierung**: Überarbeitung der Opinionated Filesystem Struktur
-  - [ ] Index-Datei: `.pdf2md_index.json` → `.ofs.index.json` umbenennen
+  - [x] Index-Datei: `.pdf2md_index.json` → `.ofs.index.json` umbenennen
   - [ ] `kriterien.json` Format und Struktur aktualisieren
   - [ ] `audit.json` Format und Struktur aktualisieren
   - [ ] Dokumentenvollständigkeitsprüfung: Prüfung ob die geforderten Dokumente vollständig vorhanden sind

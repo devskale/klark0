@@ -9,7 +9,7 @@ import useSWR from "swr";
 import {
   fileTreeFetcher,
   normalizePath,
-  PDF2MD_INDEX_FILE_NAME,
+  OFS_INDEX_FILE_NAME,
 } from "@/lib/fs/fileTreeUtils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";

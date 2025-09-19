@@ -1,6 +1,6 @@
 import { abstractFileSystemView, FileEntry } from "@/lib/fs/abstractFilesystem";
 
-export const PDF2MD_INDEX_FILE_NAME = ".pdf2md_index.json";
+export const OFS_INDEX_FILE_NAME = ".ofs.index.json";
 
 export type FileSystemSettings = {
   type: "webdav" | "local";
@@ -135,7 +135,7 @@ export const fileTreeFetcher = async (
     { status: string; hasActualParser: boolean; det: string[]; default: string }
   > = {};
 
-  const indexFilePath = normalizePath(finalPath) + PDF2MD_INDEX_FILE_NAME;
+  const indexFilePath = normalizePath(finalPath) + OFS_INDEX_FILE_NAME;
 
   try {
     let indexParams: URLSearchParams;

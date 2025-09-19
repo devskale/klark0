@@ -38,7 +38,7 @@ import { Input } from "@/components/ui/input";
 import DoksModule from "./DoksModule"; // <-- new import
 import DateibrowserModule from "./DateibrowserModule";
 import {
-  PDF2MD_INDEX_FILE_NAME,
+  OFS_INDEX_FILE_NAME,
   normalizePath,
   fileTreeFetcher,
   FileTreeEntry,

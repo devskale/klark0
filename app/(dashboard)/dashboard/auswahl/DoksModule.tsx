@@ -108,7 +108,7 @@ export default function DoksModule({
         const indexSidecar = `${docsPath.replace(
           /\/$/,
           ""
-        )}/.pdf2md_index.json`;
+        )}/.ofs.index.json`;
         const params = new URLSearchParams({
           path: indexSidecar,
         });
