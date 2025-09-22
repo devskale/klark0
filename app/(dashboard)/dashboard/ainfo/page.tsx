@@ -5,6 +5,7 @@ import { useProject } from "@/context/ProjectContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sparkles } from "lucide-react";
 import AKriterienPage from "./kriterien";
+import ADoksPage from "./doks";
 import Info from "./info";
 import AiProject from "./aiproject";
 
@@ -13,24 +14,28 @@ export default function AInfoPage() {
 
   return (
     <section className="p-4">
-          <Tabs defaultValue="info" className="w-full">
-            <TabsList>
-              <TabsTrigger value="info">Info</TabsTrigger>
-              <TabsTrigger value="kriterien">Kriterien</TabsTrigger>
-              <TabsTrigger value="sparkles">
-                <Sparkles />
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="info">
-              <Info />
-            </TabsContent>
-            <TabsContent value="kriterien">
-              <AKriterienPage />
-            </TabsContent>
-            <TabsContent value="sparkles">
-              <AiProject />
-            </TabsContent>
-          </Tabs>
+      <Tabs defaultValue="info" className="w-full">
+        <TabsList>
+          <TabsTrigger value="info">Info</TabsTrigger>
+          <TabsTrigger value="doks">Doks</TabsTrigger>
+          <TabsTrigger value="kriterien">Kriterien</TabsTrigger>
+          <TabsTrigger value="sparkles">
+            <Sparkles />
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="info">
+          <Info />
+        </TabsContent>
+        <TabsContent value="doks">
+          <ADoksPage />
+        </TabsContent>
+        <TabsContent value="kriterien">
+          <AKriterienPage />
+        </TabsContent>
+        <TabsContent value="sparkles">
+          <AiProject />
+        </TabsContent>
+      </Tabs>
     </section>
   );
 }

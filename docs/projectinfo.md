@@ -19,6 +19,13 @@ The Project Info system in kontext.one manages tender project metadata through a
 **Type Definitions**: `types/kriterien.ts`
 **AI Integration**: Configurable AI queries for criteria extraction
 
+### Bieterdokumente (Doks) System
+**Main Component**: `app/(dashboard)/dashboard/ainfo/doks.tsx`
+**Storage**: WebDAV-based filesystem with `projekt.json` main project file
+**Data Source**: `bdoks.bieterdokumente` array within project structure
+**Caching**: SWR for efficient data fetching and real-time updates
+**UI Features**: Filtering, statistics, and responsive table display
+
 ## Data Flow Processes
 
 ### 1. Reading from JSON 📖
@@ -147,6 +154,59 @@ The AI uses a specialized prompt that:
 }
 ```
 
+### 4. Bieterdokumente Display 📋
+
+**File Location**: `projekt.json` (main project metadata file)
+**API Endpoint**: `POST /api/fs/read`
+**Data Source**: `bdoks.bieterdokumente` array
+
+#### Process Flow:
+
+##### 1. Data Loading:
+- Component constructs project path: `projectDir + "projekt.json"`
+- Uses SWR to fetch complete project data via `POST /api/fs/read`
+- API reads full `projekt.json` file content via WebDAV GET request
+- Parses JSON and extracts `bdoks.bieterdokumente` array for display
+
+##### 2. Data Processing:
+- Filters documents based on search term, document type, and requirement type
+- Calculates statistics (total documents, signed requirements, document types)
+- Groups documents by type for organized display
+- Applies responsive table formatting for optimal viewing
+
+##### 3. UI Rendering:
+- Displays filterable table with document information
+- Shows statistics cards with document counts and requirements
+- Provides search functionality across document descriptions
+- Implements responsive design for desktop and mobile viewing
+
+#### Data Structure (BieterDokument):
+```typescript
+{
+  anforderungstyp: string,        // e.g., "Eignungsnachweis", "Angebot"
+  dokumenttyp: string,            // e.g., "Referenzliste", "Preisblatt"
+  beschreibung?: string,          // Detailed description of document
+  unterzeichnung_erforderlich: boolean,  // Whether signature is required
+  bemerkungen?: string,           // Additional notes or requirements
+  los?: string                    // Associated lot number if applicable
+}
+```
+
+#### Implementation Details:
+- **API Integration**: Uses `POST /api/fs/read` to retrieve complete project data
+- **Data Extraction**: Accesses `bdoks.bieterdokumente` from nested project structure
+- **Error Handling**: Graceful handling of missing data or malformed JSON
+- **Performance**: SWR caching with `{ revalidateOnFocus: false }` configuration
+- **Type Safety**: TypeScript interfaces for document structure validation
+
+#### UI Features:
+- **Search Functionality**: Real-time filtering by document description
+- **Type Filtering**: Filter by document type (Alle, Eignungsnachweis, Angebot, etc.)
+- **Requirement Filtering**: Filter by signature requirement (Alle, Erforderlich, Nicht erforderlich)
+- **Statistics Display**: Overview cards showing document counts and requirements
+- **Responsive Table**: Optimized display for various screen sizes
+- **Loading States**: Skeleton loading during data fetch operations
+
 ## API Endpoints
 
 ### `/api/fs/metadata` (GET)
@@ -164,10 +224,11 @@ The AI uses a specialized prompt that:
 - **Implementation**: Merges with existing data, preserves `lose` object structure, saves via WebDAV PUT
 
 ### `/api/fs/read` (POST)
-- **Purpose**: Read parser markdown files for AI context
+- **Purpose**: Read complete project files including bid documents data
 - **Body**: `{path: string}`
 - **Response**: `{content: string}`
-- **Usage**: Loading parsed document content for AI analysis
+- **Usage**: Loading complete `projekt.json` content for bid documents display and AI context
+- **Doks Integration**: Primary endpoint for accessing `bdoks.bieterdokumente` data structure
 
 ### `/api/ai/gem/stream` (POST)
 - **Purpose**: AI-powered metadata extraction
@@ -201,6 +262,9 @@ The AI uses a specialized prompt that:
 - **Parser Selection**: Dynamic dropdown based on detected parsers
 - **Progress Indicators**: Loading states for all async operations
 - **Debug Information**: Collapsible dev info section for troubleshooting
+- **Doks Display**: Responsive table interface with filtering and search capabilities
+- **Statistics Cards**: Overview displays for document counts and requirements
+- **Filter Controls**: Multi-criteria filtering by type, requirements, and search terms
 
 ## Development Guidelines
 
@@ -246,6 +310,12 @@ The AI uses a specialized prompt that:
 - **Cause**: Missing metadata file or SWR cache issues
 - **Solution**: Use refresh button to force cache revalidation
 - **Debug**: Check if `projekt.meta.json` exists in project directory
+
+#### Bid Documents Not Displaying
+- **Cause**: Missing or malformed `bdoks.bieterdokumente` structure in `projekt.json`
+- **Solution**: Verify `projekt.json` contains valid `bdoks` object with `bieterdokumente` array
+- **Debug**: Check browser console for JSON parsing errors and verify data structure
+- **API Issue**: Ensure using `POST /api/fs/read` instead of `GET /api/fs/metadata` for complete data access
 
 ### Debug Information
 The component includes a collapsible "Dev Info" section that displays:
@@ -494,6 +564,10 @@ The `lose` field requires special handling due to the mismatch between UI expect
 7. **Criteria Search**: Full-text search within criteria titles and descriptions
 8. **Criteria Analytics**: Dashboard for criteria completion statistics
 9. **Criteria Templates**: Predefined criteria templates for different tender types
+10. **Doks Export**: Export bid documents list to PDF or Excel format
+11. **Doks Sorting**: Advanced sorting capabilities by multiple columns
+12. **Doks Grouping**: Group documents by Los, type, or requirement status
+13. **Doks Status Tracking**: Track document submission status and deadlines
 
 ### Recently Implemented ✅
 - **Data Structure Compatibility**: Fixed `lose` field handling between UI and storage formats
@@ -503,6 +577,9 @@ The `lose` field requires special handling due to the mismatch between UI expect
 - **Modern UI Interface**: Responsive table with filtering, grouping, and status management
 - **Type Safety**: Comprehensive TypeScript interfaces for criteria validation and type checking
 - **Centralized Persistence**: Single source of truth for all project data including criteria
+- **Doks System**: Complete bid documents display system with filtering and search capabilities
+- **Full Data Access**: Switched from metadata API to full file read API for complete `projekt.json` access
+- **Responsive Doks UI**: Table interface with statistics cards and multi-criteria filtering
 
 ### Performance Optimizations
 1. **Caching**: Implement more aggressive caching strategies
