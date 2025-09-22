@@ -6,42 +6,43 @@ The Project Info system in kontext.one manages tender project metadata through a
 
 ## System Architecture
 
+### Project Info System
 **Main Component**: `app/(dashboard)/dashboard/ainfo/info.tsx`
 **Storage**: WebDAV-based filesystem with sidecar JSON files
 **Caching**: SWR for efficient data fetching and cache management
 **AI Integration**: Streaming responses with robust JSON extraction
 
+### Kriterien-Extraktion System
+**Main Component**: `app/(dashboard)/dashboard/ainfo/kriterien.tsx`
+**Storage**: WebDAV-based filesystem with `kriterien.meta.json` sidecar files
+**Persistence Layer**: `lib/kriterien/persistence.ts`
+**Type Definitions**: `types/kriterien.ts`
+**AI Integration**: Configurable AI queries for criteria extraction
+
 ## Data Flow Processes
 
 ### 1. Reading from JSON 📖
 
-**File Location**: `projekt.meta.json` (sidecar metadata file)
+**File Location**: `projekt.json` (main project metadata file)
 **API Endpoint**: `GET /api/fs/metadata`
 
 #### Process Flow:
-1. Component constructs metadata path: `projectDir + "projekt.meta.json"`
+1. Component constructs metadata path: `projectDir + "projekt.json"`
 2. Uses SWR to fetch metadata via `GET /api/fs/metadata?path={metadataPath}`
-3. API makes WebDAV GET request to retrieve the JSON file
-4. If file exists, returns JSON content; if not found (404), returns `null`
-5. React useEffect populates all form fields when `projectMeta` data loads
+3. API reads `projekt.json` file via WebDAV GET request
+4. API extracts metadata from nested `meta.meta` structure and flattens it for UI
+5. If file exists, returns flattened JSON content; if not found (404), returns `null`
+6. React useEffect populates all form fields when `projectMeta` data loads
 
-#### Data Structure:
+#### Data Structure (UI Format):
 ```typescript
 {
-  vergabestelle: string,
-  adresse: string,
-  projektName: string,
-  startDatum: string,
-  bieterabgabe: string,
-  projektStart: string,
-  endDatum: string,
-  beschreibung: string,
-  referenznummer: string,
-  schlagworte: string,
-  sprache: string,
-  dokumentdatum: string,
-  selectedParser: string,
-  metadaten: string[] // converted to comma-separated string
+  auftraggeber: string,
+  aktenzeichen: string,
+  ausschreibungsgegenstand: string,
+  datum: string,
+  lose: string[], // Array of "Los X: Bezeichnung" strings (converted from object array)
+  selectedParser: string
 }
 ```
 
@@ -79,18 +80,16 @@ The Project Info system in kontext.one manages tender project metadata through a
 #### Expected AI JSON Output:
 ```typescript
 {
-  "Vergabestelle": string,
-  "Addresse": string,
-  "Projekttitel": string,
-  "Ausschreibungsstart": string,
-  "Ausschreibungsende": string,
-  "Projektstart": string,
-  "Projektende": string,
-  "Projekt Kurzbeschreibung": string,
-  "Referenznummer": string,
-  "Dokumentdatum": string,
-  "Sprache": string,
-  "Schlagworte": string[]
+  "Auftraggeber": string,
+  "Aktenzeichen": string,
+  "Ausschreibungsgegenstand": string,
+  "Datum": string,
+  "Lose": [
+    {
+      "nummer": string,
+      "bezeichnung": string
+    }
+  ]
 }
 ```
 
@@ -117,54 +116,52 @@ The AI uses a specialized prompt that:
 ##### 1. Data Preparation:
 - Collects all form field values into `metaObj`
 - Converts empty strings to `null` for clean storage
-- Splits comma-separated `metadataList` into array
-- Trims and filters empty values
+- Handles `lose` field as string array (UI format)
 
 ##### 2. API Call:
 - Sends `POST /api/fs/metadata` with `{path, metadata}`
-- API performs WebDAV PUT request with `JSON.stringify(metadata, null, 2)`
-- Returns success response with saved metadata
+- API merges with existing `projekt.json` data
+- Preserves existing object structure for `lose` field if it exists
+- Performs WebDAV PUT request to save complete project data
 
 ##### 3. Cache Update:
 - Updates SWR cache with new metadata using `mutateMeta(() => json.metadata, false)`
 - No revalidation needed since we have fresh data
 - Immediate UI update without server round-trip
 
-#### Saved JSON Structure:
+#### Saved JSON Structure (in projekt.json):
 ```typescript
 {
-  vergabestelle: string | null,
-  adresse: string | null,
-  projektName: string | null,
-  startDatum: string | null,
-  bieterabgabe: string | null,
-  projektStart: string | null,
-  endDatum: string | null,
-  beschreibung: string | null,
-  referenznummer: string | null,
-  schlagworte: string | null,
-  sprache: string | null,
-  dokumentdatum: string | null,
-  selectedParser: string | null,
-  metadaten: string[] // array of trimmed, non-empty strings
+  meta: {
+    meta: {
+      auftraggeber: string | null,
+      aktenzeichen: string | null,
+      ausschreibungsgegenstand: string | null,
+      datum: string | null,
+      lose: Array<{nummer: string, bezeichnung: string}>, // Preserved as object array
+      selectedParser: string | null
+    }
+  },
+  bdoks: any[], // Preserved from existing data
+  ids: any[]    // Preserved from existing data
 }
 ```
 
 ## API Endpoints
 
 ### `/api/fs/metadata` (GET)
-- **Purpose**: Retrieve project metadata JSON file
+- **Purpose**: Retrieve and flatten project metadata from `projekt.json`
 - **Authentication**: Team context required
 - **Parameters**: `path` (query parameter)
-- **Response**: JSON metadata or `null` if not found
-- **Implementation**: Direct WebDAV GET request
+- **Response**: Flattened JSON metadata or `null` if not found
+- **Implementation**: Reads `projekt.json`, extracts `meta.meta` structure, converts `lose` objects to UI strings
 
 ### `/api/fs/metadata` (POST)
-- **Purpose**: Save project metadata to JSON file
+- **Purpose**: Save project metadata to `projekt.json` while preserving structure
 - **Authentication**: Team context required
 - **Body**: `{path: string, metadata: object}`
 - **Response**: `{success: true, metadata: object}`
-- **Implementation**: WebDAV PUT with formatted JSON
+- **Implementation**: Merges with existing data, preserves `lose` object structure, saves via WebDAV PUT
 
 ### `/api/fs/read` (POST)
 - **Purpose**: Read parser markdown files for AI context
@@ -188,9 +185,10 @@ The AI uses a specialized prompt that:
 
 ### File System Integration
 - **WebDAV Protocol**: All file operations use WebDAV for remote storage
-- **Sidecar Files**: Metadata stored as `.meta.json` files alongside projects
+- **Main Project File**: Metadata stored in `projekt.json` with nested structure
 - **Path Construction**: Dynamic path building based on project structure
-- **Parser Detection**: Automatic detection of available parsers per document
+- **Data Transformation**: UI converts object arrays to strings, API preserves object structure
+- **Backward Compatibility**: Handles both legacy string arrays and new object arrays
 
 ### AI Integration
 - **Streaming Responses**: Real-time processing of AI-generated content
@@ -259,14 +257,252 @@ The component includes a collapsible "Dev Info" section that displays:
 
 This information is invaluable for troubleshooting issues and understanding the system's current state.
 
+## Kriterien-Extraktion System
+
+### Overview
+The Kriterien-Extraktion system extracts and manages tender criteria from documents, providing structured data for qualification and award criteria. The system uses AI-powered extraction with human review capabilities and persistent storage.
+
+### Data Flow Processes
+
+#### 1. Reading Criteria 📖
+
+**File Location**: `{projectDir}kriterien.meta.json` (sidecar metadata file)
+**API Endpoint**: `GET /api/fs/metadata`
+**Persistence Function**: `loadKriterienFromFile(projectDir)`
+
+##### Process Flow:
+1. Component constructs criteria path: `projectDir + "kriterien.meta.json"`
+2. Uses SWR to fetch criteria via `GET /api/fs/metadata?path={criteriaPath}`
+3. API reads `kriterien.meta.json` file via WebDAV GET request
+4. Returns complete `KriterienMetadata` object or `null` if not found
+5. React component displays extracted criteria with review status
+
+##### Data Structure (KriterienMetadata):
+```typescript
+{
+  extractedCriteria: KriterienExtraktion,
+  extractionTimestamp: string,
+  extractionMethod: string, // "KRITERIEN_EXTRAKTION", "A_INFO", etc.
+  aabFileName?: string,
+  parserUsed?: string,
+  lastModified: string,
+  version: string,
+  reviewStatus?: {
+    aiReviewed: boolean,
+    humanReviewed: boolean,
+    lastReviewDate?: string,
+    reviewNotes?: string
+  }
+}
+```
+
+#### 2. AI Criteria Extraction 🤖
+
+**Trigger**: "Kriterien extrahieren" button
+**AI Query**: Configurable AI queries for criteria extraction
+**Streaming**: Real-time AI response processing
+
+##### Process Flow:
+1. User triggers extraction via button click
+2. Component sends AI request with document context
+3. AI streams response with structured criteria data
+4. Real-time parsing and validation of JSON response
+5. Automatic save to `kriterien.meta.json` upon completion
+
+##### Expected AI Output Format:
+```json
+{
+  "eignungskriterien": {
+    "befugnis": [{"kriterium": "...", "nachweise": [...]}],
+    "berufliche_zuverlaessigkeit": [...],
+    "technische_leistungsfaehigkeit": [...],
+    "finanzielle_und_wirtschaftliche_leistungsfaehigkeit": [...]
+  },
+  "zuschlagskriterien": [
+    {
+      "los": {"nummer": "Los 1", "bezeichnung": "..."},
+      "prinzip": "Bestbieterprinzip",
+      "kriterien": [{"name": "...", "gewichtung": "..."}]
+    }
+  ],
+  "subunternehmerregelung": ["..."],
+  "formale_anforderungen": ["..."]
+}
+```
+
+#### 3. Writing Criteria 💾
+
+**API Endpoint**: `POST /api/fs/metadata`
+**Persistence Function**: `saveKriterienToFile(projectDir, criteria, metadata)`
+
+##### Data Preparation:
+- Validates criteria structure using `validateKriterienExtraktion()`
+- Creates metadata with extraction timestamp and method
+- Includes review status and version information
+- Preserves original extraction context (parser, filename)
+
+##### API Call:
+```javascript
+POST /api/fs/metadata
+{
+  path: "{projectDir}kriterien.meta.json",
+  metadata: KriterienMetadata
+}
+```
+
+##### Implementation:
+- WebDAV PUT operation to save JSON file
+- Atomic write operation with error handling
+- SWR cache mutation for immediate UI updates
+- Backup of previous version before overwrite
+
+#### 4. Review Status Management 📋
+
+**Function**: `updateKriterienReviewStatus(projectDir, reviewStatus)`
+**Purpose**: Track human review and validation of AI-extracted criteria
+
+##### Process Flow:
+1. Load existing criteria metadata
+2. Update review status fields (aiReviewed, humanReviewed, etc.)
+3. Set lastReviewDate to current timestamp
+4. Save updated metadata back to file
+5. Maintain extraction history and review trail
+
+### Type Definitions
+
+#### Core Interfaces:
+```typescript
+interface KriteriumNachweis {
+  dokument: string;
+  typ: 'PFLICHT' | 'ODER';
+  gueltigkeit?: string;
+  hinweis?: string;
+}
+
+interface KriteriumObjekt {
+  kriterium: string;
+  nachweise: KriteriumNachweis[];
+}
+
+interface ZuschlagsKriterium {
+  name: string;
+  gewichtung: string;
+  unterkriterien?: ZuschlagsKriterium[];
+}
+```
+
+### API Endpoints
+
+#### `/api/fs/metadata` (GET)
+- **Purpose**: Load criteria metadata from sidecar JSON files
+- **Parameters**: `path` (criteria file path)
+- **Response**: `KriterienMetadata` object or `null`
+- **Implementation**: WebDAV GET with JSON parsing
+
+#### `/api/fs/metadata` (POST)
+- **Purpose**: Save criteria metadata to sidecar JSON files
+- **Body**: `{ path: string, metadata: KriterienMetadata }`
+- **Response**: `{ success: boolean }`
+- **Implementation**: WebDAV PUT with atomic write operation
+
+### Technical Implementation
+
+#### State Management:
+- SWR for criteria data fetching and caching
+- Local state for AI extraction progress
+- Review status tracking with timestamps
+- Error state management for failed operations
+
+#### File System Integration:
+- **Sidecar Files**: `kriterien.meta.json` alongside project files
+- **Atomic Operations**: Safe concurrent access with file locking
+- **Backup Strategy**: Version preservation before updates
+- **Error Recovery**: Graceful handling of corrupted files
+
+#### AI Integration:
+- **Streaming Responses**: Real-time criteria extraction display
+- **JSON Validation**: Robust parsing with error recovery
+- **Context Preservation**: Document source and extraction method tracking
+- **Retry Logic**: Automatic retry on extraction failures
+
+#### User Interface:
+- **Real-time Updates**: Live display of extraction progress
+- **Review Interface**: Human validation and editing capabilities
+- **Status Indicators**: Visual feedback for review states
+- **Error Display**: Clear error messages and recovery options
+
+### Development Guidelines
+
+#### Error Handling Best Practices:
+- Always validate criteria structure before saving
+- Provide meaningful error messages for validation failures
+- Implement graceful degradation for missing files
+- Log extraction errors for debugging and improvement
+
+#### Performance Considerations:
+- Use SWR caching to minimize API calls
+- Implement debounced auto-save for user edits
+- Optimize JSON parsing for large criteria sets
+- Consider pagination for extensive criteria lists
+
+## Lose Field Handling
+
+### Data Structure Transformation
+The `lose` field requires special handling due to the mismatch between UI expectations and data storage format:
+
+#### Storage Format (projekt.json):
+```json
+{
+  "lose": [
+    {"nummer": "Los 1", "bezeichnung": "Bauleistungen"},
+    {"nummer": "Los 2", "bezeichnung": "Elektroinstallation"}
+  ]
+}
+```
+
+#### UI Format (EditableText component):
+```javascript
+["Los 1: Bauleistungen", "Los 2: Elektroinstallation"]
+```
+
+### Implementation Details
+
+#### Reading (API → UI):
+1. API reads `projekt.json` and extracts `meta.meta.lose` array of objects
+2. UI `useEffect` converts objects to strings: `${obj.nummer}: ${obj.bezeichnung}`
+3. Fallback for legacy string arrays (backward compatibility)
+
+#### Writing (UI → API):
+1. UI sends string array to API
+2. API preserves existing object structure if it exists in `projekt.json`
+3. Only falls back to string array if no object structure is found
+
+#### Benefits:
+- **UI Simplicity**: EditableText works with comma-separated strings
+- **Data Integrity**: Full object structure preserved in storage
+- **Backward Compatibility**: Handles both old and new data formats
+- **Future-Proof**: Object structure allows for additional fields
+
 ## Future Enhancements
 
 ### Planned Improvements
-1. **Validation**: Add form validation for date formats and required fields
+1. **Form Validation**: Add comprehensive form validation for date formats and required fields (line 265 in projectinfo.md)
 2. **Versioning**: Implement metadata versioning for change tracking
 3. **Batch Operations**: Support for bulk metadata updates across projects
 4. **Templates**: Predefined metadata templates for common project types
 5. **Export/Import**: JSON export/import functionality for metadata backup
+6. **Criteria Editing**: Interactive editing interface for extracted criteria
+7. **Criteria Validation**: Advanced validation rules for criteria completeness
+8. **Multi-Document Extraction**: Support for extracting criteria from multiple documents
+9. **Criteria Templates**: Predefined criteria templates for different tender types
+
+### Recently Implemented ✅
+- **Data Structure Compatibility**: Fixed `lose` field handling between UI and storage formats
+- **Backward Compatibility**: Support for both legacy string arrays and new object arrays
+- **API Optimization**: Flattened metadata structure for UI consumption while preserving storage integrity
+- **Criteria Extraction System**: Complete AI-powered criteria extraction with structured data output
+- **Criteria Persistence**: Robust save/load operations with metadata tracking and review status
+- **Type Safety**: Comprehensive TypeScript interfaces for criteria validation and type checking
 
 ### Performance Optimizations
 1. **Caching**: Implement more aggressive caching strategies
