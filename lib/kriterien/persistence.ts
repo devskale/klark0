@@ -1,161 +1,174 @@
-import { KriterienExtraktion } from "@/types/kriterien";
+/**
+ * Kriterien Persistence Layer
+ * Handles loading of criteria from projekt.json and saving updates
+ */
 
 /**
- * Interface für erweiterte Kriterien-Metadaten mit Persistierung-Informationen
+ * Interface for individual kriterium from projekt.json
  */
-export interface KriterienMetadata {
-  extractedCriteria: KriterienExtraktion;
-  extractionTimestamp: string;
-  extractionMethod: string; // z.B. "KRITERIEN_EXTRAKTION", "A_INFO", etc.
-  aabFileName?: string;
-  parserUsed?: string;
-  lastModified: string;
-  version: string;
-  reviewStatus?: {
-    aiReviewed: boolean;
-    humanReviewed: boolean;
-    lastReviewDate?: string;
-    reviewNotes?: string;
+export interface ProjektKriterium {
+  id: string;
+  typ: string;
+  kategorie: string;
+  name: string;
+  anforderung: string;
+  schwellenwert: string | null;
+  gewichtung_punkte: number | null;
+  dokumente: string[];
+  geltung_lose: string[];
+  pruefung: {
+    status: string | null;
+    bemerkung: string | null;
+    pruefer: string | null;
+    datum: string | null;
   };
+  quelle: string;
 }
 
 /**
- * Speichert extrahierte Kriterien als JSON-Sidecar-Datei im Projektverzeichnis
- * @param projectDir - Projektverzeichnis-Pfad
- * @param criteria - Extrahierte Kriterien
- * @param metadata - Zusätzliche Metadaten
- * @returns Promise mit Erfolgs-Status
+ * Interface for the ids section in projekt.json
  */
-export async function saveKriterienToFile(
-  projectDir: string,
-  criteria: KriterienExtraktion,
-  metadata: Partial<KriterienMetadata> = {}
-): Promise<{ success: boolean; error?: string }> {
-  try {
-    const kriterienPath = `${projectDir}kriterien.meta.json`;
-    
-    const kriterienMetadata: KriterienMetadata = {
-      extractedCriteria: criteria,
-      extractionTimestamp: new Date().toISOString(),
-      extractionMethod: metadata.extractionMethod || "KRITERIEN_EXTRAKTION",
-      aabFileName: metadata.aabFileName,
-      parserUsed: metadata.parserUsed,
-      lastModified: new Date().toISOString(),
-      version: "1.0",
-      reviewStatus: {
-        aiReviewed: true, // AI hat die Kriterien extrahiert
-        humanReviewed: false,
-        lastReviewDate: new Date().toISOString(),
-        ...metadata.reviewStatus
-      },
-      ...metadata
-    };
+export interface ProjektIds {
+  schema_version: string;
+  kriterien: ProjektKriterium[];
+}
 
-    const response = await fetch("/api/fs/metadata", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+/**
+ * Interface for the complete projekt.json structure
+ */
+export interface ProjektJson {
+  meta: any;
+  bdoks: any;
+  ids: ProjektIds;
+}
+
+/**
+ * Loads kriterien from projekt.json via API
+ */
+export async function loadKriterienFromFile(projectPath: string): Promise<ProjektKriterium[] | null> {
+  try {
+    const response = await fetch('/api/fs/read', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({
-        path: kriterienPath,
-        metadata: kriterienMetadata,
+        path: `${projectPath}/projekt.json`
       }),
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
-    }
-
-    const result = await response.json();
-    return { success: result.success };
-  } catch (error) {
-    console.error("Error saving criteria to file:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unbekannter Fehler beim Speichern"
-    };
-  }
-}
-
-/**
- * Lädt gespeicherte Kriterien aus JSON-Sidecar-Datei
- * @param projectDir - Projektverzeichnis-Pfad
- * @returns Promise mit geladenen Kriterien oder null
- */
-export async function loadKriterienFromFile(
-  projectDir: string
-): Promise<KriterienMetadata | null> {
-  try {
-    const kriterienPath = `${projectDir}kriterien.meta.json`;
-    const params = new URLSearchParams({ path: kriterienPath });
-    
-    const response = await fetch(`/api/fs/metadata?${params.toString()}`);
-    
-    if (!response.ok) {
-      // Datei existiert nicht oder anderer Fehler
-      return null;
+      if (response.status === 404) {
+        return null; // File doesn't exist
+      }
+      throw new Error(`Failed to load projekt.json: ${response.status}`);
     }
 
     const data = await response.json();
-    return data as KriterienMetadata;
+    const projektData: ProjektJson = JSON.parse(data.content);
+    
+    // Return the kriterien from the ids section
+    return projektData.ids?.kriterien || null;
   } catch (error) {
-    console.error("Error loading criteria from file:", error);
+    console.error('Error loading kriterien from projekt.json:', error);
     return null;
   }
 }
 
 /**
- * Aktualisiert den Review-Status von gespeicherten Kriterien
- * @param projectDir - Projektverzeichnis-Pfad
- * @param reviewStatus - Neuer Review-Status
- * @returns Promise mit Erfolgs-Status
+ * Updates a specific kriterium's pruefung status in projekt.json
+ */
+export async function updateKriteriumPruefung(
+  projectPath: string,
+  kriteriumId: string,
+  pruefung: ProjektKriterium['pruefung']
+): Promise<void> {
+  try {
+    // First, load the current projekt.json
+    const response = await fetch('/api/fs/read', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        path: `${projectPath}/projekt.json`
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to load projekt.json: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const projektData: ProjektJson = JSON.parse(data.content);
+    
+    // Find and update the specific kriterium
+    const kriterium = projektData.ids.kriterien.find(k => k.id === kriteriumId);
+    if (!kriterium) {
+      throw new Error(`Kriterium with ID ${kriteriumId} not found`);
+    }
+
+    kriterium.pruefung = {
+      ...kriterium.pruefung,
+      ...pruefung,
+      datum: new Date().toISOString()
+    };
+
+    // Save the updated projekt.json
+    const saveResponse = await fetch('/api/fs/read', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        path: `${projectPath}/projekt.json`,
+        content: JSON.stringify(projektData, null, 2)
+      }),
+    });
+
+    if (!saveResponse.ok) {
+      throw new Error(`Failed to save projekt.json: ${saveResponse.status}`);
+    }
+  } catch (error) {
+    console.error('Error updating kriterium pruefung:', error);
+    throw error;
+  }
+}
+
+/**
+ * Legacy function for backward compatibility - now returns null
+ * @deprecated Use loadKriterienFromFile instead
+ */
+export async function saveKriterienToFile(): Promise<void> {
+  console.warn('saveKriterienToFile is deprecated. Kriterien are now managed in projekt.json');
+  throw new Error('Kriterien saving is now handled through projekt.json updates');
+}
+
+/**
+ * Legacy interface for backward compatibility
+ * @deprecated Use ProjektKriterium instead
+ */
+export interface KriterienMetadata {
+  extractedCriteria: any;
+  extractionTimestamp: string;
+  aabFileName?: string;
+  extractionMethod: 'ai' | 'manual';
+  reviewStatus?: {
+    aiReviewed: boolean;
+    humanReviewed: boolean;
+    lastModified: string;
+    notes?: string;
+  };
+}
+
+/**
+ * Legacy function for backward compatibility
+ * @deprecated Use updateKriteriumPruefung instead
  */
 export async function updateKriterienReviewStatus(
   projectDir: string,
   reviewStatus: Partial<KriterienMetadata['reviewStatus']>
 ): Promise<{ success: boolean; error?: string }> {
-  try {
-    // Lade aktuelle Kriterien
-    const currentData = await loadKriterienFromFile(projectDir);
-    if (!currentData) {
-      return { success: false, error: "Keine gespeicherten Kriterien gefunden" };
-    }
-
-    // Aktualisiere Review-Status
-    const updatedData: KriterienMetadata = {
-      ...currentData,
-      lastModified: new Date().toISOString(),
-      reviewStatus: {
-        aiReviewed: currentData.reviewStatus?.aiReviewed ?? true,
-        humanReviewed: currentData.reviewStatus?.humanReviewed ?? false,
-        lastReviewDate: new Date().toISOString(),
-        ...currentData.reviewStatus,
-        ...reviewStatus
-      }
-    };
-
-    // Speichere aktualisierte Daten
-    const kriterienPath = `${projectDir}kriterien.meta.json`;
-    const response = await fetch("/api/fs/metadata", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        path: kriterienPath,
-        metadata: updatedData,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
-    }
-
-    const result = await response.json();
-    return { success: result.success };
-  } catch (error) {
-    console.error("Error updating criteria review status:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unbekannter Fehler beim Aktualisieren"
-    };
-  }
+  console.warn('updateKriterienReviewStatus is deprecated. Use updateKriteriumPruefung instead');
+  return { success: false, error: 'Function is deprecated' };
 }
