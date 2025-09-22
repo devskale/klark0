@@ -28,7 +28,7 @@ export default function Info() {
   const projectDir = selectedProject ? normalizePath(selectedProject) : null;
 
   // Side-car metadata JSON for project
-  const metadataFileName = "projekt.meta.json";
+  const metadataFileName = "projekt.json";
   const metadataPath = projectDir ? projectDir + metadataFileName : null;
   const { data: projectMeta, mutate: mutateMeta } = useSWR(
     metadataPath,
@@ -72,20 +72,12 @@ export default function Info() {
   const parserDetList = parserEntry?.parserDet ?? [];
   const parserDefault = parserEntry?.parserDefault;
 
-  // Editable state for project fields
-  const [vergabestelle, setVergabestelle] = React.useState("");
-  const [adresse, setAdresse] = React.useState("");
-  const [projektName, setProjektName] = React.useState("");
-  const [startDatum, setStartDatum] = React.useState("");
-  const [bieterabgabe, setBieterabgabe] = React.useState("");
-  const [projektStart, setProjektStart] = React.useState("");
-  const [endDatum, setEndDatum] = React.useState("");
-  const [beschreibung, setBeschreibung] = React.useState("");
-  const [referenznummer, setReferenznummer] = React.useState("");
-  const [schlagworte, setSchlagworte] = React.useState("");
-  const [sprache, setSprache] = React.useState("");
-  const [dokumentdatum, setDokumentdatum] = React.useState("");
-  const [metadataList, setMetadataList] = React.useState("");
+  // Editable state for project fields (projekt.json structure)
+  const [auftraggeber, setAuftraggeber] = React.useState("");
+  const [aktenzeichen, setAktenzeichen] = React.useState("");
+  const [ausschreibungsgegenstand, setAusschreibungsgegenstand] = React.useState("");
+  const [datum, setDatum] = React.useState("");
+  const [lose, setLose] = React.useState<string[]>([]);
   const [aiLoading, setAiLoading] = React.useState(false);
   const [aiError, setAiError] = React.useState<string | null>(null);
   const [aiPrompt, setAiPrompt] = React.useState<string>("");
@@ -95,47 +87,32 @@ export default function Info() {
   const [selectedParser, setSelectedParser] = React.useState<string>("");
   const [isSavingMeta, setIsSavingMeta] = React.useState(false);
 
-  // Populate form when metadata (.meta.json) loads
+  // Populate form when metadata loads
   React.useEffect(() => {
     if (!projectMeta) return;
-    if (projectMeta.vergabestelle != null) {
-      setVergabestelle(projectMeta.vergabestelle);
+    
+    // projekt.json structure fields
+    if (projectMeta.auftraggeber != null) {
+      setAuftraggeber(projectMeta.auftraggeber);
     }
-    if (projectMeta.adresse != null) {
-      setAdresse(projectMeta.adresse);
+    if (projectMeta.aktenzeichen != null) {
+      setAktenzeichen(projectMeta.aktenzeichen);
     }
-    if (projectMeta.projektName != null) {
-      setProjektName(projectMeta.projektName);
+    if (projectMeta.ausschreibungsgegenstand != null) {
+      setAusschreibungsgegenstand(projectMeta.ausschreibungsgegenstand);
     }
-    if (projectMeta.startDatum != null) {
-      setStartDatum(projectMeta.startDatum);
+    if (projectMeta.datum != null) {
+      setDatum(projectMeta.datum);
     }
-    if (projectMeta.bieterabgabe != null) {
-      setBieterabgabe(projectMeta.bieterabgabe);
-    }
-    if (projectMeta.projektStart != null) {
-      setProjektStart(projectMeta.projektStart);
-    }
-    if (projectMeta.endDatum != null) {
-      setEndDatum(projectMeta.endDatum);
-    }
-    if (projectMeta.beschreibung != null) {
-      setBeschreibung(projectMeta.beschreibung);
-    }
-    if (projectMeta.referenznummer != null) {
-      setReferenznummer(projectMeta.referenznummer);
-    }
-    if (projectMeta.schlagworte != null) {
-      setSchlagworte(projectMeta.schlagworte);
-    }
-    if (projectMeta.sprache != null) {
-      setSprache(projectMeta.sprache);
-    }
-    if (projectMeta.dokumentdatum != null) {
-      setDokumentdatum(projectMeta.dokumentdatum);
-    }
-    if (Array.isArray(projectMeta.metadaten)) {
-      setMetadataList(projectMeta.metadaten.join(", "));
+    if (Array.isArray(projectMeta.lose)) {
+      // Handle both string arrays (legacy) and object arrays (new format)
+      if (projectMeta.lose.length > 0 && typeof projectMeta.lose[0] === 'object') {
+        // New format: array of objects with nummer, bezeichnung, etc.
+        setLose(projectMeta.lose.map((los: any) => `${los.nummer}: ${los.bezeichnung}`));
+      } else {
+        // Legacy format: simple string array
+        setLose(projectMeta.lose);
+      }
     }
     if (projectMeta.selectedParser != null) {
       setSelectedParser(projectMeta.selectedParser);
@@ -150,23 +127,13 @@ export default function Info() {
     setIsSavingMeta(true);
     try {
       const metaObj = {
-        vergabestelle: vergabestelle || null,
-        adresse: adresse || null,
-        projektName: projektName || null,
-        startDatum: startDatum || null,
-        bieterabgabe: bieterabgabe || null,
-        projektStart: projektStart || null,
-        endDatum: endDatum || null,
-        beschreibung: beschreibung || null,
-        referenznummer: referenznummer || null,
-        schlagworte: schlagworte || null,
-        sprache: sprache || null,
-        dokumentdatum: dokumentdatum || null,
+        // projekt.json structure fields
+        auftraggeber: auftraggeber || null,
+        aktenzeichen: aktenzeichen || null,
+        ausschreibungsgegenstand: ausschreibungsgegenstand || null,
+        datum: datum || null,
+        lose: lose || [],
         selectedParser: selectedParser || null,
-        metadaten: metadataList
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean),
       };
       
       // Call metadata API
@@ -321,20 +288,13 @@ export default function Info() {
       // 6) parse & populate fields
       const aiJson = JSON.parse(cleanedJsonString); // Use cleaned string
 
-      // Populate fields with AI results from A_INFO query
-      if (aiJson.Vergabestelle) setVergabestelle(aiJson.Vergabestelle);
-      if (aiJson.Addresse) setAdresse(aiJson.Addresse);
-      if (aiJson.Projekttitel) setProjektName(aiJson.Projekttitel);
-      if (aiJson.Ausschreibungsstart) setStartDatum(aiJson.Ausschreibungsstart);
-      if (aiJson.Ausschreibungsende) setBieterabgabe(aiJson.Ausschreibungsende);
-      if (aiJson.Projektstart) setProjektStart(aiJson.Projektstart);
-      if (aiJson.Projektende) setEndDatum(aiJson.Projektende);
-      if (aiJson["Projekt Kurzbeschreibung"]) setBeschreibung(aiJson["Projekt Kurzbeschreibung"]);
-      if (aiJson.Referenznummer) setReferenznummer(aiJson.Referenznummer);
-      if (aiJson.Dokumentdatum) setDokumentdatum(aiJson.Dokumentdatum);
-      if (aiJson.Sprache) setSprache(aiJson.Sprache);
-      if (Array.isArray(aiJson.Schlagworte)) {
-        setSchlagworte(aiJson.Schlagworte.join(", "));
+      // Populate fields with AI results from A_INFO query (projekt.json structure)
+      if (aiJson.auftraggeber) setAuftraggeber(aiJson.auftraggeber);
+      if (aiJson.aktenzeichen) setAktenzeichen(aiJson.aktenzeichen);
+      if (aiJson.ausschreibungsgegenstand) setAusschreibungsgegenstand(aiJson.ausschreibungsgegenstand);
+      if (aiJson.datum) setDatum(aiJson.datum);
+      if (Array.isArray(aiJson.lose)) {
+        setLose(aiJson.lose);
       }
       
     } catch (err: any) {
@@ -354,18 +314,38 @@ export default function Info() {
         <h2 className="text-2xl font-bold">{trimName(projektPath)}</h2>
       </div>
       <div className="space-y-0.5">
+        {/* New projekt.json structure fields */}
         <EditableText
-          label="Vergabestelle:"
-          value={vergabestelle}
-          onChange={setVergabestelle}
-          placeholder="Vergabestelle eingeben"
+          label="Auftraggeber:"
+          value={auftraggeber}
+          onChange={setAuftraggeber}
+          placeholder="Auftraggeber eingeben"
         />
         <EditableText
-          label="Adresse:"
-          value={adresse}
-          onChange={setAdresse}
-          placeholder="Adresse eingeben"
+          label="Aktenzeichen:"
+          value={aktenzeichen}
+          onChange={setAktenzeichen}
+          placeholder="Aktenzeichen eingeben"
         />
+        <EditableText
+          label="Ausschreibungsgegenstand:"
+          value={ausschreibungsgegenstand}
+          onChange={setAusschreibungsgegenstand}
+          placeholder="Ausschreibungsgegenstand eingeben"
+        />
+        <EditableText
+          label="Datum:"
+          value={datum}
+          onChange={setDatum}
+          placeholder="Datum (YYYY-MM-DD)"
+        />
+        <EditableText
+          label="Lose:"
+          value={lose.join(", ")}
+          onChange={(value) => setLose(value.split(",").map(s => s.trim()).filter(Boolean))}
+          placeholder="Lose kommasepariert"
+        />
+        
         <div className="flex items-start">
           <strong className="mr-2 py-1.5 whitespace-nowrap shrink-0">
             Projektpfad:
@@ -374,82 +354,6 @@ export default function Info() {
             {projektPathDecoded}
           </span>
         </div>
-        <EditableText
-          label="Projektname:"
-          value={projektName}
-          onChange={setProjektName}
-          placeholder="Projektname eingeben"
-        />
-        <div className="flex gap-4">
-          <div className="flex-1">
-            <EditableText
-              label="Ausschreibungsstart:"
-              value={startDatum}
-              onChange={setStartDatum}
-              placeholder="Ausschreibungsstart (YYYY-MM-DD)"
-            />
-          </div>
-          <div className="flex-1">
-            <EditableText
-              label="Ausschreibungsende:"
-              value={bieterabgabe}
-              onChange={setBieterabgabe}
-              placeholder="Ausschreibungsende (YYYY-MM-DD)"
-            />
-          </div>
-        </div>
-        <div className="flex gap-4">
-          <div className="flex-1">
-            <EditableText
-              label="Projektstart:"
-              value={projektStart}
-              onChange={setProjektStart}
-              placeholder="Projektstart (YYYY-MM-DD)"
-            />
-          </div>
-          <div className="flex-1">
-            <EditableText
-              label="Projektende:"
-              value={endDatum}
-              onChange={setEndDatum}
-              placeholder="Projektende (YYYY-MM-DD)"
-            />
-          </div>
-        </div>
-        <EditableText
-          label="Beschreibung:"
-          value={beschreibung}
-          onChange={setBeschreibung}
-          as="textarea"
-          placeholder="Projektbeschreibung hinzufügen"
-          inputClassName="min-h-[70px]"
-        />
-        <EditableText
-          label="Referenznummer:"
-          value={referenznummer}
-          onChange={setReferenznummer}
-          placeholder="Projektnummer/Referenz eingeben"
-        />
-        <EditableText
-          label="Dokumentdatum:"
-          value={dokumentdatum}
-          onChange={setDokumentdatum}
-          placeholder="Dokumentdatum (YYYY-MM-DD)"
-        />
-        <EditableText
-          label="Sprache:"
-          value={sprache}
-          onChange={setSprache}
-          placeholder="Dokumentsprache"
-        />
-        <EditableText
-          label="Schlagworte:"
-          value={schlagworte}
-          onChange={setSchlagworte}
-          as="textarea"
-          placeholder="Schlagworte kommasepariert"
-          inputClassName="min-h-[70px]"
-        />
         
         <div className="flex items-start">
           <strong className="mr-2 py-1.5 whitespace-nowrap shrink-0">
@@ -478,15 +382,7 @@ export default function Info() {
             </Select>
           </div>
         </div>
-        
-        <EditableText
-          label="Metadaten:"
-          value={metadataList}
-          onChange={setMetadataList}
-          as="textarea"
-          placeholder="Einträge kommasepariert (z.B. Tag1, Tag2)"
-          inputClassName="min-h-[70px]"
-        />
+
       </div>
       <div className="flex justify-end gap-4 p-4 border-t">
         <Button
