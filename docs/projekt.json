@@ -1,0 +1,776 @@
+{
+    "meta": {
+        "schema_version": "3.3-ai-optimized",
+        "meta": {
+            "auftraggeber": "Wiener Wohnen Hausbetreuung GmbH",
+            "aktenzeichen": "2022_10001_AAB_EV",
+            "ausschreibungsgegenstand": "Abschluss von Rahmenverträgen zur Beschaffung von Reinigungsmaterial",
+            "datum": "2023-05-02",
+            "lose": [
+                {
+                    "nummer": "Los 1",
+                    "bezeichnung": "Reinigungsmittel",
+                    "beschreibung": "Lieferung von Reinigungsmitteln wie Geschirrspülmittel, Handwaschlotion und Duftölspray",
+                    "bewertungsprinzip": "Bestbieter"
+                },
+                {
+                    "nummer": "Los 2",
+                    "bezeichnung": "Mikrofasertücher",
+                    "beschreibung": "Lieferung von Mikrofasertüchern in verschiedenen Farben",
+                    "bewertungsprinzip": "Bestbieter"
+                },
+                {
+                    "nummer": "Los 3",
+                    "bezeichnung": "Reinigungsmaterial",
+                    "beschreibung": "Lieferung von Reinigungsmaterial",
+                    "bewertungsprinzip": "Bestbieter"
+                },
+                {
+                    "nummer": "Los 4",
+                    "bezeichnung": "Müllsäcke",
+                    "beschreibung": "Lieferung von Müllsäcken verschiedener Größen und Stärken",
+                    "bewertungsprinzip": "Bestbieter"
+                },
+                {
+                    "nummer": "Los 5",
+                    "bezeichnung": "Reinigungsmaterial",
+                    "beschreibung": "Lieferung von Reinigungsmaterial",
+                    "bewertungsprinzip": "Bestbieter"
+                },
+                {
+                    "nummer": "Los 6",
+                    "bezeichnung": "Reinigungsmaterial",
+                    "beschreibung": "Lieferung von Reinigungsmaterial",
+                    "bewertungsprinzip": "Bestbieter"
+                }
+            ]
+        },
+        "Autor": "KI-generiert tu@glm-4.5-355b@kriterien.meta@docling 2025-09-19T13:25:28.544668"
+    },
+    "bdoks": {
+        "schema_version": "3.3-ai-optimized",
+        "bieterdokumente": [
+            {
+                "anforderungstyp": "Pflichtdokument",
+                "dokumenttyp": "Angebot",
+                "bezeichnung": "Angebotshauptteil der Vergabeplattform",
+                "beilage_nummer": null,
+                "beschreibung": "Ausgefüllter und signierter Hauptteil des Angebots über die elektronische Vergabeplattform",
+                "unterzeichnung_erforderlich": true,
+                "fachliche_pruefung": false
+            },
+            {
+                "anforderungstyp": "Bedarfsfall",
+                "dokumenttyp": "Formblatt",
+                "bezeichnung": "Erklärung für Bieter- und Arbeitsgemeinschaften",
+                "beilage_nummer": "Beilage 01",
+                "beschreibung": "Erforderlich bei Bieter- oder Arbeitsgemeinschaften zur Darstellung der Zusammenarbeit",
+                "unterzeichnung_erforderlich": true,
+                "fachliche_pruefung": false
+            },
+            {
+                "anforderungstyp": "Bedarfsfall",
+                "dokumenttyp": "Formblatt",
+                "bezeichnung": "Subunternehmerliste",
+                "beilage_nummer": "Beilage 02",
+                "beschreibung": "Auflistung der Subunternehmer mit Angabe des jeweiligen Anteils an der Gesamtleistung",
+                "unterzeichnung_erforderlich": false,
+                "fachliche_pruefung": false
+            },
+            {
+                "anforderungstyp": "Bedarfsfall",
+                "dokumenttyp": "Formblatt",
+                "bezeichnung": "Verpflichtungserklärung Subunternehmer",
+                "beilage_nummer": "Beilage 03",
+                "beschreibung": "Erklärung des Subunternehmers zur Übernahme von Verpflichtungen",
+                "unterzeichnung_erforderlich": true,
+                "fachliche_pruefung": false
+            },
+            {
+                "anforderungstyp": "Pflichtdokument",
+                "dokumenttyp": "Formblatt",
+                "bezeichnung": "Leistungsverzeichnis und Preisblatt",
+                "beilage_nummer": "Beilage 04",
+                "beschreibung": "Ausgefülltes Formblatt mit Preisangaben für alle ausgeschriebenen Leistungen samt Umwelt-Zertifikaten",
+                "unterzeichnung_erforderlich": false,
+                "fachliche_pruefung": false
+            },
+            {
+                "anforderungstyp": "Pflichtdokument",
+                "dokumenttyp": "Formblatt",
+                "bezeichnung": "Leistungsfähigkeit Dienstnehmer und Umsätze",
+                "beilage_nummer": "Beilage 05",
+                "beschreibung": "Von Steuerberater oder Wirtschaftsprüfer bestätigtes Formblatt zur technischen und finanziellen Leistungsfähigkeit",
+                "unterzeichnung_erforderlich": true,
+                "fachliche_pruefung": true
+            },
+            {
+                "anforderungstyp": "Bedarfsfall",
+                "dokumenttyp": "Formblatt",
+                "bezeichnung": "Zuschlagskriterium UmweltZertifizierungen",
+                "beilage_nummer": "Beilage 06",
+                "beschreibung": "Ausgefülltes Formblatt mit Angaben zu Umwelt-Zertifizierungen samt entsprechenden Nachweisen",
+                "unterzeichnung_erforderlich": false,
+                "fachliche_pruefung": false
+            },
+            {
+                "anforderungstyp": "Bedarfsfall",
+                "dokumenttyp": "Formblatt",
+                "bezeichnung": "Zuschlagskriterium ISOZertifizierungen",
+                "beilage_nummer": "Beilage 07",
+                "beschreibung": "Ausgefülltes Formblatt mit Angaben zu ISO-Zertifizierungen samt entsprechenden Nachweisen",
+                "unterzeichnung_erforderlich": false,
+                "fachliche_pruefung": false
+            },
+            {
+                "anforderungstyp": "Bedarfsfall",
+                "dokumenttyp": "Formblatt",
+                "bezeichnung": "Zuschlagskriterium Produktionsstandort",
+                "beilage_nummer": "Beilage 08",
+                "beschreibung": "Ausgefülltes Formblatt mit Angaben zum Produktionsstandort samt entsprechenden Nachweisen",
+                "unterzeichnung_erforderlich": false,
+                "fachliche_pruefung": false
+            },
+            {
+                "anforderungstyp": "Pflichtdokument",
+                "dokumenttyp": "Formblatt",
+                "bezeichnung": "Erklärung SanktionenVO",
+                "beilage_nummer": "Beilage 09",
+                "beschreibung": "Unterfertigte Formblatt-Erklärung zur Einhaltung der Sanktionsverordnung",
+                "unterzeichnung_erforderlich": true,
+                "fachliche_pruefung": false
+            },
+            {
+                "anforderungstyp": "Pflichtdokument",
+                "dokumenttyp": "Nachweis",
+                "bezeichnung": "Nachweise der Eignung",
+                "beilage_nummer": null,
+                "beschreibung": "Nachweise gemäß Punkt 5 der Ausschreibungsunterlagen zur Befugnis, beruflichen Zuverlässigkeit, technischen und finanziellen Leistungsfähigkeit",
+                "unterzeichnung_erforderlich": false,
+                "fachliche_pruefung": false
+            },
+            {
+                "anforderungstyp": "Pflichtdokument",
+                "dokumenttyp": "Zusatzdokument",
+                "bezeichnung": "Datenblätter zu den angebotenen Produkten",
+                "beilage_nummer": null,
+                "beschreibung": "Datenblätter mit technischen Informationen zu den angebotenen Reinigungsmaterialien",
+                "unterzeichnung_erforderlich": false,
+                "fachliche_pruefung": false
+            },
+            {
+                "anforderungstyp": "Bedarfsfall",
+                "dokumenttyp": "Zusatzdokument",
+                "bezeichnung": "Sicherheitsdatenblätter zu den angebotenen Produkten",
+                "beilage_nummer": null,
+                "beschreibung": "Sicherheitsdatenblätter mit Informationen zur sicheren Handhabung der Produkte",
+                "unterzeichnung_erforderlich": false,
+                "fachliche_pruefung": false
+            },
+            {
+                "anforderungstyp": "Pflichtdokument",
+                "dokumenttyp": "Nachweis",
+                "bezeichnung": "Firmenbuchauszug und/oder sonstige Nachweise für die rechtsgültige Unterfertigung",
+                "beilage_nummer": null,
+                "beschreibung": "Nachweis der rechtsgeschäftlichen Vertretungsbefugnis der unterfertigenden Person(en)",
+                "unterzeichnung_erforderlich": false,
+                "fachliche_pruefung": false
+            }
+        ],
+        "Autor": "KI-generiert tu@glm-4.5-355b@kriterien.bdoks@docling 2025-09-19T13:28:01.510291"
+    },
+    "ids": {
+        "schema_version": "3.2-ai-optimized",
+        "kriterien": [
+            {
+                "id": "F_BIEGE_001",
+                "typ": "Formal",
+                "kategorie": "Bietergemeinschaft",
+                "name": "Mitglieder-Auflistung",
+                "anforderung": "Bietergemeinschaften müssen in Beilage 01 die Mitglieder auflisten",
+                "schwellenwert": null,
+                "gewichtung_punkte": null,
+                "dokumente": [
+                    "Beilage 01"
+                ],
+                "geltung_lose": [
+                    "alle"
+                ],
+                "pruefung": {
+                    "status": null,
+                    "bemerkung": null,
+                    "pruefer": null,
+                    "datum": null
+                },
+                "quelle": "Punkt 4.1.(2)"
+            },
+            {
+                "id": "F_SUB_001",
+                "typ": "Formal",
+                "kategorie": "Subunternehmer",
+                "name": "Subunternehmerliste",
+                "anforderung": "Subunternehmer müssen in Beilage 02 und 03 aufgeführt werden",
+                "schwellenwert": null,
+                "gewichtung_punkte": null,
+                "dokumente": [
+                    "Beilage 02",
+                    "Beilage 03"
+                ],
+                "geltung_lose": [
+                    "alle"
+                ],
+                "pruefung": {
+                    "status": null,
+                    "bemerkung": null,
+                    "pruefer": null,
+                    "datum": null
+                },
+                "quelle": "Punkt 4.2.(3)"
+            },
+            {
+                "id": "F_FORM_001",
+                "typ": "Formal",
+                "kategorie": "Formale Anforderungen",
+                "name": "Elektronische Angebotsabgabe",
+                "anforderung": "Angebote müssen elektronisch über www.vergabeportal.at abgegeben werden",
+                "schwellenwert": null,
+                "gewichtung_punkte": null,
+                "dokumente": [],
+                "geltung_lose": [
+                    "alle"
+                ],
+                "pruefung": {
+                    "status": null,
+                    "bemerkung": null,
+                    "pruefer": null,
+                    "datum": null
+                },
+                "quelle": "Punkt 6.1.(1)"
+            },
+            {
+                "id": "F_FORM_002",
+                "typ": "Formal",
+                "kategorie": "Formale Anforderungen",
+                "name": "Sprache des Angebots",
+                "anforderung": "Angebote müssen in deutscher Sprache sein",
+                "schwellenwert": null,
+                "gewichtung_punkte": null,
+                "dokumente": [],
+                "geltung_lose": [
+                    "alle"
+                ],
+                "pruefung": {
+                    "status": null,
+                    "bemerkung": null,
+                    "pruefer": null,
+                    "datum": null
+                },
+                "quelle": "Punkt 6.1.(2)"
+            },
+            {
+                "id": "F_FORM_003",
+                "typ": "Formal",
+                "kategorie": "Formale Anforderungen",
+                "name": "Alternativ- und Abänderungsangebote",
+                "anforderung": "Alternativ- und Abänderungsangebote sind unzulässig",
+                "schwellenwert": null,
+                "gewichtung_punkte": null,
+                "dokumente": [],
+                "geltung_lose": [
+                    "alle"
+                ],
+                "pruefung": {
+                    "status": null,
+                    "bemerkung": null,
+                    "pruefer": null,
+                    "datum": null
+                },
+                "quelle": "Punkt 6.5"
+            },
+            {
+                "id": "F_FORM_004",
+                "typ": "Formal",
+                "kategorie": "Formale Anforderungen",
+                "name": "Kopplungsangebote und Paketabschläge",
+                "anforderung": "Kopplungsangebote und Paketabschläge sind unzulässig",
+                "schwellenwert": null,
+                "gewichtung_punkte": null,
+                "dokumente": [],
+                "geltung_lose": [
+                    "alle"
+                ],
+                "pruefung": {
+                    "status": null,
+                    "bemerkung": null,
+                    "pruefer": null,
+                    "datum": null
+                },
+                "quelle": "Punkt 6.6"
+            },
+            {
+                "id": "F_FORM_005",
+                "typ": "Formal",
+                "kategorie": "Formale Anforderungen",
+                "name": "Elektronische Unterfertigung",
+                "anforderung": "Angebote müssen rechtsgültig elektronisch unterfertigt sein",
+                "schwellenwert": null,
+                "gewichtung_punkte": null,
+                "dokumente": [],
+                "geltung_lose": [
+                    "alle"
+                ],
+                "pruefung": {
+                    "status": null,
+                    "bemerkung": null,
+                    "pruefer": null,
+                    "datum": null
+                },
+                "quelle": "Punkt 6.10.(1)"
+            },
+            {
+                "id": "F_NACH_001",
+                "typ": "Formal",
+                "kategorie": "Nachweise",
+                "name": "Vertretungsbefugnis",
+                "anforderung": "Nachweis der rechtsgeschäftlichen Vertretungsbefugnis",
+                "schwellenwert": null,
+                "gewichtung_punkte": null,
+                "dokumente": [
+                    "Firmenbuchauszug oder gleichwertige Bescheinigung"
+                ],
+                "geltung_lose": [
+                    "alle"
+                ],
+                "pruefung": {
+                    "status": null,
+                    "bemerkung": null,
+                    "pruefer": null,
+                    "datum": null
+                },
+                "quelle": "Punkt 6.10.(2)"
+            },
+            {
+                "id": "F_FRIST_001",
+                "typ": "Formal",
+                "kategorie": "Fristen",
+                "name": "Angebotsfrist",
+                "anforderung": "Angebote müssen bis zum 02.05.2023, 10:00 Uhr eingereicht werden",
+                "schwellenwert": "02.05.2023, 10:00 Uhr",
+                "gewichtung_punkte": null,
+                "dokumente": [],
+                "geltung_lose": [
+                    "alle"
+                ],
+                "pruefung": {
+                    "status": null,
+                    "bemerkung": null,
+                    "pruefer": null,
+                    "datum": null
+                },
+                "quelle": "Punkt 6.11.(1)"
+            },
+            {
+                "id": "E_BEFR_001",
+                "typ": "Eignung",
+                "kategorie": "Befugnis",
+                "name": "Befugnis - Österreichische Bieter",
+                "anforderung": "Österreichische Bieter müssen GISA-Auszug oder Wirtschaftskammer-Auszug vorlegen",
+                "schwellenwert": "nicht älter als 6 Monate",
+                "gewichtung_punkte": null,
+                "dokumente": [
+                    "GISA-Auszug oder Wirtschaftskammer-Auszug"
+                ],
+                "geltung_lose": [
+                    "alle"
+                ],
+                "pruefung": {
+                    "status": null,
+                    "bemerkung": null,
+                    "pruefer": null,
+                    "datum": null
+                },
+                "quelle": "Punkt 5.2.(2)"
+            },
+            {
+                "id": "E_BEFR_002",
+                "typ": "Eignung",
+                "kategorie": "Befugnis",
+                "name": "Befugnis - Ausländische Bieter",
+                "anforderung": "Ausländische Bieter müssen Urkunde über Eintragung im Berufsregister oder Handelsregister vorlegen",
+                "schwellenwert": null,
+                "gewichtung_punkte": null,
+                "dokumente": [
+                    "Urkunde über Eintragung im Berufsregister oder Handelsregister"
+                ],
+                "geltung_lose": [
+                    "alle"
+                ],
+                "pruefung": {
+                    "status": null,
+                    "bemerkung": null,
+                    "pruefer": null,
+                    "datum": null
+                },
+                "quelle": "Punkt 5.2.(3)"
+            },
+            {
+                "id": "E_BERUFL_001",
+                "typ": "Eignung",
+                "kategorie": "Berufliche Zuverlässigkeit",
+                "name": "Strafregisterbescheinigung",
+                "anforderung": "Vorlage einer Strafregisterbescheinigung",
+                "schwellenwert": "nicht älter als 6 Monate",
+                "gewichtung_punkte": null,
+                "dokumente": [
+                    "Strafregisterbescheinigung"
+                ],
+                "geltung_lose": [
+                    "alle"
+                ],
+                "pruefung": {
+                    "status": null,
+                    "bemerkung": null,
+                    "pruefer": null,
+                    "datum": null
+                },
+                "quelle": "Punkt 5.3.(3)"
+            },
+            {
+                "id": "E_BERUFL_002",
+                "typ": "Eignung",
+                "kategorie": "Berufliche Zuverlässigkeit",
+                "name": "Insolvenzdatei",
+                "anforderung": "Vorlage eines Auszugs aus der Insolvenzdatei",
+                "schwellenwert": "nicht älter als 3 Monate",
+                "gewichtung_punkte": null,
+                "dokumente": [
+                    "Auszug aus der Insolvenzdatei"
+                ],
+                "geltung_lose": [
+                    "alle"
+                ],
+                "pruefung": {
+                    "status": null,
+                    "bemerkung": null,
+                    "pruefer": null,
+                    "datum": null
+                },
+                "quelle": "Punkt 5.3.(3)"
+            },
+            {
+                "id": "E_BERUFL_003",
+                "typ": "Eignung",
+                "kategorie": "Berufliche Zuverlässigkeit",
+                "name": "Firmenbuchauszug",
+                "anforderung": "Vorlage eines Firmenbuchauszugs",
+                "schwellenwert": "nicht älter als 6 Monate",
+                "gewichtung_punkte": null,
+                "dokumente": [
+                    "Firmenbuchauszug"
+                ],
+                "geltung_lose": [
+                    "alle"
+                ],
+                "pruefung": {
+                    "status": null,
+                    "bemerkung": null,
+                    "pruefer": null,
+                    "datum": null
+                },
+                "quelle": "Punkt 5.3.(3)"
+            },
+            {
+                "id": "E_BERUFL_004",
+                "typ": "Eignung",
+                "kategorie": "Berufliche Zuverlässigkeit",
+                "name": "Sozialversicherungsnachweis",
+                "anforderung": "Vorlage eines Kontoauszugs oder einer Unbedenklichkeitsbescheinigung der Sozialversicherungsanstalt",
+                "schwellenwert": "nicht älter als 3 Monate",
+                "gewichtung_punkte": null,
+                "dokumente": [
+                    "Kontoauszug oder Unbedenklichkeitsbescheinigung der Sozialversicherungsanstalt"
+                ],
+                "geltung_lose": [
+                    "alle"
+                ],
+                "pruefung": {
+                    "status": null,
+                    "bemerkung": null,
+                    "pruefer": null,
+                    "datum": null
+                },
+                "quelle": "Punkt 5.3.(3)"
+            },
+            {
+                "id": "E_BERUFL_005",
+                "typ": "Eignung",
+                "kategorie": "Berufliche Zuverlässigkeit",
+                "name": "Steuernachweis",
+                "anforderung": "Vorlage einer Rückstandsbescheinigung gemäß BAO",
+                "schwellenwert": "nicht älter als 3 Monate",
+                "gewichtung_punkte": null,
+                "dokumente": [
+                    "Rückstandsbescheinigung gemäß BAO"
+                ],
+                "geltung_lose": [
+                    "alle"
+                ],
+                "pruefung": {
+                    "status": null,
+                    "bemerkung": null,
+                    "pruefer": null,
+                    "datum": null
+                },
+                "quelle": "Punkt 5.3.(3)"
+            },
+            {
+                "id": "E_TECH_001",
+                "typ": "Eignung",
+                "kategorie": "Technische Leistungsfähigkeit",
+                "name": "Mitarbeiterzahl",
+                "anforderung": "Mindestens 5 Vollzeitäquivalente in den Jahren 2020, 2021 und 2022",
+                "schwellenwert": "5 Vollzeitäquivalente",
+                "gewichtung_punkte": null,
+                "dokumente": [
+                    "Beilage 05"
+                ],
+                "geltung_lose": [
+                    "alle"
+                ],
+                "pruefung": {
+                    "status": null,
+                    "bemerkung": null,
+                    "pruefer": null,
+                    "datum": null
+                },
+                "quelle": "Punkt 5.4"
+            },
+            {
+                "id": "E_WIRT_001",
+                "typ": "Eignung",
+                "kategorie": "Wirtschaftliche Leistungsfähigkeit",
+                "name": "Betriebshaftpflichtversicherung",
+                "anforderung": "Betriebshaftpflichtversicherung mit mindestens EUR 300.000,00 pro Schadenfall",
+                "schwellenwert": "EUR 300.000,00 pro Schadenfall",
+                "gewichtung_punkte": null,
+                "dokumente": [
+                    "Versicherungsnachweis"
+                ],
+                "geltung_lose": [
+                    "alle"
+                ],
+                "pruefung": {
+                    "status": null,
+                    "bemerkung": null,
+                    "pruefer": null,
+                    "datum": null
+                },
+                "quelle": "Punkt 5.5.(1)"
+            },
+            {
+                "id": "E_WIRT_002",
+                "typ": "Eignung",
+                "kategorie": "Wirtschaftliche Leistungsfähigkeit",
+                "name": "Produkthaftpflichtversicherung",
+                "anforderung": "Produkthaftpflichtversicherung mit mindestens EUR 750.000,00 pro Schadenfall",
+                "schwellenwert": "EUR 750.000,00 pro Schadenfall",
+                "gewichtung_punkte": null,
+                "dokumente": [
+                    "Versicherungsnachweis"
+                ],
+                "geltung_lose": [
+                    "alle"
+                ],
+                "pruefung": {
+                    "status": null,
+                    "bemerkung": null,
+                    "pruefer": null,
+                    "datum": null
+                },
+                "quelle": "Punkt 5.5.(1)"
+            },
+            {
+                "id": "E_WIRT_003",
+                "typ": "Eignung",
+                "kategorie": "Wirtschaftliche Leistungsfähigkeit",
+                "name": "Jahresumsatz",
+                "anforderung": "Durchschnittlicher Jahresumsatz von mindestens EUR 500.000,00 in den Jahren 2020, 2021 und 2022",
+                "schwellenwert": "EUR 500.000,00",
+                "gewichtung_punkte": null,
+                "dokumente": [
+                    "Beilage 05"
+                ],
+                "geltung_lose": [
+                    "alle"
+                ],
+                "pruefung": {
+                    "status": null,
+                    "bemerkung": null,
+                    "pruefer": null,
+                    "datum": null
+                },
+                "quelle": "Punkt 5.5.(1)"
+            },
+            {
+                "id": "Z_PREIS_001",
+                "typ": "Zuschlag",
+                "kategorie": "Preis",
+                "name": "Gesamtpreis - Los 1, 2, 4",
+                "anforderung": null,
+                "schwellenwert": null,
+                "gewichtung_punkte": 800,
+                "dokumente": [],
+                "geltung_lose": [
+                    "1",
+                    "2",
+                    "4"
+                ],
+                "pruefung": {
+                    "status": null,
+                    "bemerkung": null,
+                    "pruefer": null,
+                    "datum": null
+                },
+                "quelle": "Punkt 7.2"
+            },
+            {
+                "id": "Z_PREIS_002",
+                "typ": "Zuschlag",
+                "kategorie": "Preis",
+                "name": "Gesamtpreis - Los 3, 5, 6",
+                "anforderung": null,
+                "schwellenwert": null,
+                "gewichtung_punkte": 900,
+                "dokumente": [],
+                "geltung_lose": [
+                    "3",
+                    "5",
+                    "6"
+                ],
+                "pruefung": {
+                    "status": null,
+                    "bemerkung": null,
+                    "pruefer": null,
+                    "datum": null
+                },
+                "quelle": "Punkt 7.2"
+            },
+            {
+                "id": "Z_QUAL_001",
+                "typ": "Zuschlag",
+                "kategorie": "Qualität",
+                "name": "Umwelt-Zertifizierungen - Los 1",
+                "anforderung": "Umwelt-Zertifizierung der Produkte gemäß Punkt 6.2.",
+                "schwellenwert": null,
+                "gewichtung_punkte": 100,
+                "dokumente": [
+                    "Beilage 06",
+                    "Umwelt-Zertifikate"
+                ],
+                "geltung_lose": [
+                    "1"
+                ],
+                "pruefung": {
+                    "status": null,
+                    "bemerkung": null,
+                    "pruefer": null,
+                    "datum": null
+                },
+                "quelle": "Punkt 7.3.1"
+            },
+            {
+                "id": "Z_QUAL_002",
+                "typ": "Zuschlag",
+                "kategorie": "Qualität",
+                "name": "Umwelt-Zertifizierungen - Los 2",
+                "anforderung": "Umwelt-Zertifizierung der Produkte gemäß Punkt 6.2.",
+                "schwellenwert": null,
+                "gewichtung_punkte": 100,
+                "dokumente": [
+                    "Beilage 06",
+                    "Umwelt-Zertifikate"
+                ],
+                "geltung_lose": [
+                    "2"
+                ],
+                "pruefung": {
+                    "status": null,
+                    "bemerkung": null,
+                    "pruefer": null,
+                    "datum": null
+                },
+                "quelle": "Punkt 7.3.1"
+            },
+            {
+                "id": "Z_QUAL_003",
+                "typ": "Zuschlag",
+                "kategorie": "Qualität",
+                "name": "Umwelt-Zertifizierungen - Los 4",
+                "anforderung": "Umwelt-Zertifizierung der Produkte gemäß Punkt 6.2.",
+                "schwellenwert": null,
+                "gewichtung_punkte": 100,
+                "dokumente": [
+                    "Beilage 06",
+                    "Umwelt-Zertifikate"
+                ],
+                "geltung_lose": [
+                    "4"
+                ],
+                "pruefung": {
+                    "status": null,
+                    "bemerkung": null,
+                    "pruefer": null,
+                    "datum": null
+                },
+                "quelle": "Punkt 7.3.1"
+            },
+            {
+                "id": "Z_QUAL_004",
+                "typ": "Zuschlag",
+                "kategorie": "Qualität",
+                "name": "ISO-Zertifizierungen",
+                "anforderung": "ISO-Zertifizierungen (ISO 14001, ISO 45001, ISO 9001) oder gleichwertige Zertifizierungen",
+                "schwellenwert": null,
+                "gewichtung_punkte": 45,
+                "dokumente": [
+                    "Beilage 07",
+                    "ISO-Zertifikate"
+                ],
+                "geltung_lose": [
+                    "alle"
+                ],
+                "pruefung": {
+                    "status": null,
+                    "bemerkung": null,
+                    "pruefer": null,
+                    "datum": null
+                },
+                "quelle": "Punkt 7.3.2"
+            },
+            {
+                "id": "Z_QUAL_005",
+                "typ": "Zuschlag",
+                "kategorie": "Qualität",
+                "name": "Produktionsstandort",
+                "anforderung": "Produktionsstandort innerhalb der Europäischen Union, des EWR oder der Schweiz",
+                "schwellenwert": null,
+                "gewichtung_punkte": 55,
+                "dokumente": [
+                    "Beilage 08",
+                    "Nachweise zum Produktionsstandort"
+                ],
+                "geltung_lose": [
+                    "alle"
+                ],
+                "pruefung": {
+                    "status": null,
+                    "bemerkung": null,
+                    "pruefer": null,
+                    "datum": null
+                },
+                "quelle": "Punkt 7.3.3"
+            }
+        ],
+        "Autor": "KI-generiert tu@glm-4.5-355b@kriterien.ids@docling 2025-09-19T13:30:23.015878"
+    }
+}
