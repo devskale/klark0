@@ -11,7 +11,13 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Clock, Edit, Sparkles, MoreHorizontal } from "lucide-react";
+import {
+  CheckCircle2,
+  Clock,
+  Edit,
+  Sparkles,
+  MoreHorizontal,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -54,7 +60,7 @@ const sampleCriteria = [
   },
 ];
 
-export default function AKriterienPage() {
+export default function AuditPage() {
   const { selectedProject, selectedBieter } = useProject();
 
   return (
@@ -62,7 +68,7 @@ export default function AKriterienPage() {
       <h1 className="text-2xl font-bold mb-4">
         Kriterien für {selectedProject ?? "kein Projekt"}
       </h1>
-      
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -81,9 +87,7 @@ export default function AKriterienPage() {
                 <TableCell className="text-muted-foreground text-sm">
                   {criterion.id}
                 </TableCell>
-                <TableCell className="font-medium">
-                  {criterion.name}
-                </TableCell>
+                <TableCell className="font-medium">{criterion.name}</TableCell>
                 <TableCell>{criterion.description}</TableCell>
                 <TableCell>{criterion.weight}%</TableCell>
                 <TableCell>

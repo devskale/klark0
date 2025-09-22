@@ -1,0 +1,1611 @@
+{
+    "meta": {
+        "schema_version": "1.0-bieter-kriterien",
+        "projekt": "Rein",
+        "bieter": "ATU1_Bieter1"
+    },
+    "kriterien": [
+        {
+            "id": "E_BERUFL_001",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.109999Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "E_BERUFL_002",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110002Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "E_BERUFL_003",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110039Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "E_BERUFL_004",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110043Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "E_BERUFL_005",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110046Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "E_BERUFL_006",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110053Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "E_BERUFL_007",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110057Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "E_BERUFL_008",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110060Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "E_BERUFL_009",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110063Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "E_BERUFL_010",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110067Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "E_BERUFL_011",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110070Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "E_FORM_001",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110016Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "E_FORM_002",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110019Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "E_TECH_001",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110077Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "E_WIRT_001",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110006Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "E_WIRT_002",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110009Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "E_WIRT_003",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110083Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "E_WIRT_004",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110087Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "E_WIRT_005",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110090Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_BIEGE_001",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.109971Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_BIEGE_002",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.109975Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_BIEGE_003",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.109979Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_BIEGE_004",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.109982Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_BIEGE_005",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110242Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_BIEGE_006",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110249Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_BIEGE_007",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110255Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_DOK_001",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.109992Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_DOK_002",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.109996Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_DOK_003",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110013Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_DOK_004",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110022Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_DOK_005",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110026Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_DOK_006",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110029Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_DOK_007",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110033Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_DOK_008",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110073Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_DOK_009",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110080Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_DOK_010",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110093Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_DOK_011",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110097Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_DOK_012",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110145Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_DOK_013",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110148Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_DOK_014",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110152Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_DOK_015",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110155Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_DOK_016",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110159Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_DOK_017",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110162Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_DOK_018",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110165Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_DOK_019",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110169Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_DOK_020",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110172Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_DOK_021",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110175Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_DOK_022",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110179Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_DOK_023",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110185Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_DOK_024",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110188Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_DOK_025",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110191Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_DOK_026",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110201Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_DOK_027",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110205Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_DOK_028",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110235Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_DOK_029",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110238Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_DOK_030",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110245Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_DOK_031",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110252Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_FORM_001",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.109951Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_FORM_002",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.109960Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_FORM_003",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.109965Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_FORM_004",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.109968Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_FORM_005",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.109985Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_FORM_006",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.109989Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_FORM_007",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110100Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_FORM_008",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110104Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_FORM_009",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110110Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_FORM_010",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110114Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_FORM_011",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110118Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_FORM_012",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110121Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_FORM_013",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110124Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_FORM_014",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110128Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_FORM_015",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110131Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_FORM_016",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110134Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_FORM_017",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110137Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_FORM_018",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110141Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_FORM_019",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110195Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_FORM_020",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110198Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_FORM_021",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110212Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_FORM_022",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110265Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_FORM_023",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110269Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_FRIST_001",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110036Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_FRIST_002",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110050Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_FRIST_003",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110208Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "F_FRIST_004",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110262Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "Z_PREIS_001",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110215Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "Z_PREIS_002",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110219Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "Z_QUAL_001",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110224Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "Z_QUAL_002",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110228Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "Z_QUAL_003",
+            "status": null,
+            "prio": null,
+            "bewertung": null,
+            "audit": {
+                "zustand": "synchronisiert",
+                "verlauf": [
+                    {
+                        "zeit": "2025-09-18T11:12:10.110232Z",
+                        "ereignis": "kopiert",
+                        "quelle_status": null,
+                        "ergebnis": null,
+                        "akteur": "system"
+                    }
+                ]
+            }
+        }
+    ]
+}
