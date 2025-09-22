@@ -257,193 +257,192 @@ The component includes a collapsible "Dev Info" section that displays:
 
 This information is invaluable for troubleshooting issues and understanding the system's current state.
 
-## Kriterien-Extraktion System
+## Kriterien Management System
 
 ### Overview
-The Kriterien-Extraktion system extracts and manages tender criteria from documents, providing structured data for qualification and award criteria. The system uses AI-powered extraction with human review capabilities and persistent storage.
+The Kriterien Management system manages tender criteria directly within the main project data structure. The system has been migrated from standalone AI extraction to integrated criteria management with human review capabilities and persistent storage in `projekt.json`.
 
 ### Data Flow Processes
 
 #### 1. Reading Criteria 📖
 
-**File Location**: `{projectDir}kriterien.meta.json` (sidecar metadata file)
+**File Location**: `{projectDir}projekt.json` (main project file)
 **API Endpoint**: `GET /api/fs/metadata`
 **Persistence Function**: `loadKriterienFromFile(projectDir)`
 
 ##### Process Flow:
-1. Component constructs criteria path: `projectDir + "kriterien.meta.json"`
-2. Uses SWR to fetch criteria via `GET /api/fs/metadata?path={criteriaPath}`
-3. API reads `kriterien.meta.json` file via WebDAV GET request
-4. Returns complete `KriterienMetadata` object or `null` if not found
-5. React component displays extracted criteria with review status
+1. Component constructs project path: `projectDir + "projekt.json"`
+2. Uses SWR to fetch project data via `GET /api/fs/metadata?path={projectPath}`
+3. API reads `projekt.json` file via WebDAV GET request
+4. Extracts `kriterien` array from project data structure
+5. React component displays criteria with review status and filtering capabilities
 
-##### Data Structure (KriterienMetadata):
+##### Data Structure (ProjektKriterium):
 ```typescript
 {
-  extractedCriteria: KriterienExtraktion,
-  extractionTimestamp: string,
-  extractionMethod: string, // "KRITERIEN_EXTRAKTION", "A_INFO", etc.
-  aabFileName?: string,
-  parserUsed?: string,
-  lastModified: string,
-  version: string,
-  reviewStatus?: {
-    aiReviewed: boolean,
-    humanReviewed: boolean,
-    lastReviewDate?: string,
-    reviewNotes?: string
+  id: string,
+  kategorie: 'eignungskriterium' | 'zuschlagskriterium' | 'formale_anforderung',
+  unterkategorie?: string,
+  titel: string,
+  beschreibung?: string,
+  gewichtung?: string,
+  los?: string,
+  nachweise?: string[],
+  pruefung?: {
+    status: 'offen' | 'geprueft' | 'nachbesserung' | 'erfuellt',
+    bemerkung?: string,
+    pruefer?: string,
+    datum?: string
   }
 }
 ```
 
-#### 2. AI Criteria Extraction 🤖
+#### 2. Criteria Management Interface 📋
 
-**Trigger**: "Kriterien extrahieren" button
-**AI Query**: Configurable AI queries for criteria extraction
-**Streaming**: Real-time AI response processing
+**Component**: Tabular interface with filtering and grouping
+**Actions**: View, filter, group, and update review status
+**Data Source**: Direct integration with `projekt.json` structure
 
 ##### Process Flow:
-1. User triggers extraction via button click
-2. Component sends AI request with document context
-3. AI streams response with structured criteria data
-4. Real-time parsing and validation of JSON response
-5. Automatic save to `kriterien.meta.json` upon completion
+1. Component loads criteria from `projekt.json` via SWR
+2. Displays criteria in responsive table format
+3. Provides filtering by category, status, and Los
+4. Enables grouping by category or Los
+5. Allows updating review status for individual criteria
 
-##### Expected AI Output Format:
-```json
-{
-  "eignungskriterien": {
-    "befugnis": [{"kriterium": "...", "nachweise": [...]}],
-    "berufliche_zuverlaessigkeit": [...],
-    "technische_leistungsfaehigkeit": [...],
-    "finanzielle_und_wirtschaftliche_leistungsfaehigkeit": [...]
-  },
-  "zuschlagskriterien": [
-    {
-      "los": {"nummer": "Los 1", "bezeichnung": "..."},
-      "prinzip": "Bestbieterprinzip",
-      "kriterien": [{"name": "...", "gewichtung": "..."}]
-    }
-  ],
-  "subunternehmerregelung": ["..."],
-  "formale_anforderungen": ["..."]
-}
-```
+##### UI Features:
+- **Filtering**: Filter by kategorie, pruefung status, or Los
+- **Grouping**: Group criteria by kategorie or Los for better organization
+- **Status Management**: Update review status (offen, geprueft, nachbesserung, erfuellt)
+- **Responsive Design**: Optimized for desktop and mobile viewing
+- **Real-time Updates**: Immediate UI updates with SWR cache management
 
-#### 3. Writing Criteria 💾
+#### 3. Updating Criteria Status 💾
 
 **API Endpoint**: `POST /api/fs/metadata`
-**Persistence Function**: `saveKriterienToFile(projectDir, criteria, metadata)`
+**Persistence Function**: `updateKriteriumPruefung(projectPath, kriteriumId, pruefung)`
 
 ##### Data Preparation:
-- Validates criteria structure using `validateKriterienExtraktion()`
-- Creates metadata with extraction timestamp and method
-- Includes review status and version information
-- Preserves original extraction context (parser, filename)
+- Validates kriterium ID exists in project data
+- Creates pruefung object with status, bemerkung, pruefer, and datum
+- Preserves existing criteria data while updating only review status
+- Maintains data integrity with atomic updates
 
 ##### API Call:
 ```javascript
 POST /api/fs/metadata
 {
-  path: "{projectDir}kriterien.meta.json",
-  metadata: KriterienMetadata
+  path: "{projectDir}projekt.json",
+  metadata: {
+    // Updated project data with modified kriterium pruefung status
+  }
 }
 ```
 
 ##### Implementation:
-- WebDAV PUT operation to save JSON file
+- WebDAV PUT operation to save complete project file
 - Atomic write operation with error handling
 - SWR cache mutation for immediate UI updates
-- Backup of previous version before overwrite
+- Preserves all existing project data structure
 
 #### 4. Review Status Management 📋
 
-**Function**: `updateKriterienReviewStatus(projectDir, reviewStatus)`
-**Purpose**: Track human review and validation of AI-extracted criteria
+**Function**: `updateKriteriumPruefung(projectPath, kriteriumId, pruefung)`
+**Purpose**: Track human review and validation of individual criteria
 
 ##### Process Flow:
-1. Load existing criteria metadata
-2. Update review status fields (aiReviewed, humanReviewed, etc.)
-3. Set lastReviewDate to current timestamp
-4. Save updated metadata back to file
-5. Maintain extraction history and review trail
+1. Load existing project data from `projekt.json`
+2. Find specific kriterium by ID in the kriterien array
+3. Update pruefung object with new status and metadata
+4. Set datum to current timestamp for audit trail
+5. Save updated project data back to file
+6. Maintain complete review history within project structure
 
 ### Type Definitions
 
 #### Core Interfaces:
 ```typescript
-interface KriteriumNachweis {
-  dokument: string;
-  typ: 'PFLICHT' | 'ODER';
-  gueltigkeit?: string;
-  hinweis?: string;
+interface ProjektKriterium {
+  id: string;
+  kategorie: 'eignungskriterium' | 'zuschlagskriterium' | 'formale_anforderung';
+  unterkategorie?: string;
+  titel: string;
+  beschreibung?: string;
+  gewichtung?: string;
+  los?: string;
+  nachweise?: string[];
+  pruefung?: {
+    status: 'offen' | 'geprueft' | 'nachbesserung' | 'erfuellt';
+    bemerkung?: string;
+    pruefer?: string;
+    datum?: string;
+  };
 }
 
-interface KriteriumObjekt {
-  kriterium: string;
-  nachweise: KriteriumNachweis[];
-}
-
-interface ZuschlagsKriterium {
-  name: string;
-  gewichtung: string;
-  unterkriterien?: ZuschlagsKriterium[];
+interface ProjektJson {
+  meta: {
+    meta: ProjectMetadata;
+  };
+  bdoks: any[];
+  ids: ProjektIds;
+  kriterien: ProjektKriterium[];
 }
 ```
 
 ### API Endpoints
 
 #### `/api/fs/metadata` (GET)
-- **Purpose**: Load criteria metadata from sidecar JSON files
-- **Parameters**: `path` (criteria file path)
-- **Response**: `KriterienMetadata` object or `null`
-- **Implementation**: WebDAV GET with JSON parsing
+- **Purpose**: Load project data including criteria from main project file
+- **Parameters**: `path` (projekt.json file path)
+- **Response**: `ProjektJson` object with kriterien array or `null`
+- **Implementation**: WebDAV GET with JSON parsing, extracts kriterien array
 
 #### `/api/fs/metadata` (POST)
-- **Purpose**: Save criteria metadata to sidecar JSON files
-- **Body**: `{ path: string, metadata: KriterienMetadata }`
+- **Purpose**: Update project data including criteria status changes
+- **Body**: `{ path: string, metadata: ProjektJson }`
 - **Response**: `{ success: boolean }`
-- **Implementation**: WebDAV PUT with atomic write operation
+- **Implementation**: WebDAV PUT with atomic write operation, preserves complete project structure
 
 ### Technical Implementation
 
 #### State Management:
-- SWR for criteria data fetching and caching
-- Local state for AI extraction progress
-- Review status tracking with timestamps
-- Error state management for failed operations
+- SWR for project data fetching and caching (including criteria)
+- Local state for filtering and grouping preferences
+- Review status tracking with timestamps per kriterium
+- Error state management for failed update operations
 
 #### File System Integration:
-- **Sidecar Files**: `kriterien.meta.json` alongside project files
-- **Atomic Operations**: Safe concurrent access with file locking
-- **Backup Strategy**: Version preservation before updates
-- **Error Recovery**: Graceful handling of corrupted files
+- **Unified Storage**: All data in `projekt.json` main project file
+- **Atomic Operations**: Safe concurrent access with complete file updates
+- **Data Integrity**: Preserves complete project structure during updates
+- **Error Recovery**: Graceful handling of corrupted project files
 
-#### AI Integration:
-- **Streaming Responses**: Real-time criteria extraction display
-- **JSON Validation**: Robust parsing with error recovery
-- **Context Preservation**: Document source and extraction method tracking
-- **Retry Logic**: Automatic retry on extraction failures
+#### Data Management:
+- **Centralized Structure**: Criteria integrated into main project data
+- **Type Safety**: Comprehensive TypeScript interfaces for validation
+- **Immutable Updates**: Functional updates preserving existing data
+- **Cache Synchronization**: SWR cache mutations for immediate UI feedback
 
 #### User Interface:
-- **Real-time Updates**: Live display of extraction progress
-- **Review Interface**: Human validation and editing capabilities
-- **Status Indicators**: Visual feedback for review states
-- **Error Display**: Clear error messages and recovery options
+- **Responsive Table**: Optimized display for desktop and mobile
+- **Advanced Filtering**: Multi-criteria filtering by category, status, Los
+- **Flexible Grouping**: Dynamic grouping by category or Los
+- **Status Management**: Inline editing of review status and notes
+- **Real-time Updates**: Immediate UI feedback with optimistic updates
 
 ### Development Guidelines
 
 #### Error Handling Best Practices:
-- Always validate criteria structure before saving
+- Always validate kriterium ID exists before updating
 - Provide meaningful error messages for validation failures
-- Implement graceful degradation for missing files
-- Log extraction errors for debugging and improvement
+- Implement graceful degradation for missing project files
+- Log update errors for debugging and audit trail
 
 #### Performance Considerations:
-- Use SWR caching to minimize API calls
-- Implement debounced auto-save for user edits
-- Optimize JSON parsing for large criteria sets
-- Consider pagination for extensive criteria lists
+- Use SWR caching to minimize API calls for project data
+- Implement debounced filtering for large criteria sets
+- Optimize table rendering with virtualization for extensive lists
+- Use optimistic updates for immediate user feedback
 
 ## Lose Field Handling
 
@@ -486,28 +485,51 @@ The `lose` field requires special handling due to the mismatch between UI expect
 ## Future Enhancements
 
 ### Planned Improvements
-1. **Form Validation**: Add comprehensive form validation for date formats and required fields (line 265 in projectinfo.md)
+1. **Form Validation**: Add comprehensive form validation for date formats and required fields
 2. **Versioning**: Implement metadata versioning for change tracking
 3. **Batch Operations**: Support for bulk metadata updates across projects
 4. **Templates**: Predefined metadata templates for common project types
 5. **Export/Import**: JSON export/import functionality for metadata backup
-6. **Criteria Editing**: Interactive editing interface for extracted criteria
-7. **Criteria Validation**: Advanced validation rules for criteria completeness
-8. **Multi-Document Extraction**: Support for extracting criteria from multiple documents
+6. **Criteria Bulk Operations**: Bulk status updates for multiple criteria
+7. **Criteria Search**: Full-text search within criteria titles and descriptions
+8. **Criteria Analytics**: Dashboard for criteria completion statistics
 9. **Criteria Templates**: Predefined criteria templates for different tender types
 
 ### Recently Implemented ✅
 - **Data Structure Compatibility**: Fixed `lose` field handling between UI and storage formats
 - **Backward Compatibility**: Support for both legacy string arrays and new object arrays
 - **API Optimization**: Flattened metadata structure for UI consumption while preserving storage integrity
-- **Criteria Extraction System**: Complete AI-powered criteria extraction with structured data output
-- **Criteria Persistence**: Robust save/load operations with metadata tracking and review status
+- **Unified Data Structure**: Migrated criteria from separate files to integrated `projekt.json` structure
+- **Modern UI Interface**: Responsive table with filtering, grouping, and status management
 - **Type Safety**: Comprehensive TypeScript interfaces for criteria validation and type checking
+- **Centralized Persistence**: Single source of truth for all project data including criteria
 
 ### Performance Optimizations
 1. **Caching**: Implement more aggressive caching strategies
 2. **Compression**: Compress large AI context before transmission
 3. **Pagination**: Handle large document sets more efficiently
 4. **Background Processing**: Move AI operations to background workers
+
+## Migration from Legacy System
+
+### Overview
+The kriterien system has been migrated from a standalone AI extraction approach to an integrated data management system within the main project structure.
+
+### Key Changes
+- **Data Storage**: Moved from `kriterien.meta.json` sidecar files to integrated `projekt.json` structure
+- **AI Extraction**: Removed automated AI extraction in favor of manual criteria management
+- **User Interface**: Replaced extraction-focused UI with management-focused table interface
+- **Data Structure**: Simplified from complex nested extraction metadata to flat `ProjektKriterium` objects
+- **Persistence**: Unified persistence layer using existing project metadata APIs
+
+### Migration Benefits
+- **Simplified Architecture**: Single source of truth for all project data
+- **Better Performance**: Reduced API calls by loading all data together
+- **Improved UX**: Focus on criteria management rather than extraction
+- **Data Integrity**: Atomic updates preserve complete project structure
+- **Maintainability**: Reduced complexity by removing AI extraction dependencies
+
+### Backward Compatibility
+The new system is **not backward compatible** with the legacy `kriterien.meta.json` format. Projects using the old format will need to migrate their criteria data to the new `projekt.json` structure.
 
 This documentation provides a comprehensive understanding of the project info system's architecture and implementation details, enabling effective development and maintenance of this critical component.
