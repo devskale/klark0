@@ -5,7 +5,7 @@ import { useProject } from "@/context/ProjectContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sparkles } from "lucide-react";
 import AKriterienPage from "./kriterien";
-import ADoksPage from "./doks";
+import ADoksPage from "./adoks";
 import Info from "./info";
 import AiProject from "./aiproject";
 
