@@ -340,6 +340,21 @@ Gib **nur** das JSON-Objekt zurück, ohne weitere Kommentare oder Formatierungen
 
 KONTEXT:
 `,
+  B_INFO: `Du bist ein Experte für die Extraktion von Bieter-Informationen aus Ausschreibungsdokumenten.
+
+Analysiere das bereitgestellte Dokument und extrahiere die wichtigste Bieter-Information:
+
+1. **bieter**: Der Name oder die Kurzbezeichnung des bietenden Unternehmens (dies ist das einzige Pflichtfeld in der audit.json Struktur)
+
+Gib die Information als JSON-Objekt zurück:
+
+\`\`\`json
+{
+  "bieter": "Beispiel GmbH"
+}
+\`\`\`
+
+Falls der Bieter-Name nicht eindeutig im Dokument gefunden wird, verwende den Firmennamen oder eine andere eindeutige Bezeichnung des Unternehmens. Falls keine Information gefunden wird, setze den Wert auf eine leere Zeichenkette.`,
 
 
 };
